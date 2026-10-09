@@ -85,7 +85,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--brass)
 .ibtn svg[fill="none"] { fill: none; }
 .ibtn .badge { position: absolute; top: -6px; right: -6px; margin: 0; }
 
-.overlay { position: fixed; inset: 0; z-index: 50; display: flex; overflow-y: auto; background: rgba(10, 15, 12, 0.82); padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+.overlay { position: fixed; inset: 0; z-index: 50; display: flex; overflow-y: auto; background: rgba(10, 15, 12, 0.93); padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
 .overlay-card { margin: auto; max-width: 460px; text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center; }
 .overlay h2 { font-family: var(--font-display); font-weight: 800; font-size: clamp(36px, 7vw, 64px); text-transform: uppercase; letter-spacing: 0.03em; line-height: 0.95; margin: 0; text-wrap: balance; }
 .overlay h2 span { color: var(--brass); }
@@ -98,7 +98,15 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--brass)
 .panel-x { position: absolute; top: 4px; right: 4px; width: 28px; height: 28px; border: 0; background: none; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; border-radius: 4px; }
 .panel-x:hover { color: var(--ink); }
 .info { display: flex; flex-direction: column; gap: 9px; }
-.info > .eyebrow:first-child { padding-right: 26px; }
+.info > :first-child { padding-right: 26px; }
+.panel.mini { width: 196px; padding: 8px; }
+.panel.mini .info { gap: 6px; }
+.panel.mini .info p.eyebrow, .panel.mini dl.kv, .panel.mini .sel-head canvas, .panel.mini #sel-meta, .panel.mini .info .meta, .panel.mini .br-stats, .panel.mini .br-desc { display: none; }
+.panel.mini .info h3 { font-size: 17px; }
+.panel.mini .seg button { font-size: 11px; padding: 3px 0; min-height: 0; }
+.panel.mini .btn { padding: 5px 6px; font-size: 12.5px; }
+.panel.mini .branch { padding: 5px 8px; }
+.panel.mini .br-top b { font-size: 15px; }
 .eyebrow { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin: 0; display: flex; justify-content: space-between; }
 
 .shop { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -289,7 +297,7 @@ dl.kv dd .next { color: var(--good); }
   .ab-text b { font-size: 12px; }
   .chip-main { height: 36px; }
   .panel { width: min(210px, 42%); padding: 8px 10px; font-size: 12.5px; }
-  .info > .eyebrow:first-child, .sel-head canvas, #sel-meta, .info .meta { display: none; }
+  .sel-head canvas, #sel-meta, .info .meta { display: none; }
   .seg button { font-size: 11.5px; padding: 3px 0; }
   .panel .btn { padding: 5px 8px; font-size: 12.5px; }
   .br-desc { display: none; }
@@ -1245,7 +1253,7 @@ function useHero(which) {
 function toggleHeroSel() {
   if (!S.hero || !ui.started || isModal()) return;
   ui.heroSel = !ui.heroSel;
-  if (ui.heroSel) { ui.selected = null; ui.build = null; ui.targeting = null; ui.pending = null; }
+  if (ui.heroSel) { ui.selected = null; ui.build = null; ui.targeting = null; ui.pending = null; ui.intel = false; }
   refreshPanel(true); refreshHud();
 }
 function abilLeft(k) { return Math.max(0, S.ab[k] - S.time); }
@@ -1681,6 +1689,15 @@ function render() {
     ctx.fillStyle = '#ece6d2'; ctx.fillText('Click to call the barrage · Esc to cancel', W / 2, 25);
   }
 
+  if (ui.heroSel && S.hero && !S.hero.dead && !ui.targeting) {
+    const nm = HEROES[S.hero.k].name.split(' ')[0];
+    const msg = `${COARSE ? 'Tap' : 'Click'} the map to move ${nm}`;
+    ctx.font = '600 14px Barlow, sans-serif'; ctx.textAlign = 'center';
+    const mw = ctx.measureText(msg).width + 20;
+    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(W / 2 - mw / 2, 8, mw, 24);
+    ctx.fillStyle = HEROES[S.hero.k].color; ctx.fillText(msg, W / 2, 25);
+  }
+
   // banner
   if (S.banner) {
     const b = S.banner, a = Math.min(1, b.life * 2, (2.6 - b.life) * 4 + 0.2);
@@ -1747,6 +1764,16 @@ function statRows(a, b) {
   return h;
 }
 
+// On small screens the tower card sits right beside the tower instead of over the middle of the map.
+function placePanel(t) {
+  const pn = els.panel, bd = $('board');
+  if (!pn.classList.contains('mini') || !t || pn.hidden) { pn.style.left = pn.style.top = pn.style.right = ''; return; }
+  const k = bd.clientWidth / W, tx = t.x * k, ty = t.y * k, pw = pn.offsetWidth, ph = pn.offsetHeight, gap = 0.7 * TILE * k;
+  const left = tx + gap + pw < bd.clientWidth - 4 ? tx + gap : Math.max(4, tx - gap - pw);
+  pn.style.right = 'auto';
+  pn.style.left = Math.round(left) + 'px';
+  pn.style.top = Math.round(Math.max(4, Math.min(bd.clientHeight - ph - 4, ty - ph / 2))) + 'px';
+}
 function refreshPanel(force) {
   for (const b of els.shop.children) {
     const ty = b.dataset.type, c = buildCost(ty);
@@ -1755,17 +1782,16 @@ function refreshPanel(force) {
     const cc = b.querySelector('.cc');
     if (cc && cc.dataset.v !== String(c)) { cc.dataset.v = c; cc.innerHTML = tk(c); }
   }
-  const t = ui.selected, hs = ui.heroSel && S.hero;
-  els.panel.hidden = !(t || hs || ui.build || ui.intel);
-  const ax = t ? t.x : hs ? S.hero.x : 0;
-  els.panel.classList.toggle('left', ax > W * 0.55);
+  const t = ui.selected, small = matchMedia('(orientation: landscape) and (max-height: 560px), (max-width: 700px)').matches;
+  els.panel.hidden = !(t || ui.intel || (ui.build && !small));
+  els.panel.classList.toggle('mini', !!t && small);
+  els.panel.classList.toggle('left', !!t && !small && t.x > W * 0.55);
   let sig;
   if (t) sig = `t${t.id}:${t.lvl}:${t.branch}:${t.mode}:${S.modVer}:${S.gold >= (upgradeCost(t) ?? Infinity)}`;
-  else if (ui.heroSel && S.hero) sig = `h${S.hero.lvl}:${S.modVer}:${Object.keys(S.hero.learned).length}:${S.hero.dead}`;
   else if (ui.build) sig = `b${ui.build}:${S.modVer}:${S.gold >= buildCost(ui.build)}`;
   else sig = `w${S.wave}:${S.waveActive}:${S.modVer}:${ui.intel}`;
   if (t) { const m = $('sel-meta'); if (m) m.textContent = `${fmt(t.kills)} kills · ${fmt(t.dealt)} damage dealt`; }
-  if (!force && sig === lastSig) return;
+  if (!force && sig === lastSig) { placePanel(t); return; }
   lastSig = sig;
 
   if (t) {
@@ -1794,6 +1820,7 @@ function refreshPanel(force) {
     els.info.querySelectorAll('[data-branch]').forEach(b => b.onclick = () => { upgradeTower(t, +b.dataset.branch); refreshPanel(true); });
     $('btn-sell').onclick = () => { sellTower(t); refreshPanel(true); };
     els.info.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { t.mode = b.dataset.mode; refreshPanel(true); });
+    placePanel(t);
   } else if (ui.build) {
     const d = TOWERS[ui.build], c = buildCost(ui.build);
     els.info.innerHTML = `
@@ -1803,22 +1830,6 @@ function refreshPanel(force) {
       <p class="meta">The second upgrade splits into two paths: ${d.br.map(b => b.name).join(' or ')}.</p>
       <p class="meta">${S.gold >= c ? 'Click any open grass tile to build. Right-click or Esc to stop.' : `Need ${tk(c - S.gold)} more.`}</p>`;
     $('sel-icon').appendChild(iconCanvas(ui.build, 48));
-  } else if (ui.heroSel && S.hero) {
-    const h = S.hero, d = HEROES[h.k];
-    els.info.innerHTML = `
-      <p class="eyebrow"><span>Commanding ${d.name.split(' ')[0]}</span><span>Esc to release</span></p>
-      <dl class="kv">
-        <dt>Damage</dt><dd>${Math.round(heroDmg(h))}${d.pierce || h.fx.pierce ? ' · ignores armor' : ''}</dd>
-        <dt>Attacks / sec</dt><dd>${(d.rate * (1 + h.fx.rate)).toFixed(2)}</dd>
-        <dt>Reach</dt><dd>${(d.range + h.fx.range).toFixed(1)} tiles${d.air ? '' : ' · ground only'}</dd>
-        <dt>Health</dt><dd>${h.maxHp}</dd>
-        <dt>Move speed</dt><dd>${(d.speed * (1 + h.fx.speed)).toFixed(1)} tiles/s</dd>
-        ${h.fx.auraRate || h.fx.auraDmg ? `<dt>Tower aura</dt><dd>+${Math.round(h.fx.auraRate * 100)}% rate · +${Math.round(h.fx.auraDmg * 100)}% dmg</dd>` : ''}
-        <dt>Kills</dt><dd>${fmt(h.kills)}</dd>
-      </dl>
-      <p class="meta">${COARSE ? 'Tap' : 'Click'} anywhere on the map to send ${d.name.split(' ')[0]} there. ${d.melee ? 'Melee heroes charge enemies that come near their post.' : 'Ranged heroes hold position and fire at anything in reach.'}</p>
-      <button class="btn" id="info-skills" type="button">Open skill tree${h.sp ? ` <span class="badge">${h.sp}</span>` : ''}</button>`;
-    $('info-skills').onclick = openSkills;
   } else {
     const nextW = S.wave + 1, groups = waveGroups(nextW);
     const tally = {};
@@ -2017,6 +2028,7 @@ function renderSkills() {
   showOverlay(`
     <p class="chap" style="color:${d.color}">${d.name} · ${d.title}</p>
     <h2>Skill <span>tree</span></h2>
+    <div class="skillhead"><span>Damage <b>${Math.round(heroDmg(h))}${d.pierce || h.fx.pierce ? ' (ignores armor)' : ''}</b></span><span>Attacks/s <b>${(d.rate * (1 + h.fx.rate)).toFixed(2)}</b></span><span>Reach <b>${(d.range + h.fx.range).toFixed(1)} tiles</b></span><span>Health <b>${Math.ceil(h.hp)} / ${h.maxHp}</b></span><span>Kills <b>${fmt(h.kills)}</b></span></div>
     <div class="skillhead"><span>Level <b>${h.lvl}</b>${h.lvl < 10 ? ` · ${Math.floor(h.xp - prev)} / ${next - prev} xp` : ' · max'}</span><span>Skill points <b>${h.sp}</b></span><span>${d.active.name} form <b>${form}</b></span><span>${d.ult.name} <b>${h.ult ? 'unlocked' : 'after wave 20'}</b></span></div>
     <div class="tree">${d.tree.map((br, bi) => `<div class="tbranch"><h4>${br.name}</h4>${br.nodes.map((n, ti) => {
       const id = '' + bi + ti, learned = !!h.learned[id], locked = ti > 0 && !h.learned['' + bi + (ti - 1)], poor = !learned && !locked && h.sp < ti + 1;
@@ -2068,7 +2080,7 @@ canvas.addEventListener('pointerdown', ev => {
   if (ui.targeting) { useAbility(ui.targeting, px, py); ui.targeting = null; refreshHud(); return; }
   const touch = ev.pointerType === 'touch', h = S.hero;
   if (h && !h.dead && !ui.build && Math.hypot(px - h.x, py - h.y) < (touch ? 0.9 : 0.6) * TILE) {
-    ui.heroSel = true; ui.selected = null; ui.pending = null; refreshPanel(true); refreshHud(); return;
+    ui.heroSel = !ui.heroSel; ui.intel = false; ui.selected = null; ui.pending = null; refreshPanel(true); refreshHud(); return;
   }
   const existing = towerAt(tx, ty) || (touch && !ui.build && !ui.heroSel ? nearTower(px, py) : null);
   if (existing) { ui.selected = existing; ui.build = null; ui.pending = null; ui.heroSel = false; }
