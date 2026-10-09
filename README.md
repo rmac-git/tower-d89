@@ -24,7 +24,7 @@ The second upgrade splits into two paths, so two players end up with different d
 
 **Maps:** Switchback (long and winding), The Serpent (four long climbs), Short Fuse (a short road, hard). Your best wave is saved per map.
 
-**Keys:** `H` commands the hero · `E` / `R` hero skill and ultimate · `K` skill tree · `1`–`5` pick a tower · `Space` sends the next wave (sending it early pays bonus gold) · `U` / `I` pick upgrade path A / B · `S` sells · `T` changes targeting · `Q` / `W` abilities · `N` next-wave intel · `F` changes speed · `P` pauses · `M` mutes · `Esc` cancels.
+**Keys:** `H` commands the hero · `E` / `R` hero skill and ultimate · `K` skill tree · `1`–`5` pick a tower · `Space` sends the next wave (sending it early pays bonus gold) · `U` / `I` pick upgrade path A / B · `S` sells · `T` changes targeting · `Q` / `W` abilities · `N` next-wave intel · `Esc` closes menus · `F` changes speed · `P` pauses · `M` mutes · `Esc` cancels.
 
 ## Learning curve
 
@@ -68,7 +68,11 @@ All prices and rewards use **BST**, the game's in-game token (the hex coin with 
 
 The game is built for landscape and the battlefield always takes as much of the screen as possible. On wide-short screens such as phones in landscape, the stats and build menu sit in a narrow rail on the left and the controls, hero and abilities in a rail on the right. On other screens they sit in slim strips above and below the board. Tap a tower in the build rail to expand its stats like an accordion (tap again to collapse). Tower and wave details appear in a small floating card only while something is selected, and on phones a placed tower's card has a Show stats toggle (the ⓘ button or `N` shows next-wave intel). In portrait on a touch device the game shows a "Turn your phone sideways" screen (with a "Play in portrait anyway" button) and pauses until you rotate. Tapping **Take command** also requests full screen and a landscape lock where the browser allows it.
 
-Touch building is two taps so small tiles are easy to hit: pick a tower, tap a grass tile to preview it, then tap the same tile again to build. Tapping near a built tower selects it.
+On touch screens, drag a tower from the build menu onto the map; the preview floats just above your finger and turns red where you can't build. Tapping a tower and then tapping a tile twice (preview, then confirm) also works. Tapping near a built tower selects it.
+
+**Feedback:** blocked actions explain themselves on the board ("Can't build on the road", "Need 40 more BST", "Barrage ready in 8s"). A green arrow floats over any tower you can afford to upgrade. The box next to Send wave previews the next wave's enemies (hover or long-press for names). Losing a life flashes the board.
+
+**Settings (⚙):** sound, full screen, larger text, and quit to title (tap twice to confirm).
 
 ## Tuning
 

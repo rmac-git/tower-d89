@@ -95,6 +95,32 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--brass)
 /* ---------- Floating detail card ---------- */
 .panel { position: absolute; top: 8px; right: 8px; width: min(280px, 46%); max-height: calc(100% - 16px); overflow-y: auto; background: rgba(20, 29, 24, 0.94); border: 1px solid var(--line); border-radius: 8px; padding: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); }
 .panel.left { right: auto; left: 8px; }
+.peek { display: flex; align-items: center; gap: 7px; height: 34px; padding: 0 9px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); font-family: var(--font-mono); font-size: 12px; color: var(--muted); white-space: nowrap; }
+.peek-l { font-family: var(--font-body); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
+.pk-e { display: inline-flex; align-items: center; gap: 3px; color: var(--ink); font-weight: 700; }
+.pk-e i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.pk-e.boss { color: var(--danger); }
+.game.side .peek { grid-column: 1 / -1; height: auto; padding: 4px 6px; flex-wrap: wrap; justify-content: center; gap: 3px 7px; }
+.game.side .peek-l { display: none; }
+.ab-ic { position: relative; display: grid; place-items: center; width: 18px; height: 18px; flex: none; }
+.ab-ic svg { width: 16px; height: 16px; fill: currentColor; }
+.ab-ic svg[fill="none"] { fill: none; }
+.abil-btn { justify-content: flex-start; }
+.ab-cd { margin-left: auto; }
+.menu { position: fixed; z-index: 40; width: 210px; display: flex; flex-direction: column; gap: 2px; padding: 6px; background: rgba(20, 29, 24, 0.98); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45); }
+.menu-item { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: none; border: 0; border-radius: 6px; padding: 9px 10px; cursor: pointer; font-size: 14px; }
+.menu-item:hover, .menu-item:focus-visible { background: var(--panel-2); }
+.menu-item svg { width: 16px; height: 16px; fill: currentColor; flex: none; }
+.menu-item svg[fill="none"] { fill: none; }
+.menu-item.warn { color: var(--danger); }
+.board.hit { animation: hit 0.4s ease-out; }
+@keyframes hit { 0% { outline: 3px solid var(--danger); transform: translateX(-3px); } 25% { transform: translateX(3px); } 50% { transform: translateX(-2px); } 100% { outline: 3px solid transparent; transform: none; } }
+html.big .stat-value { font-size: 18px; }
+html.big .hud-ctrl .btn, html.big .ab-text b, html.big .menu-item { font-size: 15.5px; }
+html.big .shop-cost, html.big .peek { font-size: 14px; }
+html.big .shop-name, html.big .game.side .shop-name { font-size: 12px; }
+html.big .panel, html.big .toast, html.big dl.kv { font-size: 15px; }
+html.big .overlay p, html.big .n-desc { font-size: 15.5px; }
 .toasts { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); width: min(360px, 90%); display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
 .toast { pointer-events: auto; display: flex; flex-direction: column; gap: 1px; text-align: center; background: rgba(20, 29, 24, 0.96); border: 1px solid var(--brass); border-radius: 8px; padding: 7px 14px; font-size: 13px; line-height: 1.3; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4); animation: toastin 0.3s ease-out; cursor: pointer; }
 .toast b { color: var(--brass); font-weight: 600; }
@@ -196,7 +222,12 @@ dl.kv dd .next { color: var(--good); }
 .game.side .dock-build, .game.side .dock-abil { justify-content: flex-start; }
 .game.side .shop { flex-direction: column; flex-wrap: nowrap; }
 .game.side .shop-item { flex-direction: row; justify-content: space-between; width: auto; padding: 3px 8px 3px 4px; }
-.game.side .shop-name { display: none; }
+.game.side .shop-item { display: grid; grid-template-columns: 28px minmax(0, 1fr); column-gap: 6px; align-items: center; justify-items: start; }
+.game.side .shop-item canvas { grid-row: 1 / span 2; }
+.game.side .shop-item > span:first-of-type { min-width: 0; max-width: 100%; }
+.game.side .shop-name { display: block; font-size: 10.5px; color: var(--ink); }
+.shop-item { touch-action: none; }
+.game.side .shop-item { touch-action: pan-y; }
 .game.side .dock-build { overflow-y: auto; min-height: 0; overscroll-behavior: contain; }
 .shop-detail { display: none; }
 .game.side .shop-detail:not([hidden]) { display: flex; flex-direction: column; gap: 4px; margin-top: -4px; padding: 8px 8px 7px; background: #26352c; border: 1px solid var(--brass); border-top: 0; border-radius: 0 0 var(--radius) var(--radius); font-size: 11.5px; line-height: 1.3; }
@@ -205,7 +236,7 @@ dl.kv dd .next { color: var(--good); }
 .shop-detail p { margin: 0; color: var(--muted); }
 .shop-detail dl { display: grid; grid-template-columns: auto 1fr; gap: 1px 6px; margin: 0; }
 .shop-detail dt { color: var(--muted); }
-.shop-detail dd { margin: 0; text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.shop-detail dd { margin: 0; white-space: nowrap; text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .shop-detail .paths { color: var(--ink); }
 .stat-toggle { display: none; }
 .panel.mini .stat-toggle { display: block; padding: 3px 6px; font-size: 12px; background: none; border-color: var(--line); color: var(--muted); }
@@ -342,7 +373,7 @@ dl.kv dd .next { color: var(--good); }
   .n-desc { font-size: 11.5px; }
 }
 @media (orientation: landscape) and (max-height: 560px) and (max-width: 700px) { .game { --rail: 92px; } }
-@media (prefers-reduced-motion: reduce) { .toast { animation: none; } .stat.flash, .stat.token.up, .stat.token.down { animation: none; } .rot-phone { animation: none; transform: rotate(-90deg); } }
+@media (prefers-reduced-motion: reduce) { .board.hit { animation: none; outline: 2px solid var(--danger); } .toast { animation: none; } .stat.flash, .stat.token.up, .stat.token.down { animation: none; } .rot-phone { animation: none; transform: rotate(-90deg); } }
 </style>
 </head>
 <body>
@@ -355,11 +386,11 @@ dl.kv dd .next { color: var(--good); }
   </div>
   <div class="hud hud-ctrl">
     <button class="btn primary" id="btn-wave" type="button">Send wave 1</button>
+    <div class="peek" id="wave-peek" hidden></div>
     <button class="ibtn" id="btn-speed" type="button" title="Game speed (F)" aria-label="Game speed">1×</button>
     <button class="ibtn" id="btn-pause" type="button" title="Pause (P)" aria-label="Pause"></button>
     <button class="ibtn" id="btn-intel" type="button" title="Next wave intel (N)" aria-label="Next wave intel"></button>
-    <button class="ibtn" id="btn-sound" type="button" title="Sound (M)" aria-label="Toggle sound"></button>
-    <button class="ibtn" id="btn-full" type="button" title="Full screen" aria-label="Toggle full screen" hidden></button>
+    <button class="ibtn" id="btn-menu" type="button" title="Settings" aria-label="Settings" aria-haspopup="true" aria-expanded="false"></button>
   </div>
   <div class="cell" id="cell">
     <div class="board" id="board">
@@ -375,14 +406,20 @@ dl.kv dd .next { color: var(--good); }
   <div class="hud dock-abil">
     <div class="hero-chip" id="hero-card" hidden></div>
     <div class="abil" aria-label="Abilities">
-      <button class="abil-btn" id="ab-hero" type="button" hidden><span class="ab-fill"></span><span class="ab-text"></span><span class="ab-cd"></span></button>
-      <button class="abil-btn" id="ab-ult" type="button" hidden><span class="ab-fill"></span><span class="ab-text"></span><span class="ab-cd"></span></button>
-      <button class="abil-btn" id="ab-strike" type="button" title="Barrage (Q): five shells on a patch of road you choose"><span class="ab-fill"></span><span class="ab-text"><b>Barrage</b></span><span class="ab-cd"></span></button>
-      <button class="abil-btn" id="ab-snap" type="button" title="Cold Snap (W): slow every enemy for 5 seconds"><span class="ab-fill"></span><span class="ab-text"><b>Cold Snap</b></span><span class="ab-cd"></span></button>
+      <button class="abil-btn" id="ab-hero" type="button" hidden><span class="ab-fill"></span><span class="ab-ic" id="ab-hero-ic"></span><span class="ab-text"></span><span class="ab-cd"></span></button>
+      <button class="abil-btn" id="ab-ult" type="button" hidden><span class="ab-fill"></span><span class="ab-ic" style="color:var(--brass)"></span><span class="ab-text"></span><span class="ab-cd"></span></button>
+      <button class="abil-btn" id="ab-strike" type="button" title="Barrage (Q): five shells on a patch of road you choose"><span class="ab-fill"></span><span class="ab-ic" style="color:#f0a35a"></span><span class="ab-text"><b>Barrage</b></span><span class="ab-cd"></span></button>
+      <button class="abil-btn" id="ab-snap" type="button" title="Cold Snap (W): slow every enemy for 5 seconds"><span class="ab-fill"></span><span class="ab-ic" style="color:var(--ice)"></span><span class="ab-text"><b>Cold Snap</b></span><span class="ab-cd"></span></button>
     </div>
   </div>
 </div>
 
+<div class="menu" id="menu" role="menu" hidden>
+  <button class="menu-item" id="btn-sound" type="button" role="menuitem"></button>
+  <button class="menu-item" id="btn-full" type="button" role="menuitem" hidden></button>
+  <button class="menu-item" id="btn-bigtext" type="button" role="menuitem"></button>
+  <button class="menu-item warn" id="btn-quit" type="button" role="menuitem"></button>
+</div>
 <div class="overlay" id="overlay" hidden>
   <div class="overlay-card" id="overlay-card"></div>
 </div>
@@ -498,6 +535,13 @@ const IC = {
   full: '<svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>',
   unfull: '<svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 2v4H2M14 6h-4V2M10 14v-4h4M2 10h4v4"/></svg>',
   intel: '<svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><path d="M8 7.2v4M8 4.8v.1"/></svg>',
+  gear: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.9 1h2.2l.4 2 1.4.6 1.7-1.1 1.6 1.6-1.1 1.7.6 1.4 2 .4v2.2l-2 .4-.6 1.4 1.1 1.7-1.6 1.6-1.7-1.1-1.4.6-.4 2H6.9l-.4-2-1.4-.6-1.7 1.1-1.6-1.6 1.1-1.7-.6-1.4-2-.4V6.9l2-.4.6-1.4-1.1-1.7 1.6-1.6 1.7 1.1 1.4-.6zM8 5.6a2.4 2.4 0 1 0 0 4.8 2.4 2.4 0 0 0 0-4.8z"/></svg>',
+  text: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 13l3.6-10h1.8L10 13H8.3l-.9-2.6H3.6L2.7 13zm3.1-4h2.8L5.5 4.8zM11 13l2-6h1.3l2 6h-1.3l-.4-1.3h-2l-.4 1.3zm1.9-2.4h1.4l-.7-2.2z"/></svg>',
+  quit: '<svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 2H2.5v12H6M10 4.5L13.5 8 10 11.5M13.5 8H5.5"/></svg>',
+  shells: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="3.6" cy="12" r="2.3"/><circle cx="8.5" cy="7.5" r="2.3"/><circle cx="12.6" cy="12.4" r="2.3"/><path d="M3.6 3v5M8.5 0v4M12.6 4v5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>',
+  flake: '<svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 1v14M2 4.5l12 7M2 11.5l12-7M6.3 2.4L8 4l1.7-1.6M6.3 13.6L8 12l1.7 1.6"/></svg>',
+  bolt: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9.5 1L3 9.2h4.2L6.2 15l6.6-8.4H8.6z"/></svg>',
+  burst: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0l1.8 5.2L15 4l-3.6 4 3.6 4-5.2-1.2L8 16l-1.8-5.2L1 12l3.6-4L1 4l5.2 1.2z"/></svg>',
   star: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5l1.9 4.1 4.4.5-3.3 3 .9 4.4L8 11.3l-3.9 2.2.9-4.4-3.3-3 4.4-.5z"/></svg>',
 };
 const setHTML = (el, html) => { if (el._h !== html) { el._h = html; el.innerHTML = html; } };
@@ -1301,12 +1345,13 @@ const CAST = {
 };
 function useHero(which) {
   const h = S.hero;
+  if (h && h.dead && ui.started && !isModal()) { sfx('nope'); notice(W / 2, 64, `${HEROES[h.k].name.split(' ')[0]} is down for ${Math.ceil(h.respawnAt - S.time)}s`); return false; }
   if (!h || h.dead || S.over || !ui.started || isModal()) return false;
   if (which === 'r' && !h.ult) { sfx('nope'); return false; }
   if (which === 'e' && !unlocked('heroSkill')) return false;
-  if (S.time < h.ab[which]) { sfx('nope'); return false; }
+  if (S.time < h.ab[which]) { sfx('nope'); notice(W / 2, 64, `${which === 'e' ? HEROES[h.k].active.name : HEROES[h.k].ult.name} ready in ${Math.ceil(h.ab[which] - S.time)}s`); return false; }
   const d = HEROES[h.k];
-  if (!CAST[h.k][which](h, d)) { sfx('nope'); return false; }
+  if (!CAST[h.k][which](h, d)) { sfx('nope'); notice(h.x, h.y - 30, 'No enemies in reach'); return false; }
   h.ab[which] = S.time + cdOf(h, which === 'e' ? d.active.cd : d.ult.cd);
   return true;
 }
@@ -1319,7 +1364,7 @@ function toggleHeroSel() {
 function abilLeft(k) { return Math.max(0, S.ab[k] - S.time); }
 function useAbility(k, x, y) {
   if (S.over || !ui.started || isModal() || !unlocked(k)) return false;
-  if (abilLeft(k) > 0) { sfx('nope'); return false; }
+  if (abilLeft(k) > 0) { sfx('nope'); notice(W / 2, 64, `${ABIL[k].name} ready in ${Math.ceil(abilLeft(k))}s`); return false; }
   if (k === 'strike') {
     for (let i = 0; i < 5; i++) {
       const a = Math.random() * 6.283, r = Math.sqrt(Math.random()) * 1.6 * TILE;
@@ -1337,7 +1382,7 @@ function useAbility(k, x, y) {
 function toggleStrike() {
   if (S.over || !ui.started || isModal() || !unlocked('strike')) return;
   if (ui.targeting) { ui.targeting = null; return; }
-  if (abilLeft('strike') > 0) { sfx('nope'); return; }
+  if (abilLeft('strike') > 0) { sfx('nope'); notice(W / 2, 64, `Barrage ready in ${Math.ceil(abilLeft('strike'))}s`); return; }
   ui.targeting = 'strike'; ui.build = null; ui.selected = null; refreshPanel(true);
 }
 
@@ -1363,6 +1408,19 @@ function burst(x, y, color, n, spd) {
   }
 }
 function ring(x, y, r0, r1, life, color) { S.rings.push({ x, y, r0, r1, life, max: life, color }); }
+function notice(x, y, text) {
+  S.texts = S.texts.filter(t => !t.note);
+  S.texts.push({ x: Math.max(110, Math.min(W - 110, x)), y: Math.max(34, Math.min(H - 12, y)), text, color: '#ffd7a0', note: true, life: 1.6, max: 1.6 });
+}
+function buildBlock(type, tx, ty) {
+  if (tx < 0 || ty < 0 || tx >= COLS || ty >= ROWS) return 'Off the map';
+  const k = tx + ',' + ty;
+  if (pathSet.has(k)) return 'Can’t build on the road';
+  if (rockSet.has(k)) return 'Rocks in the way';
+  if (towerAt(tx, ty)) return 'A tower is already here';
+  const c = buildCost(type);
+  return S.gold < c ? `Need ${c - S.gold} more BST` : '';
+}
 function floatText(x, y, text, color, coin) { if (S.texts.length < 60) S.texts.push({ x, y, text, color, coin, life: 0.9, max: 0.9 }); }
 
 // ===================================================================
@@ -1630,6 +1688,14 @@ function render() {
   for (const t of S.towers) {
     drawTower(ctx, t.type, t.lvl, t.x, t.y, t.angle, 1, t.flash, t.lvl >= 2 ? t.branch : -1);
     if (t === sel) { ctx.strokeStyle = '#d9a84e'; ctx.lineWidth = 2; roundRect(ctx, t.x - 19, t.y - 19, 38, 38, 7); ctx.stroke(); }
+    else if (!S.over) {
+      const uc = upgradeCost(t);
+      if (uc != null && S.gold >= uc) {
+        const ay = t.y - 25 + Math.sin(performance.now() / 260 + t.id) * 2;
+        ctx.fillStyle = '#8fc76c'; ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(t.x, ay - 6); ctx.lineTo(t.x + 6, ay + 1); ctx.lineTo(t.x + 2.5, ay + 1); ctx.lineTo(t.x + 2.5, ay + 5); ctx.lineTo(t.x - 2.5, ay + 5); ctx.lineTo(t.x - 2.5, ay + 1); ctx.lineTo(t.x - 6, ay + 1); ctx.closePath(); ctx.fill(); ctx.stroke();
+      }
+    }
   }
   for (const e of S.enemies) if (!e.air) drawEnemy(ctx, e);
 
@@ -1711,6 +1777,14 @@ function render() {
   ctx.font = '700 13px "JetBrains Mono", monospace'; ctx.textAlign = 'center';
   for (const t of S.texts) {
     ctx.globalAlpha = Math.min(1, t.life / t.max * 1.6);
+    if (t.note) {
+      ctx.font = '600 15px Barlow, sans-serif';
+      const nw = ctx.measureText(t.text).width + 18;
+      ctx.fillStyle = 'rgba(10,15,12,0.88)'; ctx.fillRect(t.x - nw / 2, t.y - 16, nw, 23);
+      ctx.fillStyle = t.color; ctx.fillText(t.text, t.x, t.y);
+      ctx.font = '700 13px "JetBrains Mono", monospace';
+      continue;
+    }
     const tx = t.coin ? t.x + 7 : t.x;
     ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillText(t.text, tx + 1, t.y + 1);
     ctx.fillStyle = t.color; ctx.fillText(t.text, tx, t.y);
@@ -1751,7 +1825,7 @@ function render() {
 
   if (S.wave === 0 && ui.started && !ui.targeting && !ui.heroSel && !ui.pending) {
     const act = COARSE ? 'Tap' : 'Click';
-    const tip = !S.towers.length ? (ui.build ? `${act} an open grass tile next to the road` : `${act} the Archer in the build menu to start`) : 'Build another tower, or press Send wave 1 when ready';
+    const tip = !S.towers.length ? (ui.build ? (COARSE ? 'Drop it on open grass next to the road' : 'Click an open grass tile next to the road') : COARSE ? 'Drag the Archer onto the grass beside the road' : 'Click the Archer in the build menu to start') : 'Build another tower, or press Send wave 1 when ready';
     ctx.font = '600 14px Barlow, sans-serif'; ctx.textAlign = 'center';
     const tw = ctx.measureText(tip).width + 20;
     ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(W / 2 - tw / 2, 8, tw, 24);
@@ -1795,6 +1869,7 @@ function iconCanvas(type, size) {
   return c;
 }
 
+let drag = null, justDragged = false;
 for (const k of TOWER_KEYS) {
   const d = TOWERS[k];
   const b = document.createElement('button');
@@ -1807,7 +1882,11 @@ for (const k of TOWER_KEYS) {
   const cost = document.createElement('span'); cost.className = 'shop-cost';
   cost.innerHTML = `<span class="cc" data-v="${d.cost}">${tk(d.cost)}</span><span class="kbd">key ${d.key}</span>`;
   b.appendChild(cost);
-  b.addEventListener('click', () => selectBuild(ui.build === k ? null : k));
+  b.addEventListener('click', () => { if (!justDragged) selectBuild(ui.build === k ? null : k); });
+  b.addEventListener('pointerdown', ev => {
+    if (ev.pointerType === 'mouse' || !ui.started || isModal() || S.over || !unlocked(k)) return;
+    drag = { k, id: ev.pointerId, x0: ev.clientX, y0: ev.clientY, moved: false };
+  });
   b.setAttribute('aria-expanded', 'false');
   els.shop.appendChild(b);
   const det = document.createElement('div');
@@ -1821,10 +1900,41 @@ function shopDetail(k) {
   if (st.slow) rows.push(['Slow', Math.round(st.slow * 100) + '%']);
   if (st.chain) rows.push(['Chain', st.chain]);
   rows.push(['Air', d.air ? 'yes' : 'no']);
-  d.up.forEach((u, i) => rows.push(['Upgrade ' + (i + 1), tk(Math.round(u * S.mods.upCost))]));
+  d.up.forEach((u, i) => rows.push(['Lv ' + (i + 2), tk(Math.round(u * S.mods.upCost))]));
   return `<b>${d.name}</b><p>${d.desc}</p><dl>${rows.map(([a, v]) => `<dt>${a}</dt><dd>${v}</dd>`).join('')}</dl>`
     + `<p class="paths">Level 3: ${d.br.map(x => x.name).join(' or ')}</p>`;
 }
+
+// Touch: drag a tower from the build menu onto the map. The ghost sits a little above the finger so it stays visible.
+function dragPoint(ev) {
+  const r = canvas.getBoundingClientRect(), lift = (r.height / ROWS) * 0.9, y = ev.clientY - lift;
+  if (ev.clientX < r.left || ev.clientX > r.right || y < r.top || y > r.bottom) return null;
+  return [(ev.clientX - r.left) / r.width * W, (y - r.top) / r.height * H];
+}
+window.addEventListener('pointermove', ev => {
+  if (!drag || ev.pointerId !== drag.id) return;
+  if (!drag.moved) {
+    if (Math.hypot(ev.clientX - drag.x0, ev.clientY - drag.y0) < 14) return;
+    drag.moved = true; ui.pending = null;
+    if (ui.build !== drag.k) { ui.build = drag.k; ui.selected = null; ui.targeting = null; ui.heroSel = false; ui.fresh.delete(drag.k); refreshPanel(false); }
+  }
+  const pt = dragPoint(ev);
+  if (pt) { ui.hoverPx = pt; ui.hoverTile = [Math.floor(pt[0] / TILE), Math.floor(pt[1] / TILE)]; } else ui.hoverTile = null;
+});
+function endDrag(ev) {
+  if (!drag || ev.pointerId !== drag.id) return;
+  const d = drag; drag = null;
+  if (!d.moved) return;
+  justDragged = true; setTimeout(() => { justDragged = false; }, 80);
+  const pt = ev.type === 'pointercancel' ? null : dragPoint(ev);
+  if (!pt) { ui.hoverTile = null; return; }
+  const tx = Math.floor(pt[0] / TILE), ty = Math.floor(pt[1] / TILE), why = buildBlock(d.k, tx, ty);
+  if (why) { notice(pt[0], pt[1] - 26, why); sfx('nope'); }
+  else { const t = placeTower(d.k, tx, ty); if (t && S.gold < buildCost(d.k)) { ui.build = null; ui.selected = t; } }
+  refreshPanel(true); refreshHud();
+}
+window.addEventListener('pointerup', endDrag);
+window.addEventListener('pointercancel', endDrag);
 
 function selectBuild(type) { if (type && !unlocked(type)) return; if (type) ui.fresh.delete(type); ui.build = type; ui.pending = null; if (type) { ui.selected = null; ui.targeting = null; ui.heroSel = false; } refreshPanel(true); }
 
@@ -1948,7 +2058,11 @@ function refreshPanel(force) {
 }
 
 let shownLives = START_LIVES, lastGold = START_GOLD;
-function flashLives() { const s = $('stat-lives'); s.classList.remove('flash'); void s.offsetWidth; s.classList.add('flash'); }
+function flashLives() {
+  const s = $('stat-lives'), bd = $('board');
+  s.classList.remove('flash'); bd.classList.remove('hit'); void s.offsetWidth;
+  s.classList.add('flash'); bd.classList.add('hit');
+}
 function refreshHud() {
   els.lives.textContent = S.lives;
   els.gold.textContent = fmt(S.gold);
@@ -1960,15 +2074,26 @@ function refreshHud() {
   setHTML(els.btnWave, S.waveActive ? `Early +${tk(earlyBonus(S.wave + 1))}${kbd}` : `Send wave ${S.wave + 1}${kbd}`);
   els.btnWave.title = S.waveActive ? 'Send the next wave now for bonus BST (Space)' : 'Send the next wave (Space)';
   els.btnWave.disabled = S.over || !ui.started;
+  const peek = $('wave-peek');
+  if (ui.started && !S.over) {
+    const tally = {};
+    for (const [ty, n] of waveGroups(S.wave + 1)) tally[ty] = (tally[ty] || 0) + n;
+    const ent = Object.entries(tally);
+    setHTML(peek, `<span class="peek-l">Next</span>` + ent.map(([ty, n]) => `<span class="pk-e${ty === 'boss' ? ' boss' : ''}"><i style="background:${ENEMIES[ty].color}"></i>${n}</span>`).join(''));
+    peek.title = `Wave ${S.wave + 1}: ` + ent.map(([ty, n]) => `${n} ${ENEMIES[ty].name}${n > 1 ? 's' : ''}`).join(', ');
+    peek.hidden = false;
+  } else peek.hidden = true;
   setHTML(els.btnSpeed, ui.speed + '×');
   const paused = ui.paused && ui.started;
   setHTML(els.btnPause, paused ? IC.play : IC.pause);
   els.btnPause.setAttribute('aria-label', paused ? 'Resume' : 'Pause'); els.btnPause.title = (paused ? 'Resume' : 'Pause') + ' (P)';
   els.btnPause.disabled = !ui.started || S.over || isModal();
   if (isModal()) els.btnWave.disabled = true;
-  setHTML(els.btnSound, A.on ? IC.sound : IC.mute);
-  els.btnSound.title = (A.on ? 'Sound on' : 'Sound off') + ' (M)';
-  setHTML($('btn-full'), document.fullscreenElement ? IC.unfull : IC.full);
+  setHTML(els.btnSound, `${A.on ? IC.sound : IC.mute}<span>Sound: ${A.on ? 'on' : 'off'}</span>`);
+  setHTML($('btn-full'), document.fullscreenElement ? `${IC.unfull}<span>Exit full screen</span>` : `${IC.full}<span>Full screen</span>`);
+  setHTML($('btn-bigtext'), `${IC.text}<span>Larger text: ${document.documentElement.classList.contains('big') ? 'on' : 'off'}</span>`);
+  setHTML($('btn-quit'), `${IC.quit}<span>${quitArmed ? 'Tap again to quit' : 'Quit to title'}</span>`);
+  setHTML($('btn-menu'), IC.gear);
   setHTML(els.btnIntel, IC.intel); els.btnIntel.classList.toggle('on', ui.intel); els.btnIntel.disabled = !ui.started;
   for (const k of ['strike', 'snap']) {
     const b = els.ab[k], left = abilLeft(k), total = ABIL[k].cd * S.mods.cd;
@@ -2014,6 +2139,8 @@ function renderHeroUI() {
   $('hc-sel').onclick = toggleHeroSel; $('hc-skills').onclick = openSkills;
   const evo = h.evo ? d.evo[h.evo === 'a' ? 0 : 1].name : d.active.name;
   els.ab.hero.querySelector('.ab-text').innerHTML = `<b>${evo}</b>`;
+  $('ab-hero-ic').innerHTML = IC.bolt; $('ab-hero-ic').style.color = d.color;
+  els.ab.ult.querySelector('.ab-ic').innerHTML = IC.burst;
   els.ab.hero.title = `${evo} (E): ${d.active.text}`;
   els.ab.ult.querySelector('.ab-text').innerHTML = `<b>${d.ult.name}</b>`;
   els.ab.ult.title = h.ult ? `${d.ult.name} (R): ${d.ult.text}` : `${d.ult.name}: unlocks after wave 20`;
@@ -2032,7 +2159,7 @@ function titleScreen() {
     <p>Thirty waves are marching on the gate. Build towers, choose upgrade paths, and don’t let ${START_LIVES} of them through.</p>
     <p class="chainnote"><i class="tok" aria-hidden="true"></i><span>BST is this game’s in-game token. It is off-chain: no wallet, no blockchain, no real value.</span></p>
     <div class="maps" role="group" aria-label="Choose a map">${MAPS.map((m, i) => `<button type="button" class="map-btn${i === ui.map ? ' on' : ''}" data-map="${i}"><b>${m.name}</b><small>${m.blurb}</small><span class="best">${bestWave(i) ? 'Best: wave ' + bestWave(i) : 'Unplayed'}</span></button>`).join('')}</div>
-    <p class="tapmsg">Tap a tower, then tap grass to preview it. Tap the same spot again to build. Tap a built tower to upgrade or sell it.</p>
+    <p class="tapmsg">Drag a tower from the build menu onto the grass to build it. Tap a built tower to upgrade or sell it.</p>
     <p class="desk">Press <b>1–5</b> to pick a tower and click grass to build. Click a tower to upgrade it. <b>Space</b> sends the next wave early for a bonus. <b>Q</b> calls a barrage and <b>W</b> slows every enemy.</p>
     <div class="row"><button class="btn primary" id="ov-start" type="button">Take command</button></div>`);
   els.card.querySelectorAll('.map-btn').forEach(b => b.onclick = () => {
@@ -2182,7 +2309,9 @@ canvas.addEventListener('pointerdown', ev => {
   const existing = towerAt(tx, ty) || (touch && !ui.build && !ui.heroSel ? nearTower(px, py) : null);
   if (existing) { ui.selected = existing; ui.build = null; ui.pending = null; ui.heroSel = false; }
   else if (ui.build) {
-    if (touch && !(ui.pending && ui.pending[0] === tx && ui.pending[1] === ty)) ui.pending = [tx, ty];
+    const why = buildBlock(ui.build, tx, ty);
+    if (why) { ui.pending = null; notice(px, py - 26, why); sfx('nope'); }
+    else if (touch && !(ui.pending && ui.pending[0] === tx && ui.pending[1] === ty)) ui.pending = [tx, ty];
     else {
       ui.pending = null;
       const t = placeTower(ui.build, tx, ty);
@@ -2203,6 +2332,30 @@ function toggleSound() {
   refreshHud();
 }
 els.btnSound.onclick = toggleSound;
+let quitArmed = false;
+const menuEl = $('menu'), menuBtn = $('btn-menu');
+function setMenu(open) {
+  menuEl.hidden = !open; menuBtn.setAttribute('aria-expanded', String(open)); menuBtn.classList.toggle('on', open);
+  quitArmed = false;
+  if (open) {
+    const r = menuBtn.getBoundingClientRect();
+    menuEl.style.top = Math.min(innerHeight - menuEl.offsetHeight - 8, r.bottom + 6) + 'px';
+    menuEl.style.left = Math.max(8, Math.min(innerWidth - 218, r.right - 210)) + 'px';
+  }
+  refreshHud();
+}
+menuBtn.onclick = () => setMenu(menuEl.hidden);
+document.addEventListener('pointerdown', ev => { if (!menuEl.hidden && !menuEl.contains(ev.target) && !menuBtn.contains(ev.target)) setMenu(false); });
+try { if (localStorage.getItem('bastion-line-big') === '1') document.documentElement.classList.add('big'); } catch (e) {}
+$('btn-bigtext').onclick = () => {
+  const on = document.documentElement.classList.toggle('big');
+  try { localStorage.setItem('bastion-line-big', on ? '1' : '0'); } catch (e) {}
+  refreshHud(); setTimeout(() => fitBoard && fitBoard(), 0);
+};
+$('btn-quit').onclick = () => {
+  if (!quitArmed) { quitArmed = true; refreshHud(); setTimeout(() => { quitArmed = false; refreshHud(); }, 3000); return; }
+  setMenu(false); toTitle();
+};
 els.ab.strike.onclick = toggleStrike;
 els.ab.snap.onclick = () => { useAbility('snap'); refreshHud(); };
 els.ab.hero.onclick = () => { useHero('e'); refreshHud(); };
@@ -2227,6 +2380,7 @@ window.addEventListener('keydown', ev => {
   if (ui.perkOpen) { const n = +k; if (n >= 1 && n <= 3) pickPerk(n - 1); return; }
   const idx = ['1', '2', '3', '4', '5'].indexOf(k);
   if (idx >= 0) { selectBuild(ui.build === TOWER_KEYS[idx] ? null : TOWER_KEYS[idx]); return; }
+  if (k === 'escape' && !menuEl.hidden) { setMenu(false); return; }
   if (k === 'escape') { ui.build = null; ui.selected = null; ui.targeting = null; ui.pending = null; ui.heroSel = false; ui.intel = false; refreshPanel(true); refreshHud(); }
   else if (k === 'n') toggleIntel();
   else if (k === ' ') { ev.preventDefault(); if (!S.over) els.btnWave.click(); }
@@ -2293,7 +2447,7 @@ function enterLandscape() {
     document.documentElement.requestFullscreen().then(() => { try { screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }).catch(() => {});
   } catch (e) {}
 }
-fsBtn.hidden = !(canFS && COARSE);
+fsBtn.hidden = !canFS;
 fsBtn.onclick = () => { try { if (document.fullscreenElement) document.exitFullscreen(); else enterLandscape(); } catch (e) {} };
 $('rot-skip').onclick = () => { ui.portraitOK = true; updateOrientation(); };
 window.addEventListener('resize', () => { fitBoard(); updateOrientation(); });
@@ -2301,6 +2455,7 @@ window.addEventListener('orientationchange', () => setTimeout(() => { fitBoard()
 if (window.ResizeObserver) new ResizeObserver(fitBoard).observe(rootEl);
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitBoard);
 
+els.ab.strike.querySelector('.ab-ic').innerHTML = IC.shells; els.ab.snap.querySelector('.ab-ic').innerHTML = IC.flake;
 S = newState(); loadMap(ui.map);
 renderHeroUI(); refreshPanel(true); refreshHud(); titleScreen(); fitBoard(); updateOrientation();
 requestAnimationFrame(frame);
