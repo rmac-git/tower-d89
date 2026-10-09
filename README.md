@@ -4,22 +4,28 @@ A browser tower defense game in one HTML file. There's no build step: open `inde
 
 ## How to play
 
-Hold the gate for 30 waves. If 20 lives' worth of enemies get through, you lose. After wave 30 you can keep playing in endless mode.
+Hold the gate for 30 waves on one of three maps. If 20 lives' worth of enemies get through, you lose. After wave 30 you can keep playing in endless mode.
 
-| Tower | Cost | Role |
-|---|---|---|
-| Archer (1) | 50g | Fast single-target shots, hits air |
-| Mortar (2) | 90g | Splash damage, ground only |
-| Frost Spire (3) | 70g | Pulses to slow everything in range |
-| Tesla Coil (4) | 120g | Chain lightning, ignores armor |
-| Longshot (5) | 150g | Long range and heavy hits; targets the strongest enemy by default |
+| Tower | Cost | Role | Level 3 paths |
+|---|---|---|---|
+| Archer (1) | 50g | Fast single shots, hits air | Ranger (rapid fire) or Ballista (ignores armor) |
+| Mortar (2) | 90g | Splash damage, ground only | Bombard (huge blast) or Napalm (burning) |
+| Frost Spire (3) | 70g | Pulses to slow enemies | Glacier (periodic freeze) or Blizzard (damage) |
+| Tesla Coil (4) | 120g | Chain lightning, ignores armor | Storm (10 jumps) or Arc Lance (one huge bolt) |
+| Longshot (5) | 150g | Long range, heavy hits | Assassin (armor-piercing) or Gunner (fast fire) |
 
-Each tower has three levels. Selling refunds 70% of what you spent. Each tower can target **First**, **Last**, **Strong** or **Close**.
+The second upgrade splits into two paths, so two players end up with different defenses. Selling refunds 70% of what you spent. Each tower can target **First**, **Last**, **Strong** or **Close**.
 
-Enemies: Footman, Courier (fast), Ironclad (armored), Mite (swarms), Kite (flying, so Mortars can't hit it), Mender (heals nearby enemies), and a Warlord boss every 10 waves.
+**Abilities:** *Barrage* (`Q`, 40s cooldown) drops five armor-piercing shells on a patch of road you choose. *Cold Snap* (`W`, 55s) slows every enemy for five seconds.
 
-**Keys:** `1`–`5` pick a tower · `Space` sends the next wave (sending it early pays bonus gold) · `U` upgrades · `S` sells · `T` changes targeting · `F` changes speed · `P` pauses · `Esc` cancels.
+**Field orders:** before every fifth wave you pick one of three perks. Each gives a bonus and a cost, such as +20% damage for +1 enemy armor.
+
+**Enemies:** Footman, Courier (fast), Ironclad (armored), Mite (swarms), Kite (flies straight to the gate along the dotted line, so Mortars can't hit it), Mender (heals nearby enemies), and a Warlord boss every 10 waves.
+
+**Maps:** Switchback (long and winding), The Serpent (four long climbs), Short Fuse (a short road, hard). Your best wave is saved per map.
+
+**Keys:** `1`–`5` pick a tower · `Space` sends the next wave (sending it early pays bonus gold) · `U` / `I` pick upgrade path A / B · `S` sells · `T` changes targeting · `Q` / `W` abilities · `F` changes speed · `P` pauses · `M` mutes · `Esc` cancels.
 
 ## Tuning
 
-All balance data is at the top of the script in `index.html`: `TOWERS`, `ENEMIES`, `SCRIPTED` waves, and the `hpMul` / `waveBonus` / `earlyBonus` curves. `window.__bastion` exposes the game state and core functions so you can run automated play-throughs.
+All balance data is at the top of the script in `index.html`: `TOWERS` (including each `br` path), `ENEMIES`, `MAPS`, `PERKS`, `ABIL`, `SCRIPTED` waves, and the `hpMul` / `waveBonus` / `earlyBonus` curves. `window.__bastion` exposes the game state and core functions so you can run automated play-throughs.

@@ -73,8 +73,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--brass)
 .board { position: relative; width: 100%; max-width: 100%; aspect-ratio: 960 / 600; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); background: var(--panel); touch-action: manipulation; }
 .board canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
 
-.overlay { position: absolute; inset: 0; display: grid; place-items: center; overflow-y: auto; background: rgba(10, 15, 12, 0.78); padding: 16px; }
-.overlay-card { max-width: 460px; text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center; }
+.overlay { position: absolute; inset: 0; display: flex; overflow-y: auto; background: rgba(10, 15, 12, 0.78); padding: 16px; }
+.overlay-card { margin: auto; max-width: 460px; text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center; }
 .overlay h2 { font-family: var(--font-display); font-weight: 800; font-size: clamp(36px, 7vw, 64px); text-transform: uppercase; letter-spacing: 0.03em; line-height: 0.95; margin: 0; text-wrap: balance; }
 .overlay h2 span { color: var(--brass); }
 .overlay p { margin: 0; color: var(--muted); text-wrap: pretty; }
@@ -121,6 +121,40 @@ dl.kv dd .next { color: var(--good); }
 .tips { margin: 0; padding-left: 18px; color: var(--muted); font-size: 13px; display: flex; flex-direction: column; gap: 3px; }
 .tips b { color: var(--ink); font-weight: 600; }
 
+.overlay-card.wide { max-width: 700px; width: 100%; }
+.maps, .perks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; }
+.map-btn, .perk { display: flex; flex-direction: column; gap: 3px; text-align: left; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; cursor: pointer; min-width: 0; position: relative; }
+.map-btn:hover, .perk:hover { border-color: var(--brass); }
+.map-btn.on { border-color: var(--brass); background: #2c3b31; }
+.map-btn b, .pk-name { font-family: var(--font-display); font-weight: 700; font-size: 21px; letter-spacing: 0.03em; text-transform: uppercase; line-height: 1.05; }
+.map-btn small { color: var(--muted); font-size: 12.5px; line-height: 1.3; }
+.map-btn .best { font-family: var(--font-mono); font-size: 11px; color: var(--brass); margin-top: 2px; }
+.pk-up { color: var(--good); font-size: 13.5px; }
+.pk-down { color: var(--danger); font-size: 13.5px; }
+.pk-key { position: absolute; top: 8px; right: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+
+.left { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.abil { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.abil-btn { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: space-between; gap: 8px; text-align: left; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 10px; cursor: pointer; }
+.abil-btn .ab-fill { position: absolute; inset: 0 auto 0 0; width: 0; background: rgba(217, 168, 78, 0.18); }
+.abil-btn.ready { border-color: var(--brass); }
+.abil-btn.ready .ab-fill { background: rgba(217, 168, 78, 0.12); }
+.abil-btn.armed { background: #3a2a1c; border-color: var(--danger); }
+.ab-text { position: relative; display: flex; flex-direction: column; min-width: 0; }
+.ab-text b { font-weight: 600; }
+.ab-text small { color: var(--muted); font-size: 12px; line-height: 1.3; }
+.ab-cd { position: relative; font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--brass); font-size: 13px; }
+
+.branches { display: grid; gap: 6px; }
+.branch { display: flex; flex-direction: column; gap: 2px; text-align: left; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 10px; cursor: pointer; }
+.branch:hover:not(:disabled) { border-color: var(--brass); }
+.branch:disabled { opacity: 0.5; cursor: not-allowed; }
+.br-top { display: flex; justify-content: space-between; gap: 8px; }
+.br-top b { font-family: var(--font-display); font-size: 19px; letter-spacing: 0.03em; text-transform: uppercase; font-weight: 700; line-height: 1.1; }
+.br-cost { font-family: var(--font-mono); color: var(--brass); font-weight: 700; }
+.br-desc { font-size: 13px; }
+.br-stats { font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
+
 @media (max-width: 960px) {
   .layout { grid-template-columns: minmax(0, 1fr); }
   .shop { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
@@ -140,6 +174,14 @@ dl.kv dd .next { color: var(--good); }
   .overlay h2 { font-size: 30px; }
   .overlay p { font-size: 13px; line-height: 1.35; }
   .overlay .desk { display: none; }
+  .map-btn small { display: none; }
+  .map-btn { padding: 6px 8px; }
+  .map-btn b { font-size: 16px; }
+  .perks { grid-template-columns: 1fr; gap: 6px; }
+  .perk { padding: 7px 10px; gap: 1px; }
+  .pk-name { font-size: 17px; }
+  .pk-up, .pk-down { font-size: 12.5px; }
+  .ab-text small { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .stat.flash { animation: none; } }
 </style>
@@ -158,15 +200,22 @@ dl.kv dd .next { color: var(--good); }
       <button class="btn primary" id="btn-wave">Send wave 1<span class="kbd">Space</span></button>
       <button class="btn" id="btn-speed" aria-label="Game speed">1× speed<span class="kbd">F</span></button>
       <button class="btn" id="btn-pause">Pause<span class="kbd">P</span></button>
+      <button class="btn" id="btn-sound" aria-label="Toggle sound">Sound on<span class="kbd">M</span></button>
     </div>
   </header>
 
   <div class="layout">
+    <div class="left">
     <div class="board" id="board">
       <canvas id="game" aria-label="Battlefield. Choose a tower, then click an empty grass tile to build."></canvas>
       <div class="overlay" id="overlay">
         <div class="overlay-card" id="overlay-card"></div>
       </div>
+    </div>
+    <div class="abil" aria-label="Abilities">
+      <button class="abil-btn" id="ab-strike" type="button"><span class="ab-fill"></span><span class="ab-text"><b>Barrage</b><small>Q · Five shells on a patch of road</small></span><span class="ab-cd"></span></button>
+      <button class="abil-btn" id="ab-snap" type="button"><span class="ab-fill"></span><span class="ab-text"><b>Cold Snap</b><small>W · Slow every enemy for 5s</small></span><span class="ab-cd"></span></button>
+    </div>
     </div>
 
     <aside class="ledger">
@@ -191,36 +240,151 @@ const VICTORY_WAVE = 30;
 const START_GOLD = 180, START_LIVES = 20;
 const REDUCED_MOTION = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// Path waypoints in tile coordinates (enemies enter left, exit right).
-const WAYPOINTS = [[-1, 2], [5, 2], [5, 7], [2, 7], [2, 12], [10, 12], [10, 4], [15, 4], [15, 11], [20, 11], [20, 6], [24, 6]];
+// Maps: path waypoints in tile coordinates (enemies enter left, exit right at the gate).
+const MAPS = [
+  { name: 'Switchback', blurb: 'A long winding road with plenty of corners.', seed: 42,
+    wp: [[-1, 2], [5, 2], [5, 7], [2, 7], [2, 12], [10, 12], [10, 4], [15, 4], [15, 11], [20, 11], [20, 6], [24, 6]] },
+  { name: 'The Serpent', blurb: 'Four long climbs. Made for slow fields.', seed: 11,
+    wp: [[-1, 12], [4, 12], [4, 3], [9, 3], [9, 10], [14, 10], [14, 3], [19, 3], [19, 12], [24, 12]] },
+  { name: 'Short Fuse', blurb: 'A short road. Enemies arrive fast. Hard.', seed: 5,
+    wp: [[-1, 7], [6, 7], [6, 2], [12, 2], [12, 12], [18, 12], [18, 7], [24, 7]] },
+];
+let WAYPOINTS, segs, pathLen, pathSet, rockSet, airA, airB, airLen, MAP_I = 0;
 
 const TOWERS = {
   arrow: {
     name: 'Archer', key: '1', color: '#d9a84e', cost: 50, up: [60, 110], air: true,
     desc: 'Quick single shots. Hits air.',
-    lv: [{ dmg: 8, rate: 2.0, range: 3.0 }, { dmg: 14, rate: 2.4, range: 3.4 }, { dmg: 24, rate: 3.0, range: 3.8 }],
+    lv: [{ dmg: 8, rate: 2.0, range: 3.0 }, { dmg: 14, rate: 2.4, range: 3.4 }],
+    br: [
+      { name: 'Ranger', desc: 'Rapid fire', dmg: 17, rate: 4.8, range: 3.8 },
+      { name: 'Ballista', desc: 'Heavy bolts that ignore armor', dmg: 40, rate: 2.0, range: 4.4, pierce: true },
+    ],
   },
   cannon: {
     name: 'Mortar', key: '2', color: '#c46a45', cost: 90, up: [100, 170], air: false,
     desc: 'Splash damage. Ground only.',
-    lv: [{ dmg: 22, rate: 0.7, range: 2.8, splash: 0.9 }, { dmg: 40, rate: 0.8, range: 3.1, splash: 1.1 }, { dmg: 72, rate: 0.9, range: 3.4, splash: 1.3 }],
+    lv: [{ dmg: 22, rate: 0.7, range: 2.8, splash: 0.9 }, { dmg: 40, rate: 0.8, range: 3.1, splash: 1.1 }],
+    br: [
+      { name: 'Bombard', desc: 'Enormous blast radius', dmg: 62, rate: 0.95, range: 3.4, splash: 1.9 },
+      { name: 'Napalm', desc: 'Sets enemies on fire', dmg: 45, rate: 0.9, range: 3.4, splash: 1.3, burn: 16 },
+    ],
   },
   frost: {
     name: 'Frost Spire', key: '3', color: '#8fd3e8', cost: 70, up: [80, 140], air: true,
     desc: 'Pulses to slow everything nearby.',
-    lv: [{ dmg: 3, rate: 0.8, range: 2.4, slow: 0.35, slowDur: 1.6 }, { dmg: 6, rate: 0.9, range: 2.7, slow: 0.45, slowDur: 1.8 }, { dmg: 10, rate: 1.0, range: 3.0, slow: 0.55, slowDur: 2.0 }],
+    lv: [{ dmg: 3, rate: 0.8, range: 2.4, slow: 0.35, slowDur: 1.6 }, { dmg: 6, rate: 0.9, range: 2.7, slow: 0.45, slowDur: 1.8 }],
+    br: [
+      { name: 'Glacier', desc: 'Every 4th pulse freezes enemies solid', dmg: 4, rate: 0.9, range: 3.2, slow: 0.55, slowDur: 2.2, freeze: 4 },
+      { name: 'Blizzard', desc: 'Wide pulses that hurt', dmg: 22, rate: 1.2, range: 3.7, slow: 0.45, slowDur: 1.8 },
+    ],
   },
   tesla: {
     name: 'Tesla Coil', key: '4', color: '#b18cf0', cost: 120, up: [130, 210], air: true,
     desc: 'Chain lightning. Ignores armor.',
-    lv: [{ dmg: 15, rate: 1.0, range: 2.6, chain: 3 }, { dmg: 24, rate: 1.15, range: 2.9, chain: 4 }, { dmg: 38, rate: 1.3, range: 3.2, chain: 6 }],
+    lv: [{ dmg: 15, rate: 1.0, range: 2.6, chain: 3 }, { dmg: 24, rate: 1.15, range: 2.9, chain: 4 }],
+    br: [
+      { name: 'Storm', desc: 'Chains through ten enemies', dmg: 30, rate: 1.3, range: 3.4, chain: 10 },
+      { name: 'Arc Lance', desc: 'One brutal bolt', dmg: 110, rate: 0.9, range: 3.4, chain: 2 },
+    ],
   },
   sniper: {
     name: 'Longshot', key: '5', color: '#e9e2c9', cost: 150, up: [150, 250], air: true,
     desc: 'Huge range, heavy hits. Slow.',
-    lv: [{ dmg: 60, rate: 0.45, range: 6.0 }, { dmg: 115, rate: 0.5, range: 7.0 }, { dmg: 210, rate: 0.6, range: 8.0 }],
+    lv: [{ dmg: 60, rate: 0.45, range: 6.0 }, { dmg: 115, rate: 0.5, range: 7.0 }],
+    br: [
+      { name: 'Assassin', desc: 'Armor-piercing killshots', dmg: 380, rate: 0.42, range: 9.0, pierce: true },
+      { name: 'Gunner', desc: 'Fast, steady fire', dmg: 120, rate: 1.1, range: 8.0 },
+    ],
   },
 };
+const mods0 = () => ({ dmg: 1, rate: 1, range: 0, hp: 1, speed: 1, armor: 0, bounty: 1, build: 1, upCost: 1, sell: 0.7, cd: 1 });
+function baseStats(type, lvl, branch) { const d = TOWERS[type]; return lvl < 2 ? d.lv[lvl] : d.br[branch || 0]; }
+function scaled(st) {
+  const m = S.mods;
+  return { ...st, dmg: st.dmg * m.dmg, rate: st.rate * m.rate, range: st.range + m.range, burn: st.burn && st.burn * m.dmg };
+}
+function tStats(t) {
+  if (t._s && t._v === S.modVer && t._l === t.lvl && t._b === t.branch) return t._s;
+  t._s = scaled(baseStats(t.type, t.lvl, t.branch)); t._v = S.modVer; t._l = t.lvl; t._b = t.branch;
+  return t._s;
+}
+const buildCost = type => Math.round(TOWERS[type].cost * S.mods.build);
+
+// Field orders: a gift with a price, offered before every fifth wave.
+const PERKS = [
+  { id: 'chest', name: 'War Chest', up: '+150 gold now', down: 'Enemies have 8% more health', apply: m => { S.gold += 150; m.hp *= 1.08; } },
+  { id: 'steel', name: 'Hardened Steel', up: 'Towers deal 20% more damage', down: 'Enemy armor +1', apply: m => { m.dmg *= 1.2; m.armor += 1; } },
+  { id: 'drill', name: 'Drill Sergeant', up: 'Towers fire 15% faster', down: 'Enemies move 8% faster', apply: m => { m.rate *= 1.15; m.speed *= 1.08; } },
+  { id: 'sight', name: 'Far Sight', up: 'Tower range +0.5 tiles', down: 'Enemies move 8% faster', apply: m => { m.range += 0.5; m.speed *= 1.08; } },
+  { id: 'salvage', name: 'Salvage Crews', up: 'Selling refunds 100%', down: 'Upgrades cost 15% more', apply: m => { m.sell = 1; m.upCost *= 1.15; } },
+  { id: 'levy', name: 'Royal Levy', up: '+5 lives', down: 'Kills pay 15% less', apply: m => { S.lives = Math.min(99, S.lives + 5); m.bounty *= 0.85; } },
+  { id: 'bounty', name: 'Bounty Hunters', up: 'Kills pay 30% more', down: 'Enemies have 10% more health', apply: m => { m.bounty *= 1.3; m.hp *= 1.1; } },
+  { id: 'mason', name: 'Cheap Masons', up: 'New towers cost 20% less', down: 'Enemies have 6% more health', apply: m => { m.build *= 0.8; m.hp *= 1.06; } },
+  { id: 'flare', name: 'Signal Flares', up: 'Abilities recharge 30% faster', down: 'Enemies have 6% more health', apply: m => { m.cd *= 0.7; m.hp *= 1.06; } },
+];
+const ABIL = { strike: { cd: 40, name: 'Barrage' }, snap: { cd: 55, name: 'Cold Snap' } };
+
+// ---------- Sound (synthesized, no assets) ----------
+const A = { ctx: null, on: true, master: null, last: {}, noiseBuf: null };
+try { A.on = localStorage.getItem('bastion-line-mute') !== '1'; } catch (e) {}
+function initAudio() {
+  if (A.ctx) { if (A.ctx.state === 'suspended') A.ctx.resume(); return; }
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return;
+  try {
+    A.ctx = new AC(); A.master = A.ctx.createGain(); A.master.gain.value = 0.5; A.master.connect(A.ctx.destination);
+    const n = A.ctx.sampleRate * 0.5, buf = A.ctx.createBuffer(1, n, A.ctx.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    A.noiseBuf = buf;
+  } catch (e) { A.ctx = null; }
+}
+function tone(f0, f1, dur, type, vol, delay = 0) {
+  const c = A.ctx, t = c.currentTime + delay, o = c.createOscillator(), g = c.createGain();
+  o.type = type; o.frequency.setValueAtTime(f0, t);
+  if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t + dur);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(A.master); o.start(t); o.stop(t + dur + 0.02);
+}
+function noise(dur, vol, freq, type, delay = 0, sweepTo) {
+  const c = A.ctx, t = c.currentTime + delay, s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+  s.buffer = A.noiseBuf; f.type = type; f.frequency.setValueAtTime(freq, t);
+  if (sweepTo) f.frequency.exponentialRampToValueAtTime(sweepTo, t + dur);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  s.connect(f); f.connect(g); g.connect(A.master); s.start(t); s.stop(t + dur + 0.02);
+}
+const SFX_GAP = { arrow: 45, kill: 55, frost: 120, tesla: 60, boom: 70, cannon: 80, sniper: 100 };
+const SFX = {
+  arrow: () => noise(0.05, 0.10, 2400, 'bandpass'),
+  cannon: () => { tone(170, 50, 0.2, 'sine', 0.22); noise(0.12, 0.08, 500, 'lowpass'); },
+  frost: () => tone(1000, 1500, 0.18, 'triangle', 0.07),
+  tesla: () => { tone(220 + Math.random() * 200, 1200, 0.09, 'sawtooth', 0.05); noise(0.07, 0.06, 3000, 'highpass'); },
+  sniper: () => { noise(0.25, 0.2, 1800, 'lowpass', 0, 200); tone(320, 70, 0.22, 'sine', 0.2); },
+  boom: () => { tone(110, 35, 0.3, 'sine', 0.28); noise(0.25, 0.14, 900, 'lowpass', 0, 120); },
+  kill: () => tone(520 + Math.random() * 120, 780, 0.06, 'square', 0.035),
+  leak: () => { tone(180, 60, 0.35, 'sawtooth', 0.16); tone(120, 40, 0.4, 'square', 0.1, 0.05); },
+  build: () => { tone(300, 300, 0.07, 'square', 0.07); tone(450, 450, 0.09, 'square', 0.07, 0.07); },
+  upgrade: () => [440, 554, 659, 880].forEach((f, i) => tone(f, f, 0.12, 'triangle', 0.09, i * 0.07)),
+  sell: () => { tone(900, 1350, 0.12, 'square', 0.06); tone(1350, 1350, 0.12, 'square', 0.05, 0.08); },
+  wave: () => { tone(196, 196, 0.5, 'sawtooth', 0.08); tone(294, 294, 0.5, 'sawtooth', 0.06, 0.02); },
+  bosswave: () => { tone(98, 82, 0.9, 'sawtooth', 0.14); tone(147, 123, 0.9, 'sawtooth', 0.09); },
+  clear: () => [392, 523, 659].forEach((f, i) => tone(f, f, 0.14, 'triangle', 0.08, i * 0.09)),
+  snap: () => { noise(0.8, 0.14, 4000, 'bandpass', 0, 300); tone(1400, 400, 0.6, 'sine', 0.06); },
+  whistle: () => tone(1600, 500, 0.35, 'sine', 0.06),
+  perk: () => [523, 784].forEach((f, i) => tone(f, f, 0.16, 'triangle', 0.09, i * 0.1)),
+  win: () => [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, f, 0.25, 'triangle', 0.1, i * 0.12)),
+  lose: () => [392, 330, 262, 196].forEach((f, i) => tone(f, f * 0.97, 0.4, 'sawtooth', 0.09, i * 0.22)),
+  nope: () => tone(160, 130, 0.12, 'square', 0.06),
+};
+function sfx(name) {
+  if (!A.on || !A.ctx || !SFX[name]) return;
+  const now = performance.now(), gap = SFX_GAP[name] || 25;
+  if (now - (A.last[name] || 0) < gap) return;
+  A.last[name] = now;
+  if (A.ctx.state === 'suspended') A.ctx.resume();
+  try { SFX[name](); } catch (e) {}
+}
+
 const TOWER_KEYS = Object.keys(TOWERS);
 
 const ENEMIES = {
@@ -228,7 +392,7 @@ const ENEMIES = {
   runner: { name: 'Courier',  hp: 20,   speed: 2.8,  armor: 0, bounty: 3,   size: 7,  color: '#e9c75c', lives: 1,  trait: 'Fast' },
   tank:   { name: 'Ironclad', hp: 125,  speed: 0.85, armor: 5, bounty: 10,  size: 13, color: '#8a95a3', lives: 2,  trait: 'Armored' },
   swarm:  { name: 'Mite',     hp: 11,   speed: 2.1,  armor: 0, bounty: 1,   size: 5,  color: '#a57de0', lives: 1,  trait: 'Swarm' },
-  flyer:  { name: 'Kite',     hp: 42,   speed: 1.7,  armor: 0, bounty: 6,   size: 10, color: '#5ccac3', lives: 1,  trait: 'Flying', air: true },
+  flyer:  { name: 'Kite',     hp: 42,   speed: 1.7,  armor: 0, bounty: 6,   size: 10, color: '#5ccac3', lives: 1,  trait: 'Flies straight', air: true },
   healer: { name: 'Mender',   hp: 70,   speed: 1.25, armor: 1, bounty: 9,   size: 10, color: '#86d46e', lives: 1,  trait: 'Heals allies', heal: true },
   boss:   { name: 'Warlord',  hp: 820,  speed: 0.6,  armor: 8, bounty: 120, size: 20, color: '#c23b52', lives: 10, trait: 'Boss · Armored' },
 };
@@ -268,7 +432,7 @@ function waveGroups(w) {
     return [t, Math.max(2, Math.round(n * mult)), gap];
   });
 }
-const hpMul = w => 1 + 0.12 * (w - 1) + 0.017 * (w - 1) ** 2;
+const hpMul = w => 1 + 0.12 * (w - 1) + 0.027 * (w - 1) ** 2;
 const bountyMul = w => 1 + 0.025 * (w - 1);
 const armorAdd = w => Math.floor((w - 1) / 8);
 const waveBonus = w => 20 + w * 3;
@@ -277,34 +441,40 @@ const earlyBonus = w => 8 + w * 2;
 // ===================================================================
 // Map
 // ===================================================================
-const segs = [];
-let pathLen = 0;
-for (let i = 0; i < WAYPOINTS.length - 1; i++) {
-  const [ax, ay] = WAYPOINTS[i], [bx, by] = WAYPOINTS[i + 1];
-  const x1 = (ax + 0.5) * TILE, y1 = (ay + 0.5) * TILE, x2 = (bx + 0.5) * TILE, y2 = (by + 0.5) * TILE;
-  const len = Math.hypot(x2 - x1, y2 - y1);
-  segs.push({ x1, y1, x2, y2, len, start: pathLen });
-  pathLen += len;
-}
-const pathSet = new Set();
-for (let i = 0; i < WAYPOINTS.length - 1; i++) {
-  let [x, y] = WAYPOINTS[i]; const [bx, by] = WAYPOINTS[i + 1];
-  const dx = Math.sign(bx - x), dy = Math.sign(by - y);
-  while (true) {
-    if (x >= 0 && x < COLS && y >= 0 && y < ROWS) pathSet.add(x + ',' + y);
-    if (x === bx && y === by) break;
-    x += dx; y += dy;
+function loadMap(i) {
+  MAP_I = i; const m = MAPS[i]; WAYPOINTS = m.wp;
+  segs = []; pathLen = 0;
+  for (let k = 0; k < WAYPOINTS.length - 1; k++) {
+    const [ax, ay] = WAYPOINTS[k], [bx, by] = WAYPOINTS[k + 1];
+    const x1 = (ax + 0.5) * TILE, y1 = (ay + 0.5) * TILE, x2 = (bx + 0.5) * TILE, y2 = (by + 0.5) * TILE;
+    const len = Math.hypot(x2 - x1, y2 - y1);
+    segs.push({ x1, y1, x2, y2, len, start: pathLen });
+    pathLen += len;
   }
-}
-const rockSet = new Set();
-{
-  const r = rng(42);
+  pathSet = new Set();
+  for (let k = 0; k < WAYPOINTS.length - 1; k++) {
+    let [x, y] = WAYPOINTS[k]; const [bx, by] = WAYPOINTS[k + 1];
+    const dx = Math.sign(bx - x), dy = Math.sign(by - y);
+    while (true) {
+      if (x >= 0 && x < COLS && y >= 0 && y < ROWS) pathSet.add(x + ',' + y);
+      if (x === bx && y === by) break;
+      x += dx; y += dy;
+    }
+  }
+  rockSet = new Set();
+  const r = rng(m.seed);
   let tries = 0;
   while (rockSet.size < 16 && tries++ < 500) {
     const x = Math.floor(r() * COLS), y = Math.floor(r() * ROWS), k = x + ',' + y;
     if (!pathSet.has(k)) rockSet.add(k);
   }
+  // Flyers ignore the road and head straight for the gate.
+  airA = [-TILE, (WAYPOINTS[0][1] + 0.5) * TILE];
+  airB = [W + TILE * 0.5, (WAYPOINTS[WAYPOINTS.length - 1][1] + 0.5) * TILE];
+  airLen = Math.hypot(airB[0] - airA[0], airB[1] - airA[1]);
+  drawBackground();
 }
+const prog = e => e.d / (e.air ? airLen : pathLen);
 
 function posAt(d) {
   let s = segs[segs.length - 1];
@@ -312,6 +482,7 @@ function posAt(d) {
   const t = Math.max(0, Math.min(1, (d - s.start) / s.len));
   return [s.x1 + (s.x2 - s.x1) * t, s.y1 + (s.y2 - s.y1) * t];
 }
+function airPos(d) { const t = d / airLen; return [airA[0] + (airB[0] - airA[0]) * t, airA[1] + (airB[1] - airA[1]) * t]; }
 
 // ===================================================================
 // State
@@ -323,12 +494,13 @@ function newState() {
     towers: [], enemies: [], shots: [], particles: [], texts: [], rings: [], bolts: [], tracers: [],
     spawns: [], waveActive: false, over: false, won: false, endless: false,
     banner: null, nextId: 1, totalKills: 0,
+    mods: mods0(), modVer: 0, perks: [], ab: { strike: 15, snap: 30 }, strikes: [],
   };
 }
-const ui = { build: null, selected: null, hoverTile: null, speed: 1, paused: true, started: false };
+const ui = { build: null, selected: null, hoverTile: null, hoverPx: null, speed: 1, paused: true, started: false, targeting: null, perkOpen: false, perkChoices: [], map: 0 };
 
-function bestWave() { try { return +localStorage.getItem('bastion-line-best') || 0; } catch (e) { return 0; } }
-function saveBest(w) { try { if (w > bestWave()) localStorage.setItem('bastion-line-best', String(w)); } catch (e) {} }
+function bestWave(i = MAP_I) { try { return +localStorage.getItem('bastion-line-best-' + i) || 0; } catch (e) { return 0; } }
+function saveBest(w) { try { if (w > bestWave()) localStorage.setItem('bastion-line-best-' + MAP_I, String(w)); } catch (e) {} }
 
 // ===================================================================
 // Game logic
@@ -342,32 +514,34 @@ function tileFree(tx, ty) {
 function towerAt(tx, ty) { return S.towers.find(t => t.tx === tx && t.ty === ty) || null; }
 
 function placeTower(type, tx, ty) {
-  const def = TOWERS[type];
-  if (!tileFree(tx, ty) || S.gold < def.cost) return null;
-  S.gold -= def.cost;
+  const cost = buildCost(type);
+  if (!tileFree(tx, ty) || S.gold < cost) return null;
+  S.gold -= cost;
   const t = {
     id: S.nextId++, type, lvl: 0, tx, ty, x: (tx + 0.5) * TILE, y: (ty + 0.5) * TILE,
     cd: 0.2, angle: -Math.PI / 2, mode: type === 'sniper' ? 'strong' : 'first',
-    spent: def.cost, kills: 0, dealt: 0, flash: 0,
+    branch: 0, spent: cost, kills: 0, dealt: 0, flash: 0,
   };
   S.towers.push(t);
-  burst(t.x, t.y, '#b9a77a', 10, 60);
+  burst(t.x, t.y, '#b9a77a', 10, 60); sfx('build');
   return t;
 }
-function upgradeCost(t) { const d = TOWERS[t.type]; return t.lvl < d.up.length ? d.up[t.lvl] : null; }
-function upgradeTower(t) {
+function upgradeCost(t) { const d = TOWERS[t.type]; return t.lvl < d.up.length ? Math.round(d.up[t.lvl] * S.mods.upCost) : null; }
+function upgradeTower(t, branch = 0) {
   const c = upgradeCost(t);
   if (c == null || S.gold < c) return false;
-  S.gold -= c; t.spent += c; t.lvl++;
-  ring(t.x, t.y, 6, 28, 0.4, TOWERS[t.type].color);
+  S.gold -= c; t.spent += c;
+  if (t.lvl === 1) t.branch = branch;
+  t.lvl++;
+  ring(t.x, t.y, 6, 28, 0.4, TOWERS[t.type].color); sfx('upgrade');
   return true;
 }
-function sellValue(t) { return Math.floor(t.spent * 0.7); }
+function sellValue(t) { return Math.floor(t.spent * S.mods.sell); }
 function sellTower(t) {
   S.gold += sellValue(t);
   S.towers = S.towers.filter(o => o !== t);
   floatText(t.x, t.y - 10, '+' + sellValue(t), '#d9a84e');
-  burst(t.x, t.y, '#8a7a5a', 12, 80);
+  burst(t.x, t.y, '#8a7a5a', 12, 80); sfx('sell');
   if (ui.selected === t) ui.selected = null;
 }
 
@@ -385,27 +559,28 @@ function startWave() {
   S.spawns.sort((a, b) => a.at - b.at);
   S.waveActive = true;
   const hasBoss = groups.some(g => g[0] === 'boss');
+  sfx(hasBoss ? 'bosswave' : 'wave');
   S.banner = { text: 'Wave ' + w, sub: hasBoss ? 'A Warlord approaches' : groups.map(g => ENEMIES[g[0]].name + 's').join(' · '), life: 2.6, boss: hasBoss };
 }
 
 function spawnEnemy(type, w) {
   const d = ENEMIES[type];
-  const hp = Math.round(d.hp * hpMul(w));
+  const hp = Math.round(d.hp * hpMul(w) * S.mods.hp);
   S.enemies.push({
-    id: S.nextId++, type, hp, maxHp: hp, speed: d.speed, armor: d.armor + (d.armor > 0 || type === 'boss' ? armorAdd(w) : 0),
-    bounty: Math.round(d.bounty * bountyMul(w)), air: !!d.air, d: -Math.random() * 6, x: -TILE, y: (2.5) * TILE,
+    id: S.nextId++, type, hp, maxHp: hp, speed: d.speed * S.mods.speed, armor: d.armor + (d.armor > 0 ? armorAdd(w) + S.mods.armor : 0),
+    bounty: Math.round(d.bounty * bountyMul(w) * S.mods.bounty), air: !!d.air, d: -Math.random() * 6, x: -TILE, y: (2.5) * TILE,
     slowT: 0, slowF: 0, healT: 1, hitT: 0, wob: Math.random() * 6.28, alive: true,
   });
 }
 
-function hurt(e, dmg, tower, pierce) {
+function hurt(e, dmg, tower, pierce, quiet) {
   if (!e.alive) return;
   const real = pierce ? dmg : Math.max(dmg * 0.25, dmg - e.armor);
-  e.hp -= real; e.hitT = 0.08;
+  e.hp -= real; if (!quiet) e.hitT = 0.08;
   if (tower) tower.dealt += Math.min(real, e.hp + real);
   if (e.hp <= 0) {
     e.alive = false;
-    S.gold += e.bounty; S.totalKills++;
+    S.gold += e.bounty; S.totalKills++; sfx('kill');
     if (tower) tower.kills++;
     burst(e.x, e.y, ENEMIES[e.type].color, e.type === 'boss' ? 40 : 10, e.type === 'boss' ? 160 : 90);
     floatText(e.x, e.y - 8, '+' + e.bounty, '#d9a84e');
@@ -419,8 +594,8 @@ function pickTarget(t, rangePx, canAir) {
     if (!e.alive || e.d < 0 || (e.air && !canAir) || !inRange(t, e, rangePx)) continue;
     let s;
     switch (t.mode) {
-      case 'first': s = e.d; break;
-      case 'last': s = -e.d; break;
+      case 'first': s = prog(e); break;
+      case 'last': s = -prog(e); break;
       case 'strong': s = e.hp; break;
       case 'close': s = -Math.hypot(e.x - t.x, e.y - t.y); break;
     }
@@ -430,19 +605,21 @@ function pickTarget(t, rangePx, canAir) {
 }
 
 function fireTower(t, dt) {
-  const def = TOWERS[t.type], st = def.lv[t.lvl];
+  const def = TOWERS[t.type], st = tStats(t);
   t.cd -= dt; t.flash = Math.max(0, t.flash - dt);
   const range = st.range * TILE;
   if (t.type === 'frost') {
     if (t.cd > 0) return;
+    const freezing = st.freeze && ((t.pulse || 0) + 1) % st.freeze === 0;
     let any = false;
     for (const e of S.enemies) if (e.alive && e.d >= 0 && inRange(t, e, range)) {
       any = true;
       hurt(e, st.dmg, t, false);
       e.slowF = Math.max(e.slowT > 0 ? e.slowF : 0, st.slow);
       e.slowT = Math.max(e.slowT, st.slowDur);
+      if (freezing) e.freezeT = e.type === 'boss' ? 0.5 : 1.0;
     }
-    if (any) { t.cd = 1 / st.rate; ring(t.x, t.y, 8, range, 0.5, def.color); t.flash = 0.2; }
+    if (any) { t.pulse = (t.pulse || 0) + 1; sfx('frost'); t.cd = 1 / st.rate; ring(t.x, t.y, 8, range, 0.5, def.color); t.flash = 0.2; }
     return;
   }
   const target = pickTarget(t, range, def.air);
@@ -456,14 +633,14 @@ function fireTower(t, dt) {
   const mx = t.x + Math.cos(t.angle) * 14, my = t.y + Math.sin(t.angle) * 14;
   switch (t.type) {
     case 'arrow':
-      S.shots.push({ kind: 'arrow', x: mx, y: my, target, dmg: st.dmg, tower: t, speed: 760 });
+      S.shots.push({ kind: 'arrow', x: mx, y: my, target, dmg: st.dmg, pierce: st.pierce, tower: t, speed: 760 }); sfx('arrow');
       break;
     case 'cannon': {
       const dist = Math.hypot(target.x - t.x, target.y - t.y);
       const flight = Math.max(0.35, dist / 330);
       const eff = target.speed * (target.slowT > 0 ? 1 - target.slowF : 1);
       const [px, py] = posAt(target.d + eff * TILE * flight);
-      S.shots.push({ kind: 'shell', sx: mx, sy: my, tx: px, ty: py, t: 0, dur: flight, dmg: st.dmg, splash: st.splash * TILE, tower: t });
+      S.shots.push({ kind: 'shell', sx: mx, sy: my, tx: px, ty: py, t: 0, dur: flight, dmg: st.dmg, splash: st.splash * TILE, burn: st.burn, tower: t }); sfx('cannon');
       break;
     }
     case 'tesla': {
@@ -480,12 +657,12 @@ function fireTower(t, dt) {
         if (!nxt) break;
         dmg *= 0.85; hit.push(nxt); pts.push([nxt.x, nxt.y]); hurt(nxt, dmg, t, true); cur = nxt;
       }
-      S.bolts.push({ pts, life: 0.16, max: 0.16 });
+      S.bolts.push({ pts, life: 0.16, max: 0.16 }); sfx('tesla');
       break;
     }
     case 'sniper':
       S.tracers.push({ x1: mx, y1: my, x2: target.x, y2: target.y, life: 0.18, max: 0.18 });
-      hurt(target, st.dmg, t, false);
+      hurt(target, st.dmg, t, !!st.pierce); sfx('sniper');
       if (!target.alive) floatText(target.x, target.y - 22, 'Headshot', '#e9e2c9');
       break;
   }
@@ -497,7 +674,7 @@ function updateShots(dt) {
       if (!s.target.alive) { s.dead = true; continue; }
       const dx = s.target.x - s.x, dy = s.target.y - s.y, dist = Math.hypot(dx, dy), step = s.speed * dt;
       s.a = Math.atan2(dy, dx);
-      if (dist <= step + 4) { hurt(s.target, s.dmg, s.tower, false); s.dead = true; }
+      if (dist <= step + 4) { hurt(s.target, s.dmg, s.tower, !!s.pierce); s.dead = true; }
       else { s.x += dx / dist * step; s.y += dy / dist * step; }
     } else if (s.kind === 'shell') {
       s.t += dt;
@@ -506,9 +683,12 @@ function updateShots(dt) {
         for (const e of S.enemies) {
           if (!e.alive || e.air || e.d < 0) continue;
           const dd = Math.hypot(e.x - s.tx, e.y - s.ty);
-          if (dd <= s.splash) hurt(e, s.dmg * (dd < s.splash * 0.4 ? 1 : 0.6), s.tower, false);
+          if (dd <= s.splash) {
+            hurt(e, s.dmg * (dd < s.splash * 0.4 ? 1 : 0.6), s.tower, false);
+            if (s.burn && e.alive) { e.burnT = 3; e.burnD = s.burn; e.burnSrc = s.tower; }
+          }
         }
-        ring(s.tx, s.ty, 4, s.splash, 0.35, '#f0a35a');
+        ring(s.tx, s.ty, 4, s.splash, 0.35, '#f0a35a'); sfx('boom');
         burst(s.tx, s.ty, '#e8874a', 12, 110);
       }
     }
@@ -519,13 +699,15 @@ function updateShots(dt) {
 function updateEnemies(dt) {
   for (const e of S.enemies) {
     if (!e.alive) continue;
+    if (e.burnT > 0) { e.burnT -= dt; hurt(e, e.burnD * dt, e.burnSrc, true, true); if (!e.alive) continue; }
     if (e.slowT > 0) { e.slowT -= dt; if (e.slowT <= 0) e.slowF = 0; }
+    if (e.freezeT > 0) e.freezeT -= dt;
     e.hitT = Math.max(0, e.hitT - dt);
-    const eff = e.speed * (e.slowT > 0 ? 1 - e.slowF : 1);
+    const eff = e.speed * (e.slowT > 0 ? 1 - e.slowF : 1) * (e.freezeT > 0 ? 0.03 : 1);
     e.d += eff * TILE * dt;
     e.wob += dt * (4 + e.speed * 2);
-    const [x, y] = posAt(Math.max(0, e.d));
-    e.x = e.d < 0 ? x + e.d : x; e.y = y;
+    if (e.air) { [e.x, e.y] = airPos(e.d); }
+    else { const [x, y] = posAt(Math.max(0, e.d)); e.x = e.d < 0 ? x + e.d : x; e.y = y; }
     if (ENEMIES[e.type].heal) {
       e.healT -= dt;
       if (e.healT <= 0) {
@@ -534,10 +716,10 @@ function updateEnemies(dt) {
         ring(e.x, e.y, 4, 1.7 * TILE, 0.45, '#86d46e');
       }
     }
-    if (e.d >= pathLen) {
+    if (e.d >= (e.air ? airLen : pathLen)) {
       e.alive = false; e.leaked = true;
       S.lives -= ENEMIES[e.type].lives;
-      flashLives();
+      flashLives(); sfx('leak');
       if (S.lives <= 0) { S.lives = 0; gameOver(); }
     }
   }
@@ -548,6 +730,7 @@ function update(dt) {
   if (S.over) return;
   S.time += dt;
   while (S.spawns.length && S.spawns[0].at <= S.time) { const s = S.spawns.shift(); spawnEnemy(s.type, s.w); }
+  while (S.strikes.length && S.strikes[0].at <= S.time) strikeBlast(S.strikes.shift());
   updateEnemies(dt);
   if (S.over) return;
   for (const t of S.towers) fireTower(t, dt);
@@ -558,10 +741,41 @@ function update(dt) {
     const b = waveBonus(S.wave);
     S.gold += b;
     S.banner = { text: 'Wave ' + S.wave + ' cleared', sub: '+' + b + ' gold', life: 2.2 };
-    saveBest(S.wave);
+    saveBest(S.wave); sfx('clear');
     if (S.wave >= VICTORY_WAVE && !S.won && !S.endless) { S.won = true; victory(); }
+    else if (S.wave % 5 === 4) offerPerks();
   }
   updateFx(dt);
+}
+
+function strikeBlast(k) {
+  const R = 1.1 * TILE, dmg = 60 + 5 * S.wave;
+  for (const e of S.enemies) if (e.alive && e.d >= 0 && Math.hypot(e.x - k.x, e.y - k.y) <= R) hurt(e, dmg, null, true);
+  ring(k.x, k.y, 4, R, 0.4, '#f0a35a'); burst(k.x, k.y, '#f0a35a', 18, 140); sfx('boom');
+}
+function abilLeft(k) { return Math.max(0, S.ab[k] - S.time); }
+function useAbility(k, x, y) {
+  if (S.over || !ui.started || ui.perkOpen) return false;
+  if (abilLeft(k) > 0) { sfx('nope'); return false; }
+  if (k === 'strike') {
+    for (let i = 0; i < 5; i++) {
+      const a = Math.random() * 6.283, r = Math.sqrt(Math.random()) * 1.6 * TILE;
+      S.strikes.push({ at: S.time + 0.35 + i * 0.2, x: Math.max(0, Math.min(W, x + Math.cos(a) * r)), y: Math.max(0, Math.min(H, y + Math.sin(a) * r)) });
+    }
+    sfx('whistle');
+  } else {
+    for (const e of S.enemies) if (e.alive) { e.slowF = Math.max(e.slowT > 0 ? e.slowF : 0, 0.75); e.slowT = Math.max(e.slowT, 5); }
+    ring(W / 2, H / 2, 20, W * 0.6, 0.8, '#8fd3e8'); sfx('snap');
+    S.banner = { text: 'Cold snap', sub: 'Every enemy slows for 5 seconds', life: 1.6 };
+  }
+  S.ab[k] = S.time + ABIL[k].cd * S.mods.cd;
+  return true;
+}
+function toggleStrike() {
+  if (S.over || !ui.started || ui.perkOpen) return;
+  if (ui.targeting) { ui.targeting = null; return; }
+  if (abilLeft('strike') > 0) { sfx('nope'); return; }
+  ui.targeting = 'strike'; ui.build = null; ui.selected = null; refreshPanel(true);
 }
 
 function updateFx(dt) {
@@ -597,9 +811,9 @@ canvas.width = W * DPR; canvas.height = H * DPR;
 
 const bg = document.createElement('canvas');
 bg.width = W * DPR; bg.height = H * DPR;
-(function drawBackground() {
+function drawBackground() {
   const g = bg.getContext('2d');
-  g.scale(DPR, DPR);
+  g.setTransform(DPR, 0, 0, DPR, 0, 0);
   const r = rng(7);
   for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
     const v = r();
@@ -641,8 +855,11 @@ bg.width = W * DPR; bg.height = H * DPR;
       g.beginPath(); g.ellipse(cx + ox - rad * 0.3, cy + oy - rad * 0.3, rad * 0.4, rad * 0.28, 0, 0, Math.PI * 2); g.fill();
     }
   }
+  // faint dotted route flyers take
+  g.setLineDash([3, 9]); g.strokeStyle = 'rgba(143,211,232,0.3)'; g.lineWidth = 2; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(airA[0], airA[1]); g.lineTo(airB[0], airB[1]); g.stroke(); g.setLineDash([]);
   // the bastion gate at the exit
-  const gx = W - 18, gy = 6.5 * TILE;
+  const gx = W - 18, gy = (WAYPOINTS[WAYPOINTS.length - 1][1] + 0.5) * TILE;
   g.fillStyle = '#3d3a33'; g.fillRect(gx - 6, gy - 34, 26, 68);
   g.fillStyle = '#56524a';
   for (const cx of [gx - 6, gx + 4, gx + 14]) g.fillRect(cx, gy - 42, 6, 8);
@@ -651,10 +868,11 @@ bg.width = W * DPR; bg.height = H * DPR;
   g.beginPath(); g.moveTo(gx + 4, gy - 60); g.lineTo(gx + 18, gy - 55); g.lineTo(gx + 4, gy - 50); g.fill();
   // spawn marker
   g.fillStyle = 'rgba(226,101,76,0.6)';
-  g.beginPath(); g.moveTo(4, 2.5 * TILE - 9); g.lineTo(16, 2.5 * TILE); g.lineTo(4, 2.5 * TILE + 9); g.fill();
-})();
+  const sy = (WAYPOINTS[0][1] + 0.5) * TILE;
+  g.beginPath(); g.moveTo(4, sy - 9); g.lineTo(16, sy); g.lineTo(4, sy + 9); g.fill();
+}
 
-function drawTower(c, type, lvl, x, y, angle, scale = 1, flash = 0) {
+function drawTower(c, type, lvl, x, y, angle, scale = 1, flash = 0, branch = -1) {
   const def = TOWERS[type];
   c.save(); c.translate(x, y); c.scale(scale, scale);
   // base
@@ -664,6 +882,7 @@ function drawTower(c, type, lvl, x, y, angle, scale = 1, flash = 0) {
   c.strokeStyle = 'rgba(0,0,0,0.25)'; c.lineWidth = 1; c.beginPath(); c.moveTo(-14, -2); c.lineTo(14, -2); c.moveTo(0, -14); c.lineTo(0, -2); c.stroke();
   // level pips
   for (let i = 0; i <= lvl; i++) { c.fillStyle = '#d9a84e'; c.fillRect(-10 + i * 8, 11, 5, 3); }
+  if (lvl >= 2 && branch >= 0) { c.fillStyle = branch ? '#7fd7ff' : '#ff9b54'; c.beginPath(); c.arc(12, -12, 3.2, 0, 6.283); c.fill(); c.strokeStyle = 'rgba(0,0,0,0.5)'; c.lineWidth = 1; c.stroke(); }
   const col = def.color;
   switch (type) {
     case 'arrow':
@@ -751,6 +970,8 @@ function drawEnemy(c, e) {
       break;
   }
   if (e.slowT > 0) { c.strokeStyle = 'rgba(143,211,232,0.85)'; c.lineWidth = 2; c.beginPath(); c.arc(0, 0, r + 3, 0, Math.PI * 2); c.stroke(); }
+  if (e.freezeT > 0) { c.strokeStyle = '#effcff'; c.lineWidth = 3; c.beginPath(); c.arc(0, 0, r + 4, 0, Math.PI * 2); c.stroke(); }
+  if (e.burnT > 0) { c.strokeStyle = 'rgba(255,140,60,0.9)'; c.lineWidth = 2; c.setLineDash([3, 3]); c.beginPath(); c.arc(0, 0, r + 5, 0, Math.PI * 2); c.stroke(); c.setLineDash([]); }
   c.restore();
   // health bar
   if (e.hp < e.maxHp) {
@@ -788,14 +1009,14 @@ function render() {
 
   // range of selected / hovered tower
   const sel = ui.selected;
-  if (sel) drawRange(sel.x, sel.y, TOWERS[sel.type].lv[sel.lvl].range * TILE, true);
+  if (sel) drawRange(sel.x, sel.y, tStats(sel).range * TILE, true);
   else if (!ui.build && ui.hoverTile) {
     const h = towerAt(ui.hoverTile[0], ui.hoverTile[1]);
-    if (h) drawRange(h.x, h.y, TOWERS[h.type].lv[h.lvl].range * TILE, true);
+    if (h) drawRange(h.x, h.y, tStats(h).range * TILE, true);
   }
 
   for (const t of S.towers) {
-    drawTower(ctx, t.type, t.lvl, t.x, t.y, t.angle, 1, t.flash);
+    drawTower(ctx, t.type, t.lvl, t.x, t.y, t.angle, 1, t.flash, t.lvl >= 2 ? t.branch : -1);
     if (t === sel) { ctx.strokeStyle = '#d9a84e'; ctx.lineWidth = 2; roundRect(ctx, t.x - 19, t.y - 19, 38, 38, 7); ctx.stroke(); }
   }
   for (const e of S.enemies) if (!e.air) drawEnemy(ctx, e);
@@ -859,10 +1080,25 @@ function render() {
   // build ghost
   if (ui.build && ui.hoverTile) {
     const [tx, ty] = ui.hoverTile, x = (tx + 0.5) * TILE, y = (ty + 0.5) * TILE;
-    const ok = tileFree(tx, ty) && S.gold >= TOWERS[ui.build].cost;
-    drawRange(x, y, TOWERS[ui.build].lv[0].range * TILE, ok);
+    const ok = tileFree(tx, ty) && S.gold >= buildCost(ui.build);
+    drawRange(x, y, (TOWERS[ui.build].lv[0].range + S.mods.range) * TILE, ok);
     ctx.globalAlpha = 0.65; drawTower(ctx, ui.build, 0, x, y, -Math.PI / 2); ctx.globalAlpha = 1;
     ctx.strokeStyle = ok ? '#d9a84e' : '#e2654c'; ctx.lineWidth = 2; ctx.strokeRect(tx * TILE + 1, ty * TILE + 1, TILE - 2, TILE - 2);
+  }
+
+  // pending barrage impacts and the aiming reticle
+  for (const k of S.strikes) {
+    ctx.strokeStyle = 'rgba(226,101,76,0.55)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(k.x, k.y, 1.1 * TILE, 0, Math.PI * 2); ctx.stroke();
+  }
+  if (ui.targeting === 'strike' && ui.hoverPx) {
+    const [x, y] = ui.hoverPx, R = 1.6 * TILE;
+    ctx.fillStyle = 'rgba(226,101,76,0.12)'; ctx.strokeStyle = 'rgba(226,101,76,0.95)'; ctx.lineWidth = 2; ctx.setLineDash([6, 5]);
+    ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(x - 10, y); ctx.lineTo(x + 10, y); ctx.moveTo(x, y - 10); ctx.lineTo(x, y + 10); ctx.stroke();
+    ctx.font = '600 14px Barlow, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(W / 2 - 150, 8, 300, 24);
+    ctx.fillStyle = '#ece6d2'; ctx.fillText('Click to call the barrage · Esc to cancel', W / 2, 25);
   }
 
   // banner
@@ -884,7 +1120,7 @@ function render() {
 // UI: HUD, shop, info panel
 // ===================================================================
 const $ = id => document.getElementById(id);
-const els = { lives: $('v-lives'), gold: $('v-gold'), wave: $('v-wave'), btnWave: $('btn-wave'), btnSpeed: $('btn-speed'), btnPause: $('btn-pause'), shop: $('shop'), info: $('info'), overlay: $('overlay'), card: $('overlay-card') };
+const els = { lives: $('v-lives'), gold: $('v-gold'), wave: $('v-wave'), btnWave: $('btn-wave'), btnSpeed: $('btn-speed'), btnPause: $('btn-pause'), shop: $('shop'), info: $('info'), overlay: $('overlay'), card: $('overlay-card'), btnSound: $('btn-sound'), ab: { strike: $('ab-strike'), snap: $('ab-snap') } };
 
 function iconCanvas(type, size) {
   const c = document.createElement('canvas');
@@ -904,76 +1140,91 @@ for (const k of TOWER_KEYS) {
   txt.innerHTML = `<span class="shop-name">${d.name}</span><span class="shop-desc">${d.desc}</span>`;
   b.appendChild(txt);
   const cost = document.createElement('span'); cost.className = 'shop-cost';
-  cost.innerHTML = `${d.cost}g<span class="kbd">key ${d.key}</span>`;
+  cost.innerHTML = `<span class="cc">${d.cost}g</span><span class="kbd">key ${d.key}</span>`;
   b.appendChild(cost);
   b.addEventListener('click', () => selectBuild(ui.build === k ? null : k));
   els.shop.appendChild(b);
 }
 
-function selectBuild(type) { ui.build = type; if (type) ui.selected = null; refreshPanel(true); }
+function selectBuild(type) { ui.build = type; if (type) { ui.selected = null; ui.targeting = null; } refreshPanel(true); }
 
 let lastSig = '';
 const MODES = [['first', 'First'], ['last', 'Last'], ['strong', 'Strong'], ['close', 'Close']];
 function fmt(n) { return Math.round(n).toLocaleString('en-US'); }
 
-function statRows(type, lvl, next) {
-  const a = TOWERS[type].lv[lvl], b = next != null ? TOWERS[type].lv[next] : null;
+function statRows(a, b) {
   const row = (label, f, unit = '') => {
     const va = f(a), vb = b ? f(b) : null;
     return `<dt>${label}</dt><dd>${va}${unit}${vb != null && vb !== va ? ` <span class="next">→ ${vb}${unit}</span>` : ''}</dd>`;
   };
-  let h = row('Damage', s => s.dmg) + row('Shots / sec', s => s.rate.toFixed(2)) + row('Range', s => s.range.toFixed(1), ' tiles');
+  let h = row('Damage', s => Math.round(s.dmg)) + row('Shots / sec', s => s.rate.toFixed(2)) + row('Range', s => s.range.toFixed(1), ' tiles');
   if (a.splash) h += row('Splash', s => s.splash.toFixed(1), ' tiles');
   if (a.slow) h += row('Slow', s => Math.round(s.slow * 100), '%');
   if (a.chain) h += row('Chain jumps', s => s.chain);
+  if (a.burn) h += row('Burn / sec', s => Math.round(s.burn));
+  if (a.freeze) h += row('Freeze every', s => s.freeze, ' pulses');
+  if (a.pierce) h += '<dt>Armor</dt><dd>ignored</dd>';
   return h;
 }
 
 function refreshPanel(force) {
   for (const b of els.shop.children) {
-    b.classList.toggle('active', b.dataset.type === ui.build);
-    b.classList.toggle('poor', S.gold < TOWERS[b.dataset.type].cost);
+    const ty = b.dataset.type, c = buildCost(ty);
+    b.classList.toggle('active', ty === ui.build);
+    b.classList.toggle('poor', S.gold < c);
+    const cc = b.querySelector('.cc'), txt = c + 'g';
+    if (cc && cc.textContent !== txt) cc.textContent = txt;
   }
   const t = ui.selected;
   let sig;
-  if (t) sig = `t${t.id}:${t.lvl}:${t.mode}:${S.gold >= (upgradeCost(t) ?? Infinity)}`;
-  else if (ui.build) sig = `b${ui.build}:${S.gold >= TOWERS[ui.build].cost}`;
-  else sig = `w${S.wave}:${S.waveActive}`;
+  if (t) sig = `t${t.id}:${t.lvl}:${t.branch}:${t.mode}:${S.modVer}:${S.gold >= (upgradeCost(t) ?? Infinity)}`;
+  else if (ui.build) sig = `b${ui.build}:${S.modVer}:${S.gold >= buildCost(ui.build)}`;
+  else sig = `w${S.wave}:${S.waveActive}:${S.modVer}`;
   if (t) { const m = $('sel-meta'); if (m) m.textContent = `${fmt(t.kills)} kills · ${fmt(t.dealt)} damage dealt`; }
   if (!force && sig === lastSig) return;
   lastSig = sig;
 
   if (t) {
-    const d = TOWERS[t.type], c = upgradeCost(t), max = c == null;
+    const d = TOWERS[t.type], c = upgradeCost(t), max = c == null, br = t.lvl >= 2 ? d.br[t.branch] : null;
+    const sell = `<button class="btn danger" id="btn-sell" type="button" ${c != null && t.lvl === 1 ? 'style="width:100%"' : ''}>Sell · ${sellValue(t)}g</button>`;
+    let actions;
+    if (max) actions = `<div class="actions"><button class="btn" type="button" disabled>Max level</button>${sell}</div>`;
+    else if (t.lvl === 1) actions = `<div><p class="eyebrow" style="margin-bottom:6px"><span>Choose a path</span><span>U · I</span></p><div class="branches">${d.br.map((b, i) => {
+      const s = scaled(b);
+      return `<button type="button" class="branch" data-branch="${i}" ${S.gold < c ? 'disabled' : ''}><span class="br-top"><b>${b.name}</b><span class="br-cost">${c}g</span></span><span class="br-desc">${b.desc}</span><span class="br-stats">${Math.round(s.dmg)} dmg · ${s.rate.toFixed(1)}/s · ${s.range.toFixed(1)} range</span></button>`;
+    }).join('')}</div></div>${sell}`;
+    else actions = `<div class="actions"><button class="btn primary" id="btn-up" type="button" ${S.gold < c ? 'disabled' : ''}>Upgrade · ${c}g</button>${sell}</div>`;
+    const next = t.lvl === 0 ? scaled(baseStats(t.type, 1)) : null;
     els.info.innerHTML = `
       <p class="eyebrow"><span>Selected tower</span><span>Esc to close</span></p>
-      <div class="sel-head"><span id="sel-icon"></span><div><h3>${d.name}</h3>
-        <div class="pips">${d.lv.map((_, i) => `<span class="pip${i <= t.lvl ? ' on' : ''}"></span>`).join('')}</div></div></div>
-      <dl class="kv">${statRows(t.type, t.lvl, max ? null : t.lvl + 1)}</dl>
+      <div class="sel-head"><span id="sel-icon"></span><div><h3>${br ? br.name : d.name}</h3>
+        <div class="pips">${[0, 1, 2].map(i => `<span class="pip${i <= t.lvl ? ' on' : ''}"></span>`).join('')}</div></div></div>
+      ${br ? `<p class="meta">${d.name} · ${br.desc}</p>` : ''}
+      <dl class="kv">${statRows(tStats(t), next)}</dl>
       <div><p class="eyebrow" style="margin-bottom:6px"><span>Targeting</span><span>T to cycle</span></p>
       <div class="seg" role="group" aria-label="Targeting">${MODES.map(([k, l]) => `<button type="button" data-mode="${k}" class="${t.mode === k ? 'on' : ''}" aria-pressed="${t.mode === k}">${l}</button>`).join('')}</div></div>
-      <div class="actions">
-        <button class="btn primary" id="btn-up" type="button" ${max || S.gold < c ? 'disabled' : ''}>${max ? 'Max level' : `Upgrade · ${c}g`}</button>
-        <button class="btn danger" id="btn-sell" type="button">Sell · ${sellValue(t)}g</button>
-      </div>
+      ${actions}
       <p class="meta" id="sel-meta">${fmt(t.kills)} kills · ${fmt(t.dealt)} damage dealt</p>`;
     $('sel-icon').appendChild(iconCanvas(t.type, 48));
-    $('btn-up').onclick = () => { upgradeTower(t); refreshPanel(true); };
+    const up = $('btn-up'); if (up) up.onclick = () => { upgradeTower(t, 0); refreshPanel(true); };
+    els.info.querySelectorAll('[data-branch]').forEach(b => b.onclick = () => { upgradeTower(t, +b.dataset.branch); refreshPanel(true); });
     $('btn-sell').onclick = () => { sellTower(t); refreshPanel(true); };
     els.info.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { t.mode = b.dataset.mode; refreshPanel(true); });
   } else if (ui.build) {
-    const d = TOWERS[ui.build];
+    const d = TOWERS[ui.build], c = buildCost(ui.build);
     els.info.innerHTML = `
-      <p class="eyebrow"><span>Placing</span><span>${d.cost}g</span></p>
+      <p class="eyebrow"><span>Placing</span><span>${c}g</span></p>
       <div class="sel-head"><span id="sel-icon"></span><div><h3>${d.name}</h3><p class="meta">${d.desc}</p></div></div>
-      <dl class="kv">${statRows(ui.build, 0, null)}<dt>Upgrades</dt><dd>${d.up.map(u => u + 'g').join(' · ')}</dd></dl>
-      <p class="meta">${S.gold >= d.cost ? 'Click any open grass tile to build. Right-click or Esc to stop.' : `Need ${d.cost - S.gold} more gold.`}</p>`;
+      <dl class="kv">${statRows(scaled(d.lv[0]), null)}<dt>Upgrades</dt><dd>${d.up.map(u => Math.round(u * S.mods.upCost) + 'g').join(' · ')}</dd></dl>
+      <p class="meta">The second upgrade splits into two paths: ${d.br.map(b => b.name).join(' or ')}.</p>
+      <p class="meta">${S.gold >= c ? 'Click any open grass tile to build. Right-click or Esc to stop.' : `Need ${c - S.gold} more gold.`}</p>`;
     $('sel-icon').appendChild(iconCanvas(ui.build, 48));
   } else {
     const nextW = S.wave + 1, groups = waveGroups(nextW);
     const tally = {};
     for (const [type, n] of groups) tally[type] = (tally[type] || 0) + n;
-    const hp = hpMul(nextW);
+    const hp = hpMul(nextW) * S.mods.hp;
+    const orders = S.perks.map(id => PERKS.find(p => p.id === id).name);
     els.info.innerHTML = `
       <p class="eyebrow"><span>Scouting · wave ${nextW}</span><span>HP ×${hp.toFixed(1)}</span></p>
       <ul class="wave-list">${Object.entries(tally).map(([type, n]) => {
@@ -981,10 +1232,11 @@ function refreshPanel(force) {
         return `<li><span class="dot" style="background:${e.color}"></span><span>${e.name}${e.trait ? ` <span class="trait">${e.trait}</span>` : ''}</span><span class="count">×${n}</span></li>`;
       }).join('')}</ul>
       <p class="meta">Clear bonus ${waveBonus(nextW)}g${S.waveActive ? ` · Send it early for +${earlyBonus(nextW)}g` : ''}</p>
+      ${orders.length ? `<p class="meta">Field orders: ${orders.join(', ')}</p>` : ''}
       <ul class="tips">
-        <li><b>Mortars</b> can’t hit Kites. Bring Archers or Tesla.</li>
-        <li>Armor blunts small hits. <b>Tesla</b> ignores it.</li>
-        <li><b>Frost</b> on a corner gives every tower more time.</li>
+        <li><b>Kites</b> fly straight to the gate over the dotted line. Mortars can’t hit them.</li>
+        <li>Armor blunts small hits. <b>Tesla</b>, Ballista and Assassin ignore it.</li>
+        <li>Save <b>Barrage</b> and <b>Cold Snap</b> for bosses.</li>
       </ul>`;
   }
 }
@@ -1001,70 +1253,105 @@ function refreshHud() {
   els.btnWave.disabled = S.over || !ui.started;
   els.btnSpeed.innerHTML = `${ui.speed}× speed<span class="kbd">F</span>`;
   els.btnPause.innerHTML = `${ui.paused && ui.started ? 'Resume' : 'Pause'}<span class="kbd">P</span>`;
-  els.btnPause.disabled = !ui.started || S.over;
+  els.btnPause.disabled = !ui.started || S.over || ui.perkOpen;
+  if (ui.perkOpen) els.btnWave.disabled = true;
+  els.btnSound.innerHTML = `Sound ${A.on ? 'on' : 'off'}<span class="kbd">M</span>`;
+  for (const k of ['strike', 'snap']) {
+    const b = els.ab[k], left = abilLeft(k), total = ABIL[k].cd * S.mods.cd;
+    b.classList.toggle('ready', left === 0);
+    b.classList.toggle('armed', ui.targeting === k);
+    b.querySelector('.ab-fill').style.width = (left === 0 ? 100 : (1 - left / total) * 100) + '%';
+    b.querySelector('.ab-cd').textContent = ui.targeting === k ? 'Aim…' : left === 0 ? 'Ready' : Math.ceil(left) + 's';
+  }
 }
 
 // ===================================================================
 // Overlays
 // ===================================================================
-function showOverlay(html) { els.card.innerHTML = html; els.overlay.hidden = false; }
+function showOverlay(html, cls = '') { els.card.className = 'overlay-card' + (cls ? ' ' + cls : ''); els.card.innerHTML = html; els.overlay.hidden = false; }
 function hideOverlay() { els.overlay.hidden = true; }
 
 function titleScreen() {
-  const best = bestWave();
+  ui.started = false; ui.paused = true; ui.perkOpen = false; ui.targeting = null;
   showOverlay(`
     <h2>Bastion <span>Line</span></h2>
-    <p>Thirty waves are marching on the gate. Build towers along the road, upgrade them, and don’t let ${START_LIVES} of them through.</p>
-    <p class="desk">Pick a tower with <b>1–5</b>, click grass to build, click a tower to upgrade or sell. <b>Space</b> sends the next wave, and sending it early pays a bonus.</p>
-    <div class="row"><button class="btn primary" id="ov-start" type="button">Take command</button></div>
-    ${best ? `<p>Your best: wave ${best}</p>` : ''}`);
-  $('ov-start').onclick = () => { hideOverlay(); ui.started = true; ui.paused = false; refreshHud(); };
+    <p>Thirty waves are marching on the gate. Build towers, choose upgrade paths, and don’t let ${START_LIVES} of them through.</p>
+    <div class="maps" role="group" aria-label="Choose a map">${MAPS.map((m, i) => `<button type="button" class="map-btn${i === ui.map ? ' on' : ''}" data-map="${i}"><b>${m.name}</b><small>${m.blurb}</small><span class="best">${bestWave(i) ? 'Best: wave ' + bestWave(i) : 'Unplayed'}</span></button>`).join('')}</div>
+    <p class="desk">Press <b>1–5</b> to pick a tower and click grass to build. Click a tower to upgrade it. <b>Space</b> sends the next wave early for a bonus. <b>Q</b> calls a barrage and <b>W</b> slows every enemy.</p>
+    <div class="row"><button class="btn primary" id="ov-start" type="button">Take command</button></div>`);
+  els.card.querySelectorAll('.map-btn').forEach(b => b.onclick = () => {
+    ui.map = +b.dataset.map; loadMap(ui.map);
+    els.card.querySelectorAll('.map-btn').forEach(x => x.classList.toggle('on', x === b));
+  });
+  $('ov-start').onclick = () => { initAudio(); restart(); };
   $('ov-start').focus();
+  refreshHud();
 }
+function toTitle() { S = newState(); loadMap(ui.map); ui.selected = null; ui.build = null; refreshPanel(true); titleScreen(); }
 function gameOver() {
-  S.over = true; saveBest(S.wave - 1);
+  S.over = true; saveBest(S.wave - 1); sfx('lose');
   setTimeout(() => {
     showOverlay(`
       <h2>The gate <span>fell</span></h2>
-      <p>You held through ${Math.max(0, S.wave - 1)} wave${S.wave - 1 === 1 ? '' : 's'} with ${fmt(S.totalKills)} enemies defeated.</p>
-      <p>Best: wave ${bestWave()}</p>
-      <div class="row"><button class="btn primary" id="ov-again" type="button">Try again</button></div>`);
-    $('ov-again').onclick = restart; $('ov-again').focus();
+      <p>You held through ${Math.max(0, S.wave - 1)} wave${S.wave - 1 === 1 ? '' : 's'} on ${MAPS[MAP_I].name} with ${fmt(S.totalKills)} enemies defeated.</p>
+      <p>Best on this map: wave ${bestWave()}</p>
+      <div class="row"><button class="btn primary" id="ov-again" type="button">Try again</button><button class="btn" id="ov-maps" type="button">Change map</button></div>`);
+    $('ov-again').onclick = restart; $('ov-maps').onclick = toTitle; $('ov-again').focus();
   }, 600);
 }
 function victory() {
-  ui.paused = true;
+  ui.paused = true; sfx('win');
   showOverlay(`
     <h2>The line <span>held</span></h2>
-    <p>All ${VICTORY_WAVE} waves defeated with ${S.lives} li${S.lives === 1 ? "fe" : "ves"} left and ${fmt(S.totalKills)} enemies down.</p>
-    <div class="row"><button class="btn primary" id="ov-endless" type="button">Keep going (endless)</button><button class="btn" id="ov-again" type="button">New game</button></div>`);
+    <p>All ${VICTORY_WAVE} waves defeated with ${S.lives} li${S.lives === 1 ? 'fe' : 'ves'} left and ${fmt(S.totalKills)} enemies down.</p>
+    <div class="row"><button class="btn primary" id="ov-endless" type="button">Keep going (endless)</button><button class="btn" id="ov-maps" type="button">Change map</button></div>`);
   $('ov-endless').onclick = () => { S.endless = true; hideOverlay(); ui.paused = false; refreshHud(); };
-  $('ov-again').onclick = restart;
+  $('ov-maps').onclick = toTitle;
 }
 function restart() {
-  S = newState(); ui.selected = null; ui.build = null; ui.paused = false; ui.started = true;
+  S = newState(); loadMap(ui.map);
+  ui.selected = null; ui.build = null; ui.targeting = null; ui.perkOpen = false; ui.paused = false; ui.started = true;
   hideOverlay(); refreshPanel(true); refreshHud();
+}
+function offerPerks() {
+  const pool = PERKS.filter(p => !S.perks.includes(p.id)), picks = [];
+  while (picks.length < 3 && pool.length) picks.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+  if (!picks.length) return;
+  ui.perkChoices = picks; ui.perkOpen = true; ui.paused = true; ui.targeting = null; sfx('perk');
+  showOverlay(`
+    <h2>Field <span>orders</span></h2>
+    <p>Choose one. Every gift has a price.</p>
+    <div class="perks">${picks.map((p, i) => `<button class="perk" type="button" data-i="${i}"><span class="pk-key">${i + 1}</span><span class="pk-name">${p.name}</span><span class="pk-up">+ ${p.up}</span><span class="pk-down">− ${p.down}</span></button>`).join('')}</div>`, 'wide');
+  els.card.querySelectorAll('.perk').forEach(b => b.onclick = () => pickPerk(+b.dataset.i));
+}
+function pickPerk(i) {
+  const p = ui.perkChoices[i];
+  if (!p || !ui.perkOpen) return;
+  p.apply(S.mods); S.modVer++; S.perks.push(p.id);
+  ui.perkOpen = false; ui.paused = false; hideOverlay(); sfx('upgrade');
+  refreshPanel(true); refreshHud();
 }
 
 // ===================================================================
 // Input
 // ===================================================================
-function evTile(ev) {
+function evPx(ev) {
   const r = canvas.getBoundingClientRect();
-  const x = (ev.clientX - r.left) / r.width * W, y = (ev.clientY - r.top) / r.height * H;
-  return [Math.floor(x / TILE), Math.floor(y / TILE)];
+  return [(ev.clientX - r.left) / r.width * W, (ev.clientY - r.top) / r.height * H];
 }
-canvas.addEventListener('pointermove', ev => { ui.hoverTile = evTile(ev); });
-canvas.addEventListener('pointerleave', () => { ui.hoverTile = null; });
-canvas.addEventListener('contextmenu', ev => { ev.preventDefault(); ui.build = null; ui.selected = null; refreshPanel(true); });
+canvas.addEventListener('pointermove', ev => { const [x, y] = evPx(ev); ui.hoverPx = [x, y]; ui.hoverTile = [Math.floor(x / TILE), Math.floor(y / TILE)]; });
+canvas.addEventListener('pointerleave', () => { ui.hoverTile = null; ui.hoverPx = null; });
+canvas.addEventListener('contextmenu', ev => { ev.preventDefault(); ui.build = null; ui.selected = null; ui.targeting = null; refreshPanel(true); refreshHud(); });
 canvas.addEventListener('pointerdown', ev => {
-  if (ev.button !== 0 || S.over || !ui.started) return;
-  const [tx, ty] = evTile(ev); ui.hoverTile = [tx, ty];
+  if (ev.button !== 0 || S.over || !ui.started || ui.perkOpen) return;
+  const [px, py] = evPx(ev), tx = Math.floor(px / TILE), ty = Math.floor(py / TILE);
+  ui.hoverPx = [px, py]; ui.hoverTile = [tx, ty];
+  if (ui.targeting) { useAbility(ui.targeting, px, py); ui.targeting = null; refreshHud(); return; }
   const existing = towerAt(tx, ty);
   if (existing) { ui.selected = existing; ui.build = null; }
   else if (ui.build) {
     const t = placeTower(ui.build, tx, ty);
-    if (t && S.gold < TOWERS[ui.build].cost) { ui.build = null; ui.selected = t; }
+    if (t && S.gold < buildCost(ui.build)) { ui.build = null; ui.selected = t; }
   } else ui.selected = null;
   refreshPanel(true); refreshHud();
 });
@@ -1072,18 +1359,33 @@ canvas.addEventListener('pointerdown', ev => {
 els.btnWave.onclick = () => { startWave(); refreshHud(); refreshPanel(true); };
 els.btnSpeed.onclick = () => { ui.speed = ui.speed === 3 ? 1 : ui.speed + 1; refreshHud(); };
 els.btnPause.onclick = () => { ui.paused = !ui.paused; refreshHud(); };
+function toggleSound() {
+  A.on = !A.on;
+  try { localStorage.setItem('bastion-line-mute', A.on ? '0' : '1'); } catch (e) {}
+  if (A.on) { initAudio(); sfx('build'); }
+  refreshHud();
+}
+els.btnSound.onclick = toggleSound;
+els.ab.strike.onclick = toggleStrike;
+els.ab.snap.onclick = () => { useAbility('snap'); refreshHud(); };
 
 window.addEventListener('keydown', ev => {
   if (ev.target.closest && ev.target.closest('input, textarea')) return;
-  if (!ui.started) return;
+  if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
   const k = ev.key.toLowerCase();
+  if (k === 'm') { toggleSound(); return; }
+  if (!ui.started) return;
+  if (ui.perkOpen) { const n = +k; if (n >= 1 && n <= 3) pickPerk(n - 1); return; }
   const idx = ['1', '2', '3', '4', '5'].indexOf(k);
   if (idx >= 0) { selectBuild(ui.build === TOWER_KEYS[idx] ? null : TOWER_KEYS[idx]); return; }
-  if (k === 'escape') { ui.build = null; ui.selected = null; refreshPanel(true); }
+  if (k === 'escape') { ui.build = null; ui.selected = null; ui.targeting = null; refreshPanel(true); refreshHud(); }
   else if (k === ' ') { ev.preventDefault(); if (!S.over) els.btnWave.click(); }
   else if (k === 'p') els.btnPause.click();
   else if (k === 'f') els.btnSpeed.click();
-  else if (ui.selected && k === 'u') { upgradeTower(ui.selected); refreshPanel(true); }
+  else if (k === 'q') { toggleStrike(); refreshHud(); }
+  else if (k === 'w') { useAbility('snap'); refreshHud(); }
+  else if (ui.selected && k === 'u') { upgradeTower(ui.selected, 0); refreshPanel(true); }
+  else if (ui.selected && k === 'i' && ui.selected.lvl === 1) { upgradeTower(ui.selected, 1); refreshPanel(true); }
   else if (ui.selected && (k === 's' || k === 'delete' || k === 'backspace')) { sellTower(ui.selected); refreshPanel(true); }
   else if (ui.selected && k === 't') {
     const i = MODES.findIndex(m => m[0] === ui.selected.mode);
@@ -1099,7 +1401,7 @@ function frame(now) {
   const real = Math.min(0.1, (now - last) / 1000); last = now;
   if (ui.started && !ui.paused && !S.over) {
     let remaining = real * ui.speed;
-    while (remaining > 0) { const step = Math.min(1 / 60, remaining); update(step); remaining -= step; }
+    while (remaining > 0) { const step = Math.min(1 / 60, remaining); update(step); remaining -= step; if (ui.paused || S.over) break; }
   } else updateFx(0);
   render();
   uiTimer -= real;
@@ -1107,12 +1409,12 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
-S = newState();
+S = newState(); loadMap(ui.map);
 refreshPanel(true); refreshHud(); titleScreen();
 requestAnimationFrame(frame);
 
 // Test hook for automated play-throughs.
-window.__bastion = { get S() { return S; }, ui, TOWERS, ENEMIES, placeTower, upgradeTower, startWave, update, tileFree, pathSet, waveGroups };
+window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast };
 })();
 </script>
 </body>
