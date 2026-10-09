@@ -24,7 +24,7 @@ The second upgrade splits into two paths, so two players end up with different d
 
 **Maps:** Switchback (long and winding), The Serpent (four long climbs), Short Fuse (a short road, hard). Your best wave is saved per map.
 
-**Keys:** `H` commands the hero · `E` / `R` hero skill and ultimate · `K` skill tree · `1`–`5` pick a tower · `Space` sends the next wave (sending it early pays bonus gold) · `U` / `I` pick upgrade path A / B · `S` sells · `T` changes targeting · `Q` / `W` abilities · `F` changes speed · `P` pauses · `M` mutes · `Esc` cancels.
+**Keys:** `H` commands the hero · `E` / `R` hero skill and ultimate · `K` skill tree · `1`–`5` pick a tower · `Space` sends the next wave (sending it early pays bonus gold) · `U` / `I` pick upgrade path A / B · `S` sells · `T` changes targeting · `Q` / `W` abilities · `N` next-wave intel · `F` changes speed · `P` pauses · `M` mutes · `Esc` cancels.
 
 ## Heroes
 
@@ -46,7 +46,7 @@ All prices and rewards use **BST**, the game's in-game token (the hex coin with 
 
 ## Phones and tablets
 
-The game is built for landscape. In portrait on a touch device it shows a "Turn your phone sideways" screen (with a "Play in portrait anyway" button) and pauses until you rotate. On a phone in landscape the board fills the screen height, the build menu and abilities sit to its right, and nothing scrolls the page. Tap **Take command** to also request full screen and a landscape lock where the browser allows it (a Full screen button appears on touch devices).
+The game is built for landscape and the battlefield always takes as much of the screen as possible. On wide-short screens such as phones in landscape, the stats and build menu sit in a narrow rail on the left and the controls, hero and abilities in a rail on the right. On other screens they sit in slim strips above and below the board. Tower, hero and wave details appear in a small floating card only while something is selected (the ⓘ button or `N` shows next-wave intel). In portrait on a touch device the game shows a "Turn your phone sideways" screen (with a "Play in portrait anyway" button) and pauses until you rotate. Tapping **Take command** also requests full screen and a landscape lock where the browser allows it.
 
 Touch building is two taps so small tiles are easy to hit: pick a tower, tap a grass tile to preview it, then tap the same tile again to build. Tapping near a built tower selects it.
 

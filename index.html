@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
-/* Layout: a war-table — the map is the hero on the left, a brass-trimmed field ledger on the right (stacks below on phones). */
+/* Layout: the battlefield takes every pixel it can. Slim HUD strips sit above and below it, or in narrow rails beside it on wide screens such as landscape phones, whichever leaves the bigger board. */
 /* Deliberately single-theme: the game world is a night-time moss field, so it stays dark on any host. */
 :root {
   color-scheme: dark;
@@ -37,42 +37,53 @@ body {
   font-family: var(--font-body);
   font-size: 15px;
   line-height: 1.45;
-  padding-inline: 16px;
-  padding-block: 12px 20px;
+  padding: 0;
+  overflow: hidden;
   box-sizing: border-box;
 }
 *, *::before, *::after { box-sizing: border-box; }
 button { font: inherit; color: inherit; }
 button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 
-.shell { max-width: 1340px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
 
-/* ---------- Top bar ---------- */
-.topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
-.brand { font-family: var(--font-display); font-weight: 800; font-size: 30px; letter-spacing: 0.04em; text-transform: uppercase; line-height: 1; margin: 0; }
-.brand span { color: var(--brass); }
-.stats { display: flex; gap: 8px; flex-wrap: wrap; margin-right: auto; }
-.stat { display: flex; align-items: baseline; gap: 8px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 6px 12px; }
-.stat-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
-.stat-value { font-family: var(--font-mono); font-weight: 700; font-size: 18px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* ---------- Game frame ---------- */
+.game { height: 100%; display: grid; gap: 6px 10px; padding: 8px 16px; --rail: 132px;
+  grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas: "stats ctrl" "cell cell" "build abil"; }
+.game.side { grid-template-columns: var(--rail) minmax(0, 1fr) var(--rail); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "stats cell ctrl" "build cell abil"; padding-block: 6px; }
+.hud { display: flex; align-items: center; gap: 6px; min-width: 0; flex-wrap: wrap; }
+.hud-stats { grid-area: stats; }
+.hud-ctrl { grid-area: ctrl; justify-content: flex-end; }
+.dock-build { grid-area: build; }
+.dock-abil { grid-area: abil; justify-content: flex-end; }
+.cell { grid-area: cell; position: relative; min-width: 0; min-height: 0; }
+.board { position: absolute; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); background: var(--panel); touch-action: manipulation; }
+.board canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
+
+.stat { display: flex; align-items: center; gap: 6px; height: 34px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 0 10px; }
+.stat svg { width: 14px; height: 14px; fill: var(--danger); flex: none; }
+.stat-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.stat-value { font-family: var(--font-mono); font-weight: 700; font-size: 16px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .stat-value.lives { color: var(--danger); }
 .stat-value.gold { color: var(--brass); }
 .stat.flash { animation: flash 0.5s ease-out; }
 @keyframes flash { from { background: var(--danger); } to { background: var(--panel); } }
 
-.controls { display: flex; gap: 8px; flex-wrap: wrap; }
-.btn { background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 14px; cursor: pointer; font-weight: 600; white-space: nowrap; transition: border-color .15s, background .15s; }
+.btn { background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 7px 14px; cursor: pointer; font-weight: 600; white-space: nowrap; transition: border-color .15s, background .15s; }
 .btn:hover:not(:disabled) { border-color: var(--brass); }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn.primary { background: var(--brass); color: var(--brass-ink); border-color: var(--brass); }
 .btn.primary:hover:not(:disabled) { background: var(--ink); border-color: var(--ink); }
 .btn.danger { color: var(--danger); }
 .btn .kbd { font-family: var(--font-mono); font-size: 11px; opacity: 0.6; margin-left: 6px; }
-
-/* ---------- Main layout ---------- */
-.layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
-.board { position: relative; width: 100%; max-width: 100%; aspect-ratio: 960 / 600; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); background: var(--panel); touch-action: manipulation; }
-.board canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
+.hud-ctrl .btn { height: 34px; padding: 0 12px; font-size: 14px; }
+.ibtn { position: relative; width: 34px; height: 34px; display: grid; place-items: center; padding: 0; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); cursor: pointer; font-family: var(--font-mono); font-weight: 700; font-size: 13px; }
+.ibtn:hover:not(:disabled) { border-color: var(--brass); }
+.ibtn:disabled { opacity: 0.45; cursor: not-allowed; }
+.ibtn.on { border-color: var(--brass); color: var(--brass); }
+.ibtn svg { width: 16px; height: 16px; fill: currentColor; }
+.ibtn svg[fill="none"] { fill: none; }
+.ibtn .badge { position: absolute; top: -6px; right: -6px; margin: 0; }
 
 .overlay { position: fixed; inset: 0; z-index: 50; display: flex; overflow-y: auto; background: rgba(10, 15, 12, 0.82); padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
 .overlay-card { margin: auto; max-width: 460px; text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center; }
@@ -81,24 +92,29 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--brass)
 .overlay p { margin: 0; color: var(--muted); text-wrap: pretty; }
 .overlay .row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 
-/* ---------- Ledger (side panel) ---------- */
-.ledger { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); display: flex; flex-direction: column; min-width: 0; }
-.ledger section { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
-.ledger section + section { border-top: 1px solid var(--line); }
+/* ---------- Floating detail card ---------- */
+.panel { position: absolute; top: 8px; right: 8px; width: min(280px, 46%); max-height: calc(100% - 16px); overflow-y: auto; background: rgba(20, 29, 24, 0.94); border: 1px solid var(--line); border-radius: 8px; padding: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); }
+.panel.left { right: auto; left: 8px; }
+.panel-x { position: absolute; top: 4px; right: 4px; width: 28px; height: 28px; border: 0; background: none; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; border-radius: 4px; }
+.panel-x:hover { color: var(--ink); }
+.info { display: flex; flex-direction: column; gap: 9px; }
+.info > .eyebrow:first-child { padding-right: 26px; }
 .eyebrow { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin: 0; display: flex; justify-content: space-between; }
 
-.shop { display: flex; flex-direction: column; gap: 6px; }
-.shop-item { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; gap: 10px; text-align: left; background: var(--panel-2); border: 1px solid transparent; border-radius: var(--radius); padding: 6px 10px 6px 6px; cursor: pointer; }
-.shop-item:hover { border-color: var(--line); }
+.shop { display: flex; gap: 6px; flex-wrap: wrap; }
+.shop-item { display: flex; flex-direction: column; align-items: center; gap: 1px; width: 62px; padding: 4px 4px 3px; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); cursor: pointer; }
+.shop-item:hover { border-color: var(--brass); }
 .shop-item.active { border-color: var(--brass); background: #2c3b31; }
 .shop-item.poor .shop-cost { color: var(--danger); }
-.shop-item canvas { width: 40px; height: 40px; }
-.shop-name { font-weight: 600; display: block; line-height: 1.2; }
-.shop-desc { font-size: 12.5px; color: var(--muted); display: block; line-height: 1.3; }
-.shop-cost { font-family: var(--font-mono); font-weight: 700; color: var(--brass); font-variant-numeric: tabular-nums; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
-.shop-cost .kbd { font-size: 10px; color: var(--muted); font-weight: 500; }
+.shop-item canvas { width: 30px; height: 30px; }
+.shop-name { font-size: 10.5px; color: var(--muted); line-height: 1.1; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.shop-desc { display: none; }
+.shop-cost { font-family: var(--font-mono); font-weight: 700; font-size: 12px; color: var(--brass); font-variant-numeric: tabular-nums; display: flex; gap: 4px; align-items: center; }
+.shop-cost .kbd { display: none; }
+.cc { white-space: nowrap; }
+.cc .tok { margin-left: 0.15em; }
 
-.info h3 { font-family: var(--font-display); font-weight: 700; font-size: 24px; letter-spacing: 0.03em; text-transform: uppercase; margin: 0; line-height: 1; }
+.info h3 { font-family: var(--font-display); font-weight: 700; font-size: 22px; letter-spacing: 0.03em; text-transform: uppercase; margin: 0; line-height: 1; }
 .sel-head { display: flex; gap: 10px; align-items: center; }
 .sel-head canvas { width: 48px; height: 48px; flex: none; }
 .pips { display: flex; gap: 4px; margin-top: 4px; }
@@ -134,17 +150,40 @@ dl.kv dd .next { color: var(--good); }
 .pk-down { color: var(--danger); font-size: 13.5px; }
 .pk-key { position: absolute; top: 8px; right: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
 
-.left { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.abil { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.abil-btn { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: space-between; gap: 8px; text-align: left; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 10px; cursor: pointer; }
+.abil { display: flex; gap: 6px; flex-wrap: wrap; }
+.abil-btn { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 104px; height: 40px; text-align: left; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 0 10px; cursor: pointer; }
 .abil-btn .ab-fill { position: absolute; inset: 0 auto 0 0; width: 0; background: rgba(217, 168, 78, 0.18); }
 .abil-btn.ready { border-color: var(--brass); }
 .abil-btn.ready .ab-fill { background: rgba(217, 168, 78, 0.12); }
 .abil-btn.armed { background: #3a2a1c; border-color: var(--danger); }
-.ab-text { position: relative; display: flex; flex-direction: column; min-width: 0; }
-.ab-text b { font-weight: 600; }
-.ab-text small { color: var(--muted); font-size: 12px; line-height: 1.3; }
-.ab-cd { position: relative; font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--brass); font-size: 13px; }
+.ab-text { position: relative; display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
+.ab-text b { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ab-text small { display: none; }
+.ab-cd { position: relative; font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--brass); font-size: 11.5px; white-space: nowrap; }
+
+.hero-chip { display: flex; align-items: center; gap: 4px; }
+.chip-main { display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 8px 0 4px; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); cursor: pointer; min-width: 0; }
+.chip-main:hover, .chip-main.on { border-color: var(--brass); }
+.chip-main canvas { flex: none; }
+.chip-body { display: flex; flex-direction: column; gap: 3px; width: 74px; min-width: 0; }
+.chip-top { display: flex; justify-content: space-between; gap: 4px; font-size: 12px; line-height: 1; }
+.chip-top b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chip-top span { font-family: var(--font-mono); font-weight: 700; color: var(--brass); white-space: nowrap; }
+
+/* rails beside the board */
+.game.side .hud { flex-direction: column; align-items: stretch; flex-wrap: nowrap; }
+.game.side .hud-stats .stat { justify-content: space-between; }
+.game.side .hud-ctrl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-content: start; }
+.game.side #btn-wave { grid-column: 1 / -1; padding: 0 6px; }
+.game.side .ibtn { width: auto; }
+.game.side .dock-build, .game.side .dock-abil { justify-content: flex-start; }
+.game.side .shop { flex-direction: column; flex-wrap: nowrap; }
+.game.side .shop-item { flex-direction: row; justify-content: space-between; width: auto; padding: 3px 8px 3px 4px; }
+.game.side .shop-name { display: none; }
+.game.side .abil { flex-direction: column; flex-wrap: nowrap; }
+.game.side .abil-btn { min-width: 0; height: 36px; padding: 0 8px; }
+.game.side .hero-chip .chip-main { flex: 1; }
+.game.side .chip-body { width: auto; flex: 1; }
 
 .branches { display: grid; gap: 6px; }
 .branch { display: flex; flex-direction: column; gap: 2px; text-align: left; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 10px; cursor: pointer; }
@@ -156,20 +195,7 @@ dl.kv dd .next { color: var(--good); }
 .br-desc { font-size: 13px; }
 .br-stats { font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
 
-@media (max-width: 960px) {
-  .layout { grid-template-columns: minmax(0, 1fr); }
-  .shop { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
-  .shop-item { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; padding: 6px 4px; gap: 4px; }
-  .shop-desc, .shop-cost .kbd { display: none; }
-  .shop-name { font-size: 12px; }
-  .shop-cost { align-items: center; }
-}
 @media (max-width: 520px) {
-  .brand { font-size: 24px; }
-  .stat { padding: 4px 8px; }
-  .stat-value { font-size: 15px; }
-  .btn { padding: 7px 10px; }
-  .btn .kbd { display: none; }
   .overlay { padding: 10px; }
   .overlay-card { gap: 8px; }
   .overlay h2 { font-size: 30px; }
@@ -182,13 +208,12 @@ dl.kv dd .next { color: var(--good); }
   .perk { padding: 7px 10px; gap: 1px; }
   .pk-name { font-size: 17px; }
   .pk-up, .pk-down { font-size: 12.5px; }
-  .ab-text small { display: none; }
 }
 /* ---------- BST token ---------- */
 :root { --coin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ffe29a'/%3E%3Cstop offset='.55' stop-color='%23d9a84e'/%3E%3Cstop offset='1' stop-color='%238a5f1c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpolygon points='16,1.5 28.5,8.75 28.5,23.25 16,30.5 3.5,23.25 3.5,8.75' fill='url(%23g)' stroke='%235a3d10' stroke-width='1.3'/%3E%3Cpolygon points='16,5.5 25,10.75 25,21.25 16,26.5 7,21.25 7,10.75' fill='none' stroke='%235a3d10' stroke-opacity='.55' stroke-width='1.2'/%3E%3Cpath d='M10.5 21.5v-8.5h2.2v1.8h2.2V13h2.2v1.8h2.2V13h2.2v8.5z' fill='%235a3d10'/%3E%3Cpath d='M13 21.5v-2.6a3 3 0 016 0v2.6z' fill='%23ffe29a'/%3E%3C/svg%3E"); }
 .tok { display: inline-block; width: 1.05em; height: 1.05em; margin-left: 0.28em; vertical-align: -0.17em; background: var(--coin) center / contain no-repeat; }
 .stat.token { align-items: center; gap: 7px; }
-.stat.token .tok { width: 22px; height: 22px; margin: 0; }
+.stat.token .tok { width: 18px; height: 18px; margin: 0; }
 .stat.token.up { animation: gainflash 0.5s ease-out; }
 .stat.token.down { animation: spendflash 0.5s ease-out; }
 @keyframes gainflash { from { background: rgba(143, 199, 108, 0.45); } to { background: var(--panel); } }
@@ -206,20 +231,11 @@ dl.kv dd .next { color: var(--good); }
 .rot-phone::after { content: ''; position: absolute; left: 50%; bottom: 5px; width: 14px; height: 3px; margin-left: -7px; background: var(--brass); border-radius: 2px; }
 @keyframes rot { 0%, 25% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
 /* ---------- Heroes ---------- */
-.hero-card .hc-top { display: flex; align-items: center; gap: 10px; }
-.hc-name { display: flex; flex-direction: column; min-width: 0; flex: 1; }
-.hc-name b { font-family: var(--font-display); font-weight: 700; font-size: 21px; text-transform: uppercase; letter-spacing: 0.03em; line-height: 1; }
-.hc-name small { color: var(--muted); font-size: 12px; }
-.hc-lvl { font-family: var(--font-mono); font-weight: 700; color: var(--brass); white-space: nowrap; }
-.bar { height: 7px; background: var(--panel-2); border-radius: 4px; overflow: hidden; }
-.bar.thin { height: 4px; }
+.bar { height: 5px; background: var(--ground); border-radius: 3px; overflow: hidden; }
+.bar.thin { height: 3px; }
 .bar .fill { display: block; height: 100%; width: 0; }
 .fill.hp { background: var(--good); }
 .fill.xp { background: var(--brass); }
-.hc-state { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.hc-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.hc-actions .btn.on { border-color: var(--brass); background: #2c3b31; }
-.badge { margin-left: 6px; background: var(--brass); color: var(--brass-ink); border-radius: 9px; padding: 0 6px; font-size: 11px; font-weight: 700; font-family: var(--font-mono); }
 .abil-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 .heroes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; }
 .hero-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; cursor: pointer; min-width: 0; }
@@ -258,35 +274,29 @@ dl.kv dd .next { color: var(--good); }
   .kbd { display: none !important; }
   .desk { display: none !important; }
   .tapmsg { display: block; }
-  .btn, .abil-btn, .seg button, .shop-item { min-height: 40px; }
+  .seg button { min-height: 36px; }
 }
 @media (orientation: landscape) and (max-height: 560px) {
-  html, body { overflow: hidden; }
-  body { padding-block: 6px; }
-  .shell { height: 100%; gap: 6px; }
-  .topbar { flex-wrap: nowrap; gap: 8px; }
-  .brand { display: none; }
-  .stats { flex-wrap: nowrap; gap: 6px; }
-  .stat { padding: 3px 9px; gap: 6px; align-items: center; }
-  .stat-label { font-size: 10px; }
-  .stat-value { font-size: 15px; }
-  .stat.token .tok { width: 18px; height: 18px; }
-  .controls { flex-wrap: nowrap; gap: 6px; }
-  .btn { padding: 5px 10px; font-size: 13px; min-height: 34px; }
-  .layout { flex: 1; min-height: 0; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; grid-template-areas: "board ledger" "board abil"; gap: 6px 8px; }
-  .left { display: contents; }
-  .board { grid-area: board; aspect-ratio: auto; width: auto; align-self: start; }
-  .ledger { grid-area: ledger; align-self: stretch; overflow-y: auto; min-height: 0; }
-  .shop-name { display: none; }
-  .shop-item { padding: 5px 2px; gap: 2px; }
-  .shop-item canvas { width: 34px; height: 34px; }
-  .shop-cost { font-size: 12px; }
-  .cc { white-space: nowrap; }
-  .cc .tok { margin-left: 0.15em; }
-  .ledger section { padding: 8px; gap: 6px; }
-  .abil { grid-area: abil; gap: 6px; }
-  .abil-btn { padding: 5px 8px; }
-  .ab-text small { display: none; }
+  .game { --rail: 100px; gap: 6px 8px; }
+  .game.side { padding-inline: max(8px, env(safe-area-inset-left)) max(8px, env(safe-area-inset-right)); }
+  .stat { height: 30px; padding: 0 8px; }
+  .stat-value { font-size: 14px; }
+  .hud-ctrl .btn { height: 32px; font-size: 13px; }
+  .btn .kbd { display: none; }
+  .ibtn { height: 30px; }
+  .shop-item canvas { width: 26px; height: 26px; }
+  .abil-btn, .game.side .abil-btn { height: 32px; }
+  .ab-text b { font-size: 12px; }
+  .chip-main { height: 36px; }
+  .panel { width: min(210px, 42%); padding: 8px 10px; font-size: 12.5px; }
+  .info > .eyebrow:first-child, .sel-head canvas, #sel-meta, .info .meta { display: none; }
+  .seg button { font-size: 11.5px; padding: 3px 0; }
+  .panel .btn { padding: 5px 8px; font-size: 12.5px; }
+  .br-desc { display: none; }
+  .info { gap: 6px; }
+  .info h3 { font-size: 18px; }
+  dl.kv { font-size: 12.5px; }
+  .tips { display: none; }
   .overlay h2 { font-size: 34px; }
   .overlay p { font-size: 13px; line-height: 1.35; }
   .overlay-card { gap: 8px; }
@@ -298,51 +308,45 @@ dl.kv dd .next { color: var(--good); }
   .tree { gap: 6px; }
   .node { padding: 5px 8px; }
   .n-desc { font-size: 11.5px; }
-  .hero-card .bar.thin, .hc-state { display: none; }
 }
+@media (orientation: landscape) and (max-height: 560px) and (max-width: 700px) { .game { --rail: 92px; } }
 @media (prefers-reduced-motion: reduce) { .stat.flash, .stat.token.up, .stat.token.down { animation: none; } .rot-phone { animation: none; transform: rotate(-90deg); } }
 </style>
 </head>
 <body>
 
-<div class="shell">
-  <header class="topbar">
-    <h1 class="brand">Bastion <span>Line</span></h1>
-    <div class="stats" aria-live="polite">
-      <div class="stat" id="stat-lives"><span class="stat-label">Lives</span><span class="stat-value lives" id="v-lives">20</span></div>
-      <div class="stat token" id="stat-token" title="BST is an in-game token. It is off-chain: no wallet, no blockchain, no real value."><i class="tok" role="img" aria-label="BST token"></i><span class="stat-value gold" id="v-gold">0</span><span class="stat-label">BST</span></div>
-      <div class="stat"><span class="stat-label">Wave</span><span class="stat-value" id="v-wave">0 / 30</span></div>
-    </div>
-    <div class="controls">
-      <button class="btn primary" id="btn-wave">Send wave 1<span class="kbd">Space</span></button>
-      <button class="btn" id="btn-speed" aria-label="Game speed">1× speed<span class="kbd">F</span></button>
-      <button class="btn" id="btn-pause">Pause<span class="kbd">P</span></button>
-      <button class="btn" id="btn-sound" aria-label="Toggle sound">Sound on<span class="kbd">M</span></button>
-      <button class="btn" id="btn-full" aria-label="Toggle full screen" hidden>Full screen</button>
-    </div>
-  </header>
-
-  <div class="layout">
-    <div class="left">
+<div class="game" id="game-root">
+  <div class="hud hud-stats" aria-live="polite">
+    <div class="stat" id="stat-lives" title="Lives"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14s-5.5-3.4-5.5-7.2A3 3 0 0 1 8 4.6a3 3 0 0 1 5.5 2.2C13.5 10.6 8 14 8 14z"/></svg><span class="stat-value lives" id="v-lives">20</span></div>
+    <div class="stat token" id="stat-token" title="BST is an in-game token. It is off-chain: no wallet, no blockchain, no real value."><i class="tok" role="img" aria-label="BST token"></i><span class="stat-value gold" id="v-gold">0</span></div>
+    <div class="stat" title="Wave"><span class="stat-label">Wave</span><span class="stat-value" id="v-wave">0 / 30</span></div>
+  </div>
+  <div class="hud hud-ctrl">
+    <button class="btn primary" id="btn-wave" type="button">Send wave 1</button>
+    <button class="ibtn" id="btn-speed" type="button" title="Game speed (F)" aria-label="Game speed">1×</button>
+    <button class="ibtn" id="btn-pause" type="button" title="Pause (P)" aria-label="Pause"></button>
+    <button class="ibtn" id="btn-intel" type="button" title="Next wave intel (N)" aria-label="Next wave intel"></button>
+    <button class="ibtn" id="btn-sound" type="button" title="Sound (M)" aria-label="Toggle sound"></button>
+    <button class="ibtn" id="btn-full" type="button" title="Full screen" aria-label="Toggle full screen" hidden></button>
+  </div>
+  <div class="cell" id="cell">
     <div class="board" id="board">
       <canvas id="game" aria-label="Battlefield. Choose a tower, then click an empty grass tile to build."></canvas>
+      <div class="panel" id="panel" hidden>
+        <button class="panel-x" id="panel-x" type="button" aria-label="Close">×</button>
+        <section class="info" id="info"></section>
+      </div>
     </div>
+  </div>
+  <div class="hud dock-build"><div class="shop" id="shop"></div></div>
+  <div class="hud dock-abil">
+    <div class="hero-chip" id="hero-card" hidden></div>
     <div class="abil" aria-label="Abilities">
       <button class="abil-btn" id="ab-hero" type="button" hidden><span class="ab-fill"></span><span class="ab-text"></span><span class="ab-cd"></span></button>
       <button class="abil-btn" id="ab-ult" type="button" hidden><span class="ab-fill"></span><span class="ab-text"></span><span class="ab-cd"></span></button>
-      <button class="abil-btn" id="ab-strike" type="button"><span class="ab-fill"></span><span class="ab-text"><b>Barrage</b><small>Q · Five shells on a patch of road</small></span><span class="ab-cd"></span></button>
-      <button class="abil-btn" id="ab-snap" type="button"><span class="ab-fill"></span><span class="ab-text"><b>Cold Snap</b><small>W · Slow every enemy for 5s</small></span><span class="ab-cd"></span></button>
+      <button class="abil-btn" id="ab-strike" type="button" title="Barrage (Q): five shells on a patch of road you choose"><span class="ab-fill"></span><span class="ab-text"><b>Barrage</b></span><span class="ab-cd"></span></button>
+      <button class="abil-btn" id="ab-snap" type="button" title="Cold Snap (W): slow every enemy for 5 seconds"><span class="ab-fill"></span><span class="ab-text"><b>Cold Snap</b></span><span class="ab-cd"></span></button>
     </div>
-    </div>
-
-    <aside class="ledger">
-      <section class="hero-card" id="hero-card" hidden></section>
-      <section>
-        <p class="eyebrow"><span>Build</span><span>Esc to cancel</span></p>
-        <div class="shop" id="shop"></div>
-      </section>
-      <section class="info" id="info"></section>
-    </aside>
   </div>
 </div>
 
@@ -453,6 +457,17 @@ const PERKS = [
   { id: 'mason', name: 'Cheap Masons', up: 'New towers cost 20% less', down: 'Enemies have 6% more health', apply: m => { m.build *= 0.8; m.hp *= 1.06; } },
   { id: 'flare', name: 'Signal Flares', up: 'Abilities recharge 30% faster', down: 'Enemies have 6% more health', apply: m => { m.cd *= 0.7; m.hp *= 1.06; } },
 ];
+const IC = {
+  pause: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="2.5" width="3.5" height="11" rx="1"/><rect x="9.5" y="2.5" width="3.5" height="11" rx="1"/></svg>',
+  play: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5v11l9-5.5z"/></svg>',
+  sound: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6h3l4-3v10l-4-3H2z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5M12.6 3.6a6 6 0 0 1 0 8.8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+  mute: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6h3l4-3v10l-4-3H2z"/><path d="M11 6l4 4M15 6l-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+  full: '<svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>',
+  unfull: '<svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 2v4H2M14 6h-4V2M10 14v-4h4M2 10h4v4"/></svg>',
+  intel: '<svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><path d="M8 7.2v4M8 4.8v.1"/></svg>',
+  star: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5l1.9 4.1 4.4.5-3.3 3 .9 4.4L8 11.3l-3.9 2.2.9-4.4-3.3-3 4.4-.5z"/></svg>',
+};
+const setHTML = (el, html) => { if (el._h !== html) { el._h = html; el.innerHTML = html; } };
 const tk = n => `${n}<i class="tok" role="img" aria-label="BST"></i>`;
 const ABIL = { strike: { cd: 40, name: 'Barrage' }, snap: { cd: 55, name: 'Cold Snap' } };
 
@@ -722,7 +737,7 @@ function newState() {
     mods: mods0(), modVer: 0, perks: [], ab: { strike: 15, snap: 30 }, strikes: [], rains: [], buffs: [], hero: null,
   };
 }
-const ui = { build: null, selected: null, hoverTile: null, hoverPx: null, speed: 1, paused: true, started: false, targeting: null, perkOpen: false, perkChoices: [], map: 0, pending: null, portraitOK: false, rotatePaused: false, hero: 'maren', heroSel: false, storyOpen: false, skillsOpen: false, chapter: 0, pausedBefore: false };
+const ui = { build: null, selected: null, hoverTile: null, hoverPx: null, speed: 1, paused: true, started: false, targeting: null, perkOpen: false, perkChoices: [], map: 0, pending: null, portraitOK: false, rotatePaused: false, intel: false, hero: 'maren', heroSel: false, storyOpen: false, skillsOpen: false, chapter: 0, pausedBefore: false };
 const isModal = () => ui.perkOpen || ui.storyOpen || ui.skillsOpen;
 
 function bestWave(i = MAP_I) { try { return +localStorage.getItem('bastion-line-best-' + i) || 0; } catch (e) { return 0; } }
@@ -780,6 +795,7 @@ function startWave() {
   if (S.over) return;
   if (S.waveActive) S.gold += earlyBonus(S.wave + 1);
   S.wave++;
+  if (S.wave === 1) ui.intel = false;
   const w = S.wave;
   let t = S.time + 0.5;
   const groups = waveGroups(w);
@@ -1684,7 +1700,7 @@ function render() {
 // UI: HUD, shop, info panel
 // ===================================================================
 const $ = id => document.getElementById(id);
-const els = { lives: $('v-lives'), gold: $('v-gold'), wave: $('v-wave'), btnWave: $('btn-wave'), btnSpeed: $('btn-speed'), btnPause: $('btn-pause'), shop: $('shop'), info: $('info'), overlay: $('overlay'), card: $('overlay-card'), btnSound: $('btn-sound'), ab: { strike: $('ab-strike'), snap: $('ab-snap'), hero: $('ab-hero'), ult: $('ab-ult') } };
+const els = { lives: $('v-lives'), gold: $('v-gold'), wave: $('v-wave'), btnWave: $('btn-wave'), btnSpeed: $('btn-speed'), btnPause: $('btn-pause'), shop: $('shop'), info: $('info'), overlay: $('overlay'), card: $('overlay-card'), btnSound: $('btn-sound'), panel: $('panel'), btnIntel: $('btn-intel'), ab: { strike: $('ab-strike'), snap: $('ab-snap'), hero: $('ab-hero'), ult: $('ab-ult') } };
 
 function iconCanvas(type, size) {
   const c = document.createElement('canvas');
@@ -1697,7 +1713,7 @@ function iconCanvas(type, size) {
 for (const k of TOWER_KEYS) {
   const d = TOWERS[k];
   const b = document.createElement('button');
-  b.className = 'shop-item'; b.dataset.type = k; b.type = 'button';
+  b.className = 'shop-item'; b.dataset.type = k; b.type = 'button'; b.title = `${d.name} (${d.key}): ${d.desc}`;
   b.setAttribute('aria-label', `${d.name}, ${d.cost} BST. ${d.desc}`);
   b.appendChild(iconCanvas(k, 40));
   const txt = document.createElement('span');
@@ -1721,8 +1737,8 @@ function statRows(a, b) {
     const va = f(a), vb = b ? f(b) : null;
     return `<dt>${label}</dt><dd>${va}${unit}${vb != null && vb !== va ? ` <span class="next">→ ${vb}${unit}</span>` : ''}</dd>`;
   };
-  let h = row('Damage', s => Math.round(s.dmg)) + row('Shots / sec', s => s.rate.toFixed(2)) + row('Range', s => s.range.toFixed(1), ' tiles');
-  if (a.splash) h += row('Splash', s => s.splash.toFixed(1), ' tiles');
+  let h = row('Damage', s => Math.round(s.dmg)) + row('Shots / sec', s => s.rate.toFixed(2)) + row('Range (tiles)', s => s.range.toFixed(1));
+  if (a.splash) h += row('Splash (tiles)', s => s.splash.toFixed(1));
   if (a.slow) h += row('Slow', s => Math.round(s.slow * 100), '%');
   if (a.chain) h += row('Chain jumps', s => s.chain);
   if (a.burn) h += row('Burn / sec', s => Math.round(s.burn));
@@ -1739,12 +1755,15 @@ function refreshPanel(force) {
     const cc = b.querySelector('.cc');
     if (cc && cc.dataset.v !== String(c)) { cc.dataset.v = c; cc.innerHTML = tk(c); }
   }
-  const t = ui.selected;
+  const t = ui.selected, hs = ui.heroSel && S.hero;
+  els.panel.hidden = !(t || hs || ui.build || ui.intel);
+  const ax = t ? t.x : hs ? S.hero.x : 0;
+  els.panel.classList.toggle('left', ax > W * 0.55);
   let sig;
   if (t) sig = `t${t.id}:${t.lvl}:${t.branch}:${t.mode}:${S.modVer}:${S.gold >= (upgradeCost(t) ?? Infinity)}`;
   else if (ui.heroSel && S.hero) sig = `h${S.hero.lvl}:${S.modVer}:${Object.keys(S.hero.learned).length}:${S.hero.dead}`;
   else if (ui.build) sig = `b${ui.build}:${S.modVer}:${S.gold >= buildCost(ui.build)}`;
-  else sig = `w${S.wave}:${S.waveActive}:${S.modVer}`;
+  else sig = `w${S.wave}:${S.waveActive}:${S.modVer}:${ui.intel}`;
   if (t) { const m = $('sel-meta'); if (m) m.textContent = `${fmt(t.kills)} kills · ${fmt(t.dealt)} damage dealt`; }
   if (!force && sig === lastSig) return;
   lastSig = sig;
@@ -1832,22 +1851,25 @@ function refreshHud() {
   lastGold = S.gold;
   els.wave.textContent = S.endless || S.wave > VICTORY_WAVE ? `${S.wave}` : `${S.wave} / ${VICTORY_WAVE}`;
   const kbd = '<span class="kbd">Space</span>';
-  const C = matchMedia('(orientation: landscape) and (max-height: 560px)').matches;
-  if (!S.waveActive) els.btnWave.innerHTML = `${C ? 'Wave' : 'Send wave'} ${S.wave + 1}${kbd}`;
-  else els.btnWave.innerHTML = `${C ? 'Early' : 'Send next early'} +${tk(earlyBonus(S.wave + 1))}${kbd}`;
+  setHTML(els.btnWave, S.waveActive ? `Early +${tk(earlyBonus(S.wave + 1))}${kbd}` : `Send wave ${S.wave + 1}${kbd}`);
+  els.btnWave.title = S.waveActive ? 'Send the next wave now for bonus BST (Space)' : 'Send the next wave (Space)';
   els.btnWave.disabled = S.over || !ui.started;
-  els.btnSpeed.innerHTML = `${ui.speed}×${C ? '' : ' speed'}<span class="kbd">F</span>`;
-  els.btnPause.innerHTML = `${ui.paused && ui.started ? 'Resume' : 'Pause'}<span class="kbd">P</span>`;
+  setHTML(els.btnSpeed, ui.speed + '×');
+  const paused = ui.paused && ui.started;
+  setHTML(els.btnPause, paused ? IC.play : IC.pause);
+  els.btnPause.setAttribute('aria-label', paused ? 'Resume' : 'Pause'); els.btnPause.title = (paused ? 'Resume' : 'Pause') + ' (P)';
   els.btnPause.disabled = !ui.started || S.over || isModal();
   if (isModal()) els.btnWave.disabled = true;
-  els.btnSound.innerHTML = C ? (A.on ? 'Sound' : 'Muted') : `Sound ${A.on ? 'on' : 'off'}<span class="kbd">M</span>`;
-  $('btn-full').textContent = document.fullscreenElement ? (C ? 'Exit' : 'Exit full screen') : (C ? 'Full' : 'Full screen');
+  setHTML(els.btnSound, A.on ? IC.sound : IC.mute);
+  els.btnSound.title = (A.on ? 'Sound on' : 'Sound off') + ' (M)';
+  setHTML($('btn-full'), document.fullscreenElement ? IC.unfull : IC.full);
+  setHTML(els.btnIntel, IC.intel); els.btnIntel.classList.toggle('on', ui.intel); els.btnIntel.disabled = !ui.started;
   for (const k of ['strike', 'snap']) {
     const b = els.ab[k], left = abilLeft(k), total = ABIL[k].cd * S.mods.cd;
     b.classList.toggle('ready', left === 0);
     b.classList.toggle('armed', ui.targeting === k);
     b.querySelector('.ab-fill').style.width = (left === 0 ? 100 : (1 - left / total) * 100) + '%';
-    b.querySelector('.ab-cd').textContent = ui.targeting === k ? 'Aim…' : left === 0 ? 'Ready' : Math.ceil(left) + 's';
+    b.querySelector('.ab-cd').textContent = ui.targeting === k ? 'Aim' : left === 0 ? '' : Math.ceil(left) + 's';
   }
   const h = S.hero;
   if (h && $('hc-hp')) {
@@ -1858,7 +1880,7 @@ function refreshHud() {
       b.disabled = !on;
       b.classList.toggle('ready', on && left === 0 && !h.dead);
       b.querySelector('.ab-fill').style.width = (!on ? 0 : left === 0 ? 100 : Math.max(0, (1 - left / total) * 100)) + '%';
-      b.querySelector('.ab-cd').textContent = !on ? 'Locked' : h.dead ? 'Down' : left === 0 ? 'Ready' : Math.ceil(left) + 's';
+      b.querySelector('.ab-cd').textContent = !on ? 'W20' : h.dead ? 'Down' : left === 0 ? '' : Math.ceil(left) + 's';
     }
     $('hc-hp').style.width = (h.dead ? 0 : h.hp / h.maxHp * 100) + '%';
     const prev = h.lvl <= 1 ? 0 : XP_NEXT[h.lvl - 2], next = XP_NEXT[h.lvl - 1];
@@ -1874,17 +1896,18 @@ function renderHeroUI() {
   els.ab.hero.hidden = els.ab.ult.hidden = card.hidden = !h;
   if (!h) return;
   const d = HEROES[h.k];
+  const first = d.name.split(' ')[0];
   card.innerHTML = `
-    <div class="hc-top"><span id="hc-icon"></span><div class="hc-name"><b>${d.name}</b><small>${d.title}</small></div><span class="hc-lvl" id="hc-lvl">Lv 1</span></div>
-    <div class="bar"><span class="fill hp" id="hc-hp"></span></div>
-    <div class="bar thin"><span class="fill xp" id="hc-xp"></span></div>
-    <span class="hc-state" id="hc-state"></span>
-    <div class="hc-actions"><button class="btn" id="hc-sel" type="button">Command<span class="kbd">H</span></button><button class="btn" id="hc-skills" type="button">Skills<span class="kbd">K</span><span class="badge" id="hc-sp" hidden></span></button></div>`;
-  $('hc-icon').appendChild(iconHero(h.k, 44));
+    <button class="chip-main" id="hc-sel" type="button" title="Command ${first} (H)"><span id="hc-icon"></span><span class="chip-body"><span class="chip-top"><b>${first}</b><span id="hc-lvl">Lv 1</span></span><span class="bar"><span class="fill hp" id="hc-hp"></span></span><span class="bar thin"><span class="fill xp" id="hc-xp"></span></span></span></button>
+    <button class="ibtn" id="hc-skills" type="button" title="Skill tree (K)" aria-label="Skill tree">${IC.star}<span class="badge" id="hc-sp" hidden></span></button>
+    <span id="hc-state" hidden></span>`;
+  $('hc-icon').appendChild(iconHero(h.k, 30));
   $('hc-sel').onclick = toggleHeroSel; $('hc-skills').onclick = openSkills;
   const evo = h.evo ? d.evo[h.evo === 'a' ? 0 : 1].name : d.active.name;
-  els.ab.hero.querySelector('.ab-text').innerHTML = `<b>${evo}</b><small>E · ${d.active.text}</small>`;
-  els.ab.ult.querySelector('.ab-text').innerHTML = `<b>${d.ult.name}</b><small>${h.ult ? 'R · ' + d.ult.text : 'Unlocks after wave 20'}</small>`;
+  els.ab.hero.querySelector('.ab-text').innerHTML = `<b>${evo}</b>`;
+  els.ab.hero.title = `${evo} (E): ${d.active.text}`;
+  els.ab.ult.querySelector('.ab-text').innerHTML = `<b>${d.ult.name}</b>`;
+  els.ab.ult.title = h.ult ? `${d.ult.name} (R): ${d.ult.text}` : `${d.ult.name}: unlocks after wave 20`;
 }
 
 // ===================================================================
@@ -1936,7 +1959,7 @@ function victory() {
 function restart(intro = true) {
   S = newState(); loadMap(ui.map); S.hero = makeHero(ui.hero); lastGold = S.gold;
   ui.selected = null; ui.build = null; ui.targeting = null; ui.pending = null; ui.heroSel = false;
-  ui.perkOpen = false; ui.storyOpen = false; ui.skillsOpen = false; ui.paused = false; ui.started = true;
+  ui.perkOpen = false; ui.storyOpen = false; ui.skillsOpen = false; ui.paused = false; ui.started = true; ui.intel = true;
   hideOverlay(); renderHeroUI(); refreshPanel(true); refreshHud();
   if (intro) showChapter(0);
 }
@@ -2074,6 +2097,9 @@ els.btnSound.onclick = toggleSound;
 els.ab.strike.onclick = toggleStrike;
 els.ab.snap.onclick = () => { useAbility('snap'); refreshHud(); };
 els.ab.hero.onclick = () => { useHero('e'); refreshHud(); };
+function toggleIntel() { if (!ui.started) return; ui.intel = !ui.intel; if (ui.intel) { ui.selected = null; ui.build = null; ui.heroSel = false; } refreshPanel(true); refreshHud(); }
+els.btnIntel.onclick = toggleIntel;
+$('panel-x').onclick = () => { ui.selected = null; ui.build = null; ui.heroSel = false; ui.intel = false; ui.pending = null; refreshPanel(true); refreshHud(); };
 els.ab.ult.onclick = () => { useHero('r'); refreshHud(); };
 
 window.addEventListener('keydown', ev => {
@@ -2092,7 +2118,8 @@ window.addEventListener('keydown', ev => {
   if (ui.perkOpen) { const n = +k; if (n >= 1 && n <= 3) pickPerk(n - 1); return; }
   const idx = ['1', '2', '3', '4', '5'].indexOf(k);
   if (idx >= 0) { selectBuild(ui.build === TOWER_KEYS[idx] ? null : TOWER_KEYS[idx]); return; }
-  if (k === 'escape') { ui.build = null; ui.selected = null; ui.targeting = null; ui.pending = null; ui.heroSel = false; refreshPanel(true); refreshHud(); }
+  if (k === 'escape') { ui.build = null; ui.selected = null; ui.targeting = null; ui.pending = null; ui.heroSel = false; ui.intel = false; refreshPanel(true); refreshHud(); }
+  else if (k === 'n') toggleIntel();
   else if (k === ' ') { ev.preventDefault(); if (!S.over) els.btnWave.click(); }
   else if (k === 'p') els.btnPause.click();
   else if (k === 'f') els.btnSpeed.click();
@@ -2131,12 +2158,16 @@ function frame(now) {
 const COARSE = matchMedia('(pointer: coarse)').matches;
 const mqCompact = matchMedia('(orientation: landscape) and (max-height: 560px)');
 const mqPortrait = matchMedia('(orientation: portrait) and (pointer: coarse)');
-const layoutEl = document.querySelector('.layout'), boardEl = $('board'), rotateEl = $('rotate'), fsBtn = $('btn-full');
+const rootEl = $('game-root'), cellEl = $('cell'), boardEl = $('board'), rotateEl = $('rotate'), fsBtn = $('btn-full');
+// Try both layouts (HUD strips above/below, or rails beside) and keep whichever gives the bigger board.
 function fitBoard() {
-  if (!mqCompact.matches) { boardEl.style.width = ''; boardEl.style.height = ''; return; }
-  const r = layoutEl.getBoundingClientRect();
-  const k = Math.min(r.height / 600, (r.width - 250) / 960);
-  if (k > 0) { boardEl.style.width = Math.floor(960 * k) + 'px'; boardEl.style.height = Math.floor(600 * k) + 'px'; }
+  const measure = side => { rootEl.classList.toggle('side', side); const r = cellEl.getBoundingClientRect(); return { k: Math.min(r.width / 960, r.height / 600), w: r.width, h: r.height }; };
+  const stack = measure(false), side = measure(true);
+  const useSide = side.k > stack.k * 1.02;
+  const m = useSide ? side : measure(false);
+  const bw = Math.max(0, Math.floor(960 * m.k)), bh = Math.max(0, Math.floor(600 * m.k));
+  boardEl.style.width = bw + 'px'; boardEl.style.height = bh + 'px';
+  boardEl.style.left = Math.floor((m.w - bw) / 2) + 'px'; boardEl.style.top = Math.floor((m.h - bh) / 2) + 'px';
 }
 function updateOrientation() {
   const show = mqPortrait.matches && !ui.portraitOK;
@@ -2158,7 +2189,8 @@ fsBtn.onclick = () => { try { if (document.fullscreenElement) document.exitFulls
 $('rot-skip').onclick = () => { ui.portraitOK = true; updateOrientation(); };
 window.addEventListener('resize', () => { fitBoard(); updateOrientation(); });
 window.addEventListener('orientationchange', () => setTimeout(() => { fitBoard(); updateOrientation(); }, 200));
-if (window.ResizeObserver) new ResizeObserver(fitBoard).observe(layoutEl);
+if (window.ResizeObserver) new ResizeObserver(fitBoard).observe(rootEl);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitBoard);
 
 S = newState(); loadMap(ui.map);
 renderHeroUI(); refreshPanel(true); refreshHud(); titleScreen(); fitBoard(); updateOrientation();
