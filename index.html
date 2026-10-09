@@ -681,6 +681,7 @@ function masterTower(t, skill) {
   ring(t.x, t.y, 6, 34, 0.5, BRANCH_COL[skill]); burst(t.x, t.y - 20, '#ffd166', 14, 90); sfx('upgrade');
   return true;
 }
+function veteran(st, r) { return r ? { ...st, dmg: st.dmg * (1 + 0.06 * r), rate: st.rate * (1 + 0.03 * r), burn: st.burn && st.burn * (1 + 0.06 * r) } : st; }
 function withMastery(type, st, m) {
   if (!m) return st;
   const f = MASTERY[type][m.s].fx(m.r), o = { ...st, ...f };
@@ -694,6 +695,21 @@ function withMastery(type, st, m) {
 }
 const mods0 = () => ({ dmg: 1, rate: 1, range: 0, hp: 1, speed: 1, armor: 0, bounty: 1, build: 1, upCost: 1, sell: 0.7, cd: 1 });
 function baseStats(type, lvl, branch) { const d = TOWERS[type]; return lvl < 2 ? d.lv[lvl] : d.br[branch || 0]; }
+// Veterancy: every tower earns rank from kills, plus half a point for each assist (an enemy it hurt
+// that something else finished off), so support towers rank up too. Each rank: +6% damage, +3% fire rate.
+const VET = [{ name: 'Recruit', kills: 0 }, { name: 'Seasoned', kills: 25 }, { name: 'Veteran', kills: 75 }, { name: 'Elite', kills: 180 }, { name: 'Legend', kills: 400 }];
+const vetPts = t => t.kills + 0.5 * (t.assists || 0);
+function vetRank(t) { let r = 0; while (r + 1 < VET.length && vetPts(t) >= VET[r + 1].kills) r++; return r; }
+function promote(tw) {
+  const r = vetRank(tw);
+  if (r <= (tw.vet || 0)) return;
+  tw.vet = r; ring(tw.x, tw.y, 8, 40, 0.6, '#ffd166'); burst(tw.x, tw.y - 30, '#ffd166', 16, 90);
+  floatText(tw.x, tw.y - 52, `${VET[r].name}!`, '#ffd166'); sfx('perk');
+}
+function vetMeta(t) {
+  const r = vetRank(t), nx = VET[r + 1];
+  return `${VET[r].name}${r ? ' ' + '★'.repeat(r) : ''} · ${fmt(t.kills)} kills, ${fmt(t.assists || 0)} assists${nx ? ` · ${Math.ceil(nx.kills - vetPts(t))} to ${nx.name}` : ''}`;
+}
 // Fewer build sites means each tower carries more of the defense.
 const TOWER_POWER = 1.55;
 function scaled(st) {
@@ -701,9 +717,9 @@ function scaled(st) {
   return { ...st, dmg: st.dmg * m.dmg * TOWER_POWER, rate: st.rate * m.rate, range: st.range * RANGE_K + m.range, burn: st.burn && st.burn * m.dmg * TOWER_POWER };
 }
 function tStats(t) {
-  const mk = t.mast ? t.mast.s * 10 + t.mast.r : 0;
+  const mk = (t.mast ? t.mast.s * 10 + t.mast.r : 0) + vetRank(t) * 100;
   if (t._s && t._v === S.modVer && t._l === t.lvl && t._b === t.branch && t._m === mk) return t._s;
-  t._s = withMastery(t.type, scaled(baseStats(t.type, t.lvl, t.branch)), t.mast); t._v = S.modVer; t._l = t.lvl; t._b = t.branch; t._m = mk;
+  t._s = veteran(withMastery(t.type, scaled(baseStats(t.type, t.lvl, t.branch)), t.mast), vetRank(t)); t._v = S.modVer; t._l = t.lvl; t._b = t.branch; t._m = mk;
   return t._s;
 }
 const buildCost = type => Math.round(TOWERS[type].cost * S.mods.build);
@@ -1220,7 +1236,7 @@ function snapshot(full) {
   const c = { v: 1, at: Date.now(), mapI: S.mapI, wave: S.wave, cleared: S.cleared, gold: S.gold, perks: S.perks, mods: S.mods, totalKills: S.totalKills,
     hero: h && { k: h.k, lvl: h.lvl, xp: h.xp, sp: h.sp, learned: h.learned, evo: h.evo, ult: h.ult, toldSkill: h.toldSkill } };
   if (full) Object.assign(c, { lives: S.lives, endless: S.endless, won: S.won, mapDone: S.mapDone, perkDue: ui.perkOpen,
-    towers: S.towers.map(t => ({ type: t.type, lvl: t.lvl, branch: t.branch, tx: t.tx, ty: t.ty, spent: t.spent, mode: t.mode, kills: t.kills, dealt: t.dealt, mast: t.mast || null })) });
+    towers: S.towers.map(t => ({ type: t.type, lvl: t.lvl, branch: t.branch, tx: t.tx, ty: t.ty, spent: t.spent, mode: t.mode, kills: t.kills, assists: t.assists || 0, dealt: t.dealt, mast: t.mast || null })) });
   return c;
 }
 function store(key, val) { try { if (val == null) localStorage.removeItem(key); else localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val)); } catch (e) {} }
@@ -1411,11 +1427,14 @@ function hurt(e, dmg, tower, pierce, quiet) {
   if (e.brittleT > 0) dmg *= 1 + e.brittle;
   const real = pierce ? dmg : Math.max(dmg * 0.25, dmg - e.armor);
   e.hp -= real; if (!quiet) e.hitT = 0.08;
+  if (tower && tower !== S.hero && tower.type) (e.hitBy || (e.hitBy = new Set())).add(tower);
   if (tower) tower.dealt += Math.min(real, e.hp + real);
   if (e.hp <= 0) {
     e.alive = false;
     S.gold += e.bounty; S.totalKills++; sfx('kill');
     if (tower) tower.kills++;
+    if (tower && tower !== S.hero && TOWERS[tower.type]) promote(tower);
+    if (e.hitBy) for (const o of e.hitBy) if (o !== tower) { o.assists = (o.assists || 0) + 1; promote(o); }
     if (tower && tower === S.hero && tower.fx.gold) S.gold += Math.round(e.bounty * tower.fx.gold);
     heroXp(e);
     burst(e.x, e.y, ENEMIES[e.type].color, e.type === 'boss' ? 40 : 10, e.type === 'boss' ? 160 : 90);
@@ -2612,6 +2631,12 @@ function render() {
       drawTower(ctx, t.type, pl, t.x, t.y, t.angle, TK, 0, pl >= 2 ? pb : -1);
       ctx.globalAlpha = 1;
     } else drawTower(ctx, t.type, t.lvl, t.x, t.y, t.angle, TK, t.flash, t.lvl >= 2 ? t.branch : -1);
+    const vr = t.vet || 0;
+    for (let i = 0; i < vr; i++) {
+      const sx = t.x - 12.5 * TK, sy = t.y + 3 * TK - i * 11, R1 = 5.6, R2 = 2.4;
+      ctx.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? R2 : R1; ctx.lineTo(sx + Math.cos(a) * rr, sy + Math.sin(a) * rr); }
+      ctx.closePath(); ctx.fillStyle = "#ffd166"; ctx.fill(); ctx.strokeStyle = "rgba(10,10,8,0.9)"; ctx.lineWidth = 1.4; ctx.stroke();
+    }
     if (t.mast) for (let i = 0; i < t.mast.r; i++) {
       const dx = t.x + (i - (t.mast.r - 1) / 2) * 9, dy = t.y + 23 * TK;
       ctx.fillStyle = BRANCH_COL[t.mast.s]; ctx.strokeStyle = 'rgba(10,10,8,0.85)'; ctx.lineWidth = 1.2;
@@ -3004,9 +3029,10 @@ function statRows(a, b, also = []) {
 // What a tower would become with the option under the cursor (or the first tap on a touch screen).
 function previewStats(t, p) {
   if (!p) return null;
-  if (p.kind === 'up') return withMastery(t.type, scaled(baseStats(t.type, t.lvl + 1, 0)), null);
-  if (p.kind === 'branch') return withMastery(t.type, scaled(baseStats(t.type, 2, p.branch)), null);
-  if (p.kind === 'mast') return withMastery(t.type, scaled(baseStats(t.type, 2, t.branch)), { s: p.skill, r: (t.mast ? t.mast.r : 0) + 1 });
+  const v = vetRank(t);
+  if (p.kind === 'up') return veteran(scaled(baseStats(t.type, t.lvl + 1, 0)), v);
+  if (p.kind === 'branch') return veteran(scaled(baseStats(t.type, 2, p.branch)), v);
+  if (p.kind === 'mast') return veteran(withMastery(t.type, scaled(baseStats(t.type, 2, t.branch)), { s: p.skill, r: (t.mast ? t.mast.r : 0) + 1 }), v);
   return null;
 }
 function previewName(t, p) {
@@ -3024,7 +3050,7 @@ function renderCompare(t) {
   // every option on offer contributes its rows, so previewing never changes the panel's height
   const opts = t.lvl === 0 ? [{ kind: 'up' }] : t.lvl === 1 ? [0, 1].map(branch => ({ kind: 'branch', branch }))
     : !unlocked('mastery') ? [] : !t.mast ? [0, 1].map(skill => ({ kind: 'mast', skill })) : t.mast.r < 3 ? [{ kind: 'mast', skill: t.mast.s }] : [];
-  dl.innerHTML = statRows(tStats(t), p ? previewStats(t, p) : t.lvl === 0 ? scaled(baseStats(t.type, 1)) : null, opts.map(o => previewStats(t, o)));
+  dl.innerHTML = statRows(tStats(t), p ? previewStats(t, p) : t.lvl === 0 ? veteran(scaled(baseStats(t.type, 1)), vetRank(t)) : null, opts.map(o => previewStats(t, o)));
   if (cap) { cap.classList.toggle('off', !p); if (!p) cap.innerHTML = 'Hover an upgrade to compare'; if (p) cap.innerHTML = `Comparing with <b>${previewName(t, p)}</b>${lastPointer === 'touch' ? ' · tap it again to buy' : ''}`; }
   els.panel.classList.toggle('cmp', !!p);
   els.info.querySelectorAll('[data-pv]').forEach(b => b.classList.toggle('pv', !!p && b.dataset.pv === pvKey(p)));
@@ -3081,10 +3107,10 @@ function refreshPanel(force) {
   els.panel.classList.toggle('left', !!t && !small && t.x > W * 0.55);
   let sig;
   if (!t && ui.preview) ui.preview = null;
-  if (t) sig = `t${t.id}:${t.lvl}:${t.branch}:${t.mode}:${t.mast ? t.mast.s + '.' + t.mast.r : ''}:${S.modVer}:${S.cleared}:${S.gold >= (upgradeCost(t) ?? Infinity)}:${S.gold >= (masteryCost(t) ?? Infinity)}`;
+  if (t) sig = `t${t.id}:v${vetRank(t)}:${t.lvl}:${t.branch}:${t.mode}:${t.mast ? t.mast.s + '.' + t.mast.r : ''}:${S.modVer}:${S.cleared}:${S.gold >= (upgradeCost(t) ?? Infinity)}:${S.gold >= (masteryCost(t) ?? Infinity)}`;
   else if (ui.build) sig = `b${ui.build}:${S.modVer}:${S.gold >= buildCost(ui.build)}`;
   else sig = `w${S.wave}:${S.waveActive}:${S.modVer}:${ui.intel}`;
-  if (t) { const m = $('sel-meta'); if (m) m.textContent = `${fmt(t.kills)} kills · ${fmt(t.dealt)} damage dealt`; }
+  if (t) { const m = $('sel-meta'); if (m) m.textContent = vetMeta(t); }
   if (!force && sig === lastSig) { placePanel(t); return; }
   lastSig = sig;
 
@@ -3122,7 +3148,7 @@ function refreshPanel(force) {
       ${unlocked('targeting') ? `<div><p class="eyebrow" style="margin-bottom:6px"><span>Targeting</span><span>T to cycle</span></p>
       <div class="seg" role="group" aria-label="Targeting">${MODES.map(([k, l]) => `<button type="button" data-mode="${k}" class="${t.mode === k ? 'on' : ''}" aria-pressed="${t.mode === k}">${l}</button>`).join('')}</div></div>` : ''}
       ${actions}
-      <p class="meta" id="sel-meta">${fmt(t.kills)} kills · ${fmt(t.dealt)} damage dealt</p>`;
+      <p class="meta" id="sel-meta">${vetMeta(t)}</p>`;
     $('sel-icon').appendChild(iconCanvas(t.type, 48));
     if (ui.preview && ui.preview.t !== t) ui.preview = null;
     const up = $('btn-up'); if (up) wirePreview(t, up, { kind: 'up' }, () => upgradeTower(t, 0));
@@ -3335,8 +3361,9 @@ function continueCampaign(c) {
   for (const o of c.towers || []) {
     if (!TOWERS[o.type] || !tileFree(o.tx, o.ty)) { if (TOWERS[o.type]) S.gold += o.spent || 0; continue; }
     S.towers.push({ id: S.nextId++, type: o.type, lvl: o.lvl, tx: o.tx, ty: o.ty, x: (o.tx + 0.5) * TILE, y: (o.ty + 0.5) * TILE, cd: 0.2, angle: -Math.PI / 2,
-      mode: o.mode || 'first', branch: o.branch || 0, spent: o.spent, kills: o.kills || 0, dealt: o.dealt || 0, flash: 0, mast: o.mast && MASTERY[o.type] ? o.mast : null });
+      mode: o.mode || 'first', branch: o.branch || 0, spent: o.spent, kills: o.kills || 0, assists: o.assists || 0, vet: 0, dealt: o.dealt || 0, flash: 0, mast: o.mast && MASTERY[o.type] ? o.mast : null });
   }
+  for (const t of S.towers) t.vet = vetRank(t);
   if (c.lives) S.lives = c.lives;
   S.endless = !!c.endless; S.won = !!c.won;
   resetUi(); ui.intel = false;
@@ -3731,7 +3758,7 @@ requestAnimationFrame(frame);
 connectCloud();
 
 // Test hook for automated play-throughs.
-window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get decor() { return decor; }, get sites() { return siteSet; }, A, SET, Music, previewStats, statRows, masterTower, masteryCost, MASTERY, tStats, loadLatest, saveResume, titleScreen, undoLast, lastUndo, sellTower, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, unlocked, UNLOCK, HEROES, COLS, ROWS, TILE, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero, nextMap, openGallery, closeGallery, pickFromGallery, continueCampaign, loadCheckpoint };
+window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get decor() { return decor; }, vetRank, VET, get sites() { return siteSet; }, A, SET, Music, previewStats, statRows, masterTower, masteryCost, MASTERY, tStats, loadLatest, saveResume, titleScreen, undoLast, lastUndo, sellTower, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, unlocked, UNLOCK, HEROES, COLS, ROWS, TILE, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero, nextMap, openGallery, closeGallery, pickFromGallery, continueCampaign, loadCheckpoint };
 })();
 </script>
 </body>
