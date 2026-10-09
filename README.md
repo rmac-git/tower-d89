@@ -80,6 +80,8 @@ The game is built for landscape and the battlefield always takes as much of the 
 
 Undo takes back your last build, upgrade or sale with a full refund. The Undo button next to Build (or `Z`, or `Ctrl`/`Cmd`+`Z`) works for 10 seconds of game time. Its tooltip shows how many seconds are left, and the button hides once there is nothing left to undo. Undoing several times in a row steps back through your recent actions.
 
+Double-clicks are absorbed. A second click or tap within 0.4 seconds of picking a tower, building, upgrading or selling is ignored. Double-clicking a gallery card won't also drop a tower on the map, double-clicking Upgrade buys only one level, and double-tapping a tile on a phone only previews it. Holding down `U`, `I`, `S` or `Z` doesn't repeat the order.
+
 ## Colour-blind friendly
 
 The palette is safe for protanopia and deuteranopia. Good and bad are shown as sky blue and orange, never green and red. Invalid build spots get an orange outline and an X. Every enemy has its own shape as well as a colour from the Okabe-Ito palette:

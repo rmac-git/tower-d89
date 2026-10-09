@@ -2527,16 +2527,23 @@ function closeGallery() {
   ui.galleryOpen = false; ui.paused = ui.galleryPaused; hideOverlay(); refreshPanel(true); refreshHud();
 }
 // The game stays paused while the chosen tower is placed, then picks up where it was.
+// Double-click guard: a second click that lands within a moment of a build, upgrade or sale
+// (or of picking a tower) is treated as part of the first click, not as a new order.
+const GUARD_MS = 400;
+let lastAct = 0;
+const arm = () => { lastAct = performance.now(); };
+const tooSoon = () => performance.now() - lastAct < GUARD_MS;
+function steady() { if (tooSoon()) return false; arm(); return true; }
 function pickFromGallery(k) {
   if (!unlocked(k) || S.gold < buildCost(k)) { sfx('nope'); return; }
-  ui.galleryOpen = false; hideOverlay();
+  arm(); ui.galleryOpen = false; hideOverlay();
   selectBuild(k); ui.buildPause = true; ui.paused = true;
   refreshPanel(true); refreshHud();
 }
 function endBuildPause() { if (ui.buildPause) { ui.buildPause = false; ui.paused = ui.galleryPaused; } }
 function cancelBuild() { ui.build = null; ui.pending = null; endBuildPause(); }
 
-function selectBuild(type) { if (type && !unlocked(type)) return; if (type) ui.fresh.delete(type); ui.build = type; ui.pending = null; if (type) { ui.selected = null; ui.targeting = null; ui.heroSel = false; } refreshPanel(true); }
+function selectBuild(type) { if (type && !unlocked(type)) return; arm(); if (type) ui.fresh.delete(type); ui.build = type; ui.pending = null; if (type) { ui.selected = null; ui.targeting = null; ui.heroSel = false; } refreshPanel(true); }
 
 let lastSig = '';
 const MODES = [['first', 'First'], ['last', 'Last'], ['strong', 'Strong'], ['close', 'Close']];
@@ -2620,9 +2627,9 @@ function refreshPanel(force) {
       ${actions}
       <p class="meta" id="sel-meta">${fmt(t.kills)} kills · ${fmt(t.dealt)} damage dealt</p>`;
     $('sel-icon').appendChild(iconCanvas(t.type, 48));
-    const up = $('btn-up'); if (up) up.onclick = () => { upgradeTower(t, 0); refreshPanel(true); };
-    els.info.querySelectorAll('[data-branch]').forEach(b => b.onclick = () => { upgradeTower(t, +b.dataset.branch); refreshPanel(true); });
-    $('btn-sell').onclick = () => { sellTower(t); refreshPanel(true); };
+    const up = $('btn-up'); if (up) up.onclick = () => { if (steady()) upgradeTower(t, 0); refreshPanel(true); };
+    els.info.querySelectorAll('[data-branch]').forEach(b => b.onclick = () => { if (steady()) upgradeTower(t, +b.dataset.branch); refreshPanel(true); });
+    $('btn-sell').onclick = () => { if (steady()) sellTower(t); refreshPanel(true); };
     els.info.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { t.mode = b.dataset.mode; refreshPanel(true); });
     $('stat-toggle').onclick = () => { ui.statsOpen = !ui.statsOpen; refreshPanel(true); };
     placePanel(t);
@@ -2966,11 +2973,12 @@ canvas.addEventListener('pointerdown', ev => {
   const existing = towerAt(tx, ty) || (touch && !ui.build && !ui.heroSel ? nearTower(px, py) : null);
   if (existing) { ui.selected = existing; ui.build = null; ui.pending = null; ui.heroSel = false; }
   else if (ui.build) {
+    if (tooSoon()) return;
     const why = buildBlock(ui.build, tx, ty);
     if (why) { ui.pending = null; notice(px, py - 26, why); sfx('nope'); }
-    else if (touch && !(ui.pending && ui.pending[0] === tx && ui.pending[1] === ty)) ui.pending = [tx, ty];
+    else if (touch && !(ui.pending && ui.pending[0] === tx && ui.pending[1] === ty)) { ui.pending = [tx, ty]; arm(); }
     else {
-      ui.pending = null;
+      ui.pending = null; arm();
       const t = placeTower(ui.build, tx, ty);
       if (t && ui.buildPause) { ui.build = null; endBuildPause(); }
       else if (t && S.gold < buildCost(ui.build)) { ui.build = null; ui.selected = t; }
@@ -3018,7 +3026,7 @@ els.ab.strike.onclick = toggleStrike;
 els.ab.snap.onclick = () => { useAbility('snap'); refreshHud(); };
 els.ab.hero.onclick = () => { useHero('e'); refreshHud(); };
 $('btn-build').onclick = () => (ui.galleryOpen ? closeGallery() : openGallery());
-$('btn-undo').onclick = () => undoLast();
+$('btn-undo').onclick = () => { if (steady()) undoLast(); };
 function toggleIntel() { if (!ui.started) return; ui.intel = !ui.intel; if (ui.intel) { ui.selected = null; ui.build = null; ui.heroSel = false; } refreshPanel(true); refreshHud(); }
 els.btnIntel.onclick = toggleIntel;
 $('panel-x').onclick = () => { ui.selected = null; cancelBuild(); ui.heroSel = false; ui.intel = false; ui.pending = null; refreshPanel(true); refreshHud(); };
@@ -3029,6 +3037,7 @@ window.addEventListener('keydown', ev => {
   if ((ev.ctrlKey || ev.metaKey) && !ev.altKey && !ev.shiftKey && ev.key.toLowerCase() === 'z') { if (ui.started) { ev.preventDefault(); undoLast(); } return; }
   if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
   const k = ev.key.toLowerCase();
+  if (ev.repeat && ['u', 'i', 's', 'z', 'delete', 'backspace'].includes(k)) return;   // holding a key never repeats an order
   if (k === 'm') { toggleSound(); return; }
   if (!ui.started) return;
   if (ui.galleryOpen) {
