@@ -535,7 +535,7 @@ const MAPS = [
   { name: 'Short Fuse', blurb: 'A short road. Enemies arrive fast. Hard.', seed: 5,
     wp: [[-1, 5], [4, 5], [4, 1], [8, 1], [8, 8], [12, 8], [12, 5], [16, 5]] },
 ];
-let WAYPOINTS, segs, pathLen, pathSet, rockSet, decor, critters = [], scene = {}, airA, airB, airLen, MAP_I = 0;
+let WAYPOINTS, segs, pathLen, pathSet, rockSet, decor, bigDecor = [], critters = [], scene = {}, airA, airB, airLen, MAP_I = 0;
 
 const TOWERS = {
   arrow: {
@@ -896,13 +896,20 @@ function loadMap(i) {
     for (let y = 0; y < ROWS - 1; y++) for (let x = 0; x < COLS; x++) if (free(x, y) && ok(x, y)) { const v = score(x, y) + r() * 0.4; if (v < bs) { bs = v; best = [x, y]; } }
     return best;
   };
-  const dome = pick(() => true, (x, y) => Math.hypot(x - (COLS - 1) / 2, y - (ROWS - 1) / 2) + (byRoad(x, y) ? 1.2 : 0));
-  if (dome) decor.set(dome + '', 'dome');
+  // the dome and the three pastures each take a 2x2 block
+  const quad = (x, y) => [[x, y], [x + 1, y], [x, y + 1], [x + 1, y + 1]];
+  const free2 = (x, y) => y + 1 < ROWS - 1 && quad(x, y).every(([qx, qy]) => free(qx, qy));
+  const byRoad2 = (x, y) => quad(x, y).some(([qx, qy]) => byRoad(qx, qy));
+  const ctr = (x, y) => Math.hypot(x + 0.5 - (COLS - 1) / 2, y + 0.5 - (ROWS - 1) / 2);
+  bigDecor = [];
+  const place2 = (t, kind) => { for (const [qx, qy] of quad(...t)) decor.set(qx + ',' + qy, kind); bigDecor.push({ tx: t[0], ty: t[1], type: kind }); };
+  const dome = pick(free2, (x, y) => ctr(x, y) + (byRoad2(x, y) ? 1.2 : 0));
+  if (dome) place2(dome, 'dome');
   const placed = dome ? [dome] : [];
-  const spread = (x, y) => -Math.min(...placed.map(([px, py]) => Math.hypot(px - x, py - y)), 9) * 0.6 + Math.hypot(x - (COLS - 1) / 2, y - (ROWS - 1) / 2) * 0.35;
+  const spread = (x, y) => -Math.min(...placed.map(([px, py]) => Math.hypot(px - x, py - y)), 9) * 0.6 + ctr(x, y) * 0.35;
   for (const kind of ['chickens', 'goats', 'rabbits']) {
-    const t = pick((x, y) => !byRoad(x, y) && y > 0, spread) || pick(() => true, spread);
-    if (t) { decor.set(t + '', kind); placed.push(t); }
+    const t = pick((x, y) => free2(x, y) && !byRoad2(x, y), spread) || pick(free2, spread);
+    if (t) { place2(t, kind); placed.push(t); }
   }
   for (let i = 0; i < 3; i++) {
     const t = pick((x, y) => !byRoad(x, y), () => r() * 10);
@@ -910,12 +917,12 @@ function loadMap(i) {
   }
   rockSet = new Set(decor.keys());
   critters = [];
-  for (const [k, kind] of decor) {
-    const n = { chickens: 3, goats: 2, rabbits: 3 }[kind]; if (!n) continue;
-    const [tx, ty] = k.split(',').map(Number);
+  for (const { tx, ty, type: kind } of bigDecor) {
+    const n = { chickens: 6, goats: 4, rabbits: 6 }[kind]; if (!n) continue;
+    const bx = tx * TILE + 24, by = ty * TILE + 46, bw = 2 * TILE - 48, bh = 2 * TILE - 70;   // inside the fence
     for (let i = 0; i < n; i++) {
-      const x = tx * TILE + 14 + r() * 32, y = ty * TILE + 22 + r() * 24;
-      critters.push({ kind, tx, ty, x, y, gx: x, gy: y, wait: r() * 2, dir: r() < 0.5 ? -1 : 1, ph: r() * 6, coat: Math.floor(r() * 3), hop: 0 });
+      const x = bx + r() * bw, y = by + r() * bh;
+      critters.push({ kind, bx, by, bw, bh, x, y, gx: x, gy: y, wait: r() * 2, dir: r() < 0.5 ? -1 : 1, ph: r() * 6, coat: Math.floor(r() * 3), hop: 0 });
     }
   }
   // Flyers ignore the road and head straight for the gate.
@@ -1661,7 +1668,7 @@ function updateCritters(dt) {
     const dx = a.gx - a.x, dy = a.gy - a.y, d = Math.hypot(dx, dy);
     if (d < 1) {
       a.wait = 0.6 + Math.random() * (a.kind === 'goats' ? 4 : 2.2);
-      a.gx = a.tx * TILE + 13 + Math.random() * 34; a.gy = a.ty * TILE + 22 + Math.random() * 24;
+      a.gx = a.bx + Math.random() * a.bw; a.gy = a.by + Math.random() * a.bh;
       continue;
     }
     const st = Math.min(d, sp * dt); a.x += dx / d * st; a.y += dy / d * st;
@@ -1687,7 +1694,7 @@ function drawCritters(c, time) {
     c.fillStyle = gl; c.fillRect(fx - 14, fy - 16, 28, 28);
   }
   for (const a of critters) {
-    c.save(); c.translate(a.x, a.y - a.hop); c.scale(a.dir * K * 0.85, K * 0.85);
+    c.save(); c.translate(a.x, a.y - a.hop); c.scale(a.dir * K, K);
     c.fillStyle = 'rgba(10,25,18,0.3)'; c.beginPath(); c.ellipse(0, 3 + a.hop, 4.5, 1.6, 0, 0, 6.283); c.fill();
     c.strokeStyle = 'rgba(20,16,12,0.85)'; c.lineWidth = 0.8;
     if (a.kind === 'chickens') {
@@ -1793,15 +1800,16 @@ function drawBackground() {
     g.strokeStyle = hsl(30, 28, 62); g.lineWidth = 1.6;
     for (const yy of [-6, -2]) { g.beginPath(); g.moveTo(x0, y0 + yy); g.lineTo(x0 + w, y0 + yy); g.lineTo(x0 + w, y0 + h + yy); g.lineTo(x0, y0 + h + yy); g.closePath(); g.stroke(); }
     g.fillStyle = hsl(28, 30, 40);
-    for (let i = 0; i <= 3; i++) for (const [px, py] of [[x0 + w * i / 3, y0], [x0 + w * i / 3, y0 + h]]) g.fillRect(px - 1.5, py - 9, 3, 9);
-    for (const px of [x0, x0 + w]) g.fillRect(px - 1.5, y0 + h / 2 - 9, 3, 9);
+    for (let i = 0; i <= 6; i++) for (const [px, py] of [[x0 + w * i / 6, y0], [x0 + w * i / 6, y0 + h]]) g.fillRect(px - 1.5, py - 9, 3, 9);
+    for (let i = 1; i < 4; i++) for (const px of [x0, x0 + w]) g.fillRect(px - 1.5, y0 + h * i / 4 - 9, 3, 9);
   };
   const items = [...decor].map(([k, type]) => { const [tx, ty] = k.split(',').map(Number); return { tx, ty, type }; })
+    .filter(it => !bigDecor.some(b => b.type === it.type)).concat(bigDecor.map(b => ({ ...b, big: true })))
     .sort((p, q) => (p.type === 'lighthouse') - (q.type === 'lighthouse') || p.ty - q.ty);
   // lupins along the top of the shore
   for (const it of items) if (it.type === 'water' && r() < 0.55) lupins((it.tx + 0.5) * TILE, (ROWS - 1) * TILE + 4, 3 + Math.floor(r() * 3), TILE * 0.8);
-  for (const { tx, ty, type } of items) {
-    const x0 = tx * TILE, y0 = ty * TILE, cx = x0 + TILE / 2, cy = y0 + TILE / 2;
+  for (const { tx, ty, type, big } of items) {
+    const x0 = tx * TILE, y0 = ty * TILE, cx = x0 + (big ? TILE : TILE / 2), cy = y0 + (big ? TILE : TILE / 2);
     if (type === 'water') {
       scene.water.push([x0, y0]);
       g.strokeStyle = 'rgba(225,242,255,0.38)'; g.lineWidth = 1.4;
@@ -1832,8 +1840,9 @@ function drawBackground() {
       poly(g, [-6, -75, 0, -82, 6, -75], hsl(356, 55, 40), INK);
       g.restore();
     } else if (type === 'dome') {
-      scene.dome = [cx + 15 * K * 0.85, cy + 4 + 11 * K * 0.85];
-      g.save(); g.translate(cx, cy + 4); g.scale(K * 0.85, K * 0.85);
+      const ds = K * 1.55;
+      scene.dome = [cx + 15 * ds, cy + 12 + 11 * ds];
+      g.save(); g.translate(cx, cy + 12); g.scale(ds, ds);
       // cedar deck
       g.fillStyle = 'rgba(10,25,18,0.35)'; g.beginPath(); g.ellipse(3, 13, 26, 8, 0, 0, 6.283); g.fill();
       poly(g, [-24, 6, -14, -2, 14, -2, 24, 6, 18, 14, -18, 14], hsl(28, 40, 48), INK);
@@ -1871,13 +1880,13 @@ function drawBackground() {
       poly(g, [-3, 0, 0, -8, 3, 0], '#ff9a3c'); poly(g, [-1.5, 0, 0.5, -5, 2, 0], '#ffe08a');
       g.fillStyle = '#ff8c42'; g.fillRect(-12, -3, 4, 5); g.fillStyle = '#4cc3ff'; g.fillRect(9, -2, 4, 5);
       g.restore();
-      lupins(x0 + 6, y0 + TILE - 2, 3, 10); lupins(x0 + TILE - 6, y0 + 10, 2, 8);
+      lupins(x0 + 8, y0 + 2 * TILE - 4, 4, 14); lupins(x0 + 2 * TILE - 8, y0 + 18, 3, 12); lupins(x0 + 10, y0 + 22, 2, 10);
     } else {
       // fenced pasture with a little shelter
-      const px = x0 + 9, py = y0 + 18, pw = TILE - 18, ph = TILE - 24;
+      const px = x0 + 14, py = y0 + 34, pw = 2 * TILE - 28, ph = 2 * TILE - 46;
       g.fillStyle = type === 'chickens' ? 'rgba(150,115,70,0.45)' : type === 'goats' ? 'rgba(170,180,90,0.25)' : 'rgba(120,170,90,0.25)';
       g.fillRect(px, py - 4, pw, ph);
-      g.save(); g.translate(x0 + (type === 'goats' ? 14 : TILE - 16), y0 + 16); g.scale(K * 0.75, K * 0.75);
+      g.save(); g.translate(x0 + (type === 'goats' ? 30 : 2 * TILE - 30), y0 + 30); g.scale(K * 1.2, K * 1.2);
       if (type === 'chickens') {      // red coop
         poly(g, [-9, 6, -9, -4, 9, -4, 9, 6], hsl(356, 50, 40), INK); poly(g, [-11, -4, 0, -12, 11, -4], hsl(20, 10, 30), INK);
         g.fillStyle = '#1b130e'; g.fillRect(-2.5, 0, 5, 6);
@@ -1891,7 +1900,7 @@ function drawBackground() {
       }
       g.restore();
       fence(px, py + 2, pw, ph - 2);
-      lupins(x0 + 5, y0 + TILE - 3, 2, 6);
+      lupins(x0 + 6, y0 + 2 * TILE - 4, 3, 8); lupins(x0 + 2 * TILE - 6, y0 + 2 * TILE - 4, 2, 6);
     }
   }
   // faint dotted route flyers take
