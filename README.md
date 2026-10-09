@@ -16,6 +16,16 @@ The game is a campaign across three maps, ten waves each: Switchback (waves 1–
 
 The second upgrade splits into two paths, so two players end up with different defenses. Selling refunds 70% of what you spent. Each tower can target **First**, **Last**, **Strong** or **Close**.
 
+**Mastery (after wave 12):** once a tower is in its final form, it can learn one of two skills and rank that skill up three times. Choosing one skill locks the other for that tower, so two Archers can end up very different. Rank costs are 1×, 1.5× and 2.2× the tower's build cost. Small diamonds under the tower show its rank: orange for the first skill and blue for the second. `U` and `I` pick a skill, then `U` buys the next rank. Undo works on mastery too.
+
+| Tower | Skill A | Skill B |
+| --- | --- | --- |
+| Archer | **Volley**: also fires at 1/2/3 more enemies for half damage | **Eagle Eye**: 20/30/40% chance to crit for 3× damage |
+| Mortar | **Shrapnel**: +20/40/60% blast radius, +10/20/30% damage | **Concussion**: stuns the blast for 0.3/0.45/0.6s (once every 2s per enemy, shorter on Warlords) |
+| Frost Spire | **Deep Freeze**: stronger, longer slow and more range | **Shatter**: chilled enemies take +15/30/45% damage from everything |
+| Tesla Coil | **Overload**: +2/4/6 chain jumps, +10/20/30% damage | **Static**: every enemy hit is slowed 25/35/45% |
+| Longshot | **Headhunter**: +10/20/30% damage, plus +60/120/180% more to Ironclads and Warlords | **Ricochet**: bounces to 1/2/3 more enemies at 40% damage |
+
 **Abilities:** *Barrage* (`Q`, 40s cooldown) drops five armor-piercing shells on a patch of road you choose. *Cold Snap* (`W`, 55s) slows every enemy for five seconds.
 
 **Field orders:** from wave 10 on, before every fifth wave you pick one of three perks. Each gives a bonus and a cost, such as +20% damage for +1 enemy armor.
@@ -42,6 +52,7 @@ The game starts simple and adds one system at a time. Each unlock arrives with a
 | 7 | Cold Snap |
 | 8 | Tower targeting |
 | 9 | Field orders (then every fifth wave) |
+| 12 | Tower mastery |
 | 20 | Hero ultimate |
 
 The skill tree button (★) appears with the hero's first skill point. The first wave shows tips on the board.
