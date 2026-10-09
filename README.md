@@ -16,6 +16,8 @@ The game is a campaign across three maps, ten waves each: Switchback (waves 1–
 
 The second upgrade splits into two paths, so two players end up with different defenses. Selling refunds 70% of what you spent. Each tower can target **First**, **Last**, **Strong** or **Close**.
 
+**Compare before you buy:** select a tower and hover an upgrade, path or mastery button (or tab to it) to preview it. The stats list shows each value as current ▲ new or current ▼ new, so better and worse don't depend on colour. Every stat any of the options touches is listed, so the panel doesn't jump while you compare. On the map the tower shows its upgraded form, and a dotted blue ring shows the new range. On touch screens the first tap previews and a second tap on the same button buys; tapping the other option switches the comparison.
+
 **Mastery (after wave 12):** once a tower is in its final form, it can learn one of two skills and rank that skill up three times. Choosing one skill locks the other for that tower, so two Archers can end up very different. Rank costs are 1×, 1.5× and 2.2× the tower's build cost. Small diamonds under the tower show its rank: orange for the first skill and blue for the second. `U` and `I` pick a skill, then `U` buys the next rank. Undo works on mastery too.
 
 | Tower | Skill A | Skill B |
@@ -98,7 +100,11 @@ The gear menu has **Sound** (a quick mute, also `M`), **Full screen** on phones,
 
 ## Music
 
-The soundtrack is an original tune written for the game: a Maritime kitchen-party waltz in G major (3/4, 104 BPM), with a 16-bar A part and a 16-bar B part. It is played live by Web Audio with no audio files. A fingerpicked guitar plays bass on beat 1 and strums on 2 and 3, and a penny whistle carries the melody, dropping an octave on alternate times through. A bodhrán joins in while a wave is on the road and plays busier when a Warlord appears.
+The soundtrack is an original piece written for the game, in a Maritime indie tropical house style: 4/4 at 108 BPM in G major, with a 16-bar loop (an 8-bar "low tide" hook and an 8-bar "high tide" lift over G–D–Em–C). It is played live by Web Audio with no audio files.
+
+- **Between waves:** squeezebox (accordion-style) pads, offbeat marimba in a 3-3-2 pattern, and a penny-whistle hook with a dotted-eighth echo. The hook rests every other A section so it doesn't wear out.
+- **During a wave:** a soft four-on-the-floor kick, claps on 2 and 4, a shaker and a sub bass join in, and the pads duck under each kick (sidechain pumping).
+- **When a Warlord appears:** the pad filter opens up and the hats double to sixteenths.
 
 ## Saving
 

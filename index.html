@@ -209,6 +209,14 @@ dl.kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0
 dl.kv dt { color: var(--muted); }
 dl.kv dd { margin: 0; font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; }
 dl.kv dd .next { color: var(--good); }
+dl.kv dd .worse { color: var(--danger); }
+.cmp-cap { margin: 0; font-size: 12px; color: var(--good); }
+.cmp-cap.off { color: var(--muted); }
+.panel.mini .cmp-cap.off { display: none; }
+.cmp-cap b { color: var(--ink); }
+.panel.mini.cmp dl.kv { display: grid; font-size: 12px; }
+.panel.mini .cmp-cap { font-size: 11px; }
+.branch.pv, #btn-up.pv, #btn-mast.pv { outline: 2px solid var(--good); outline-offset: 1px; }
 .seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
 .seg button { background: var(--panel-2); border: 1px solid var(--line); border-radius: 4px; padding: 5px 0; font-size: 12.5px; cursor: pointer; }
 .seg button.on { background: var(--brass); color: var(--brass-ink); border-color: var(--brass); font-weight: 600; }
@@ -904,73 +912,111 @@ function sfx(name) {
   try { SFX[name](); } catch (e) {}
 }
 
-// ---------- Music: an original Maritime kitchen-party waltz, synthesized live ----------
-// 3/4 at an easy tempo: fingerpicked guitar, a penny-whistle melody, and a bodhrán that joins in during waves.
-// Notes are MIDI numbers; durations are in beats.
+// ---------- Music: original Maritime tropical house, synthesized live ----------
+// 4/4 at 108 BPM. Between waves it's laid back: squeezebox pads, offbeat marimba and a penny-whistle hook
+// with a dotted-eighth echo. When a wave rolls in, a soft four-on-the-floor kick, claps, shaker and a
+// sub bass drop in, and the pads pump against the kick. A Warlord opens the filter and doubles the hats.
+// Notes are MIDI numbers; times and lengths are in beats.
 const Music = (() => {
-  const BPM = 104, BEAT = 60 / BPM;
-  const CH = { G: [43, 55, 59, 62], C: [48, 55, 60, 64], D: [50, 57, 62, 66], Em: [40, 55, 59, 64], Am: [45, 57, 60, 64] };
-  const bars = [
-    // A: home on the shore
-    ['G', [[62, 1], [67, 1], [71, 1]]], ['G', [[74, 2], [71, 1]]], ['C', [[72, 1], [76, 1], [72, 1]]], ['G', [[71, 2], [67, 1]]],
-    ['G', [[69, 1], [71, 1], [74, 1]]], ['Em', [[76, 1.5], [74, 0.5], [71, 1]]], ['D', [[69, 1], [66, 1], [69, 1]]], ['D', [[74, 3]]],
-    ['G', [[62, 1], [67, 1], [71, 1]]], ['G', [[74, 2], [79, 1]]], ['C', [[76, 1], [72, 1], [76, 1]]], ['G', [[74, 2], [71, 1]]],
-    ['Em', [[67, 1], [71, 1], [76, 1]]], ['D', [[74, 1], [72, 1], [69, 1]]], ['G', [[71, 1.5], [69, 0.5], [67, 1]]], ['G', [[67, 3]]],
-    // B: out past the lighthouse
-    ['C', [[76, 1], [79, 1], [76, 1]]], ['C', [[72, 2], [76, 1]]], ['G', [[74, 1], [71, 1], [67, 1]]], ['G', [[74, 3]]],
-    ['Am', [[72, 1], [69, 1], [72, 1]]], ['Am', [[76, 2], [72, 1]]], ['D', [[69, 1], [74, 1], [78, 1]]], ['D', [[81, 2], [78, 1]]],
-    ['C', [[79, 1.5], [76, 0.5], [72, 1]]], ['C', [[76, 1], [74, 1], [72, 1]]], ['G', [[71, 1], [74, 1], [79, 1]]], ['Em', [[76, 2], [74, 1]]],
-    ['Am', [[72, 1], [76, 1], [69, 1]]], ['D', [[74, 1], [66, 1], [69, 1]]], ['G', [[67, 1.5], [71, 0.5], [74, 1]]], ['G', [[67, 3]]],
+  const BPM = 108, BEAT = 60 / BPM, BAR = 4 * BEAT;
+  const CH = { G: [55, 59, 62, 67], D: [54, 57, 62, 66], Em: [55, 59, 64, 67], C: [55, 60, 64, 67] };
+  const ROOT = { G: 43, D: 38, Em: 40, C: 36 };
+  const SONG = [
+    // A: low tide (the hook)
+    ['G', [[71, 0, 0.5], [74, 0.5, 1], [76, 1.5, 0.5], [74, 2, 1.5]]],
+    ['D', [[74, 0, 0.5], [72, 0.5, 0.5], [71, 1, 1], [69, 2, 1.5]]],
+    ['Em', [[67, 0, 0.5], [71, 0.5, 1], [74, 1.5, 0.5], [76, 2, 1.5]]],
+    ['C', [[79, 0, 1], [76, 1, 0.5], [74, 1.5, 0.5], [72, 2, 1], [71, 3, 0.5]]],
+    ['G', [[71, 0, 0.5], [74, 0.5, 1], [76, 1.5, 0.5], [79, 2, 1.5]]],
+    ['D', [[78, 0, 1], [76, 1, 0.5], [74, 1.5, 1.5]]],
+    ['C', [[76, 0, 0.5], [74, 0.5, 0.5], [72, 1, 1], [71, 2, 0.5], [69, 2.5, 1]]],
+    ['C', [[67, 0, 3]]],
+    // B: high tide (lifts, then lands)
+    ['Em', [[79, 1, 0.5], [78, 1.5, 0.5], [76, 2, 1], [74, 3, 0.5]]],
+    ['C', [[76, 0, 1.5], [72, 1.5, 0.5], [74, 2, 2]]],
+    ['G', [[74, 0.5, 0.5], [79, 1, 1], [81, 2, 0.5], [79, 2.5, 1]]],
+    ['D', [[78, 0, 2], [74, 2, 1]]],
+    ['Em', [[76, 0, 0.5], [79, 0.5, 1], [83, 1.5, 0.5], [81, 2, 1.5]]],
+    ['C', [[79, 0, 1], [76, 1, 1], [72, 2, 1.5]]],
+    ['D', [[74, 0, 0.5], [78, 0.5, 0.5], [81, 1, 1], [78, 2, 0.5], [76, 2.5, 1]]],
+    ['D', [[74, 0, 2.5]]],
   ];
+  const MARIMBA = [0, 0.75, 1.5, 2, 2.75, 3.5];          // a 3-3-2 offbeat pattern
   const hz = m => 440 * Math.pow(2, (m - 69) / 12);
-  let timer = null, next = 0, bar = 0, loops = 0;
+  let timer = null, next = 0, bar = 0, loops = 0, fx = null;
+  function bus() {
+    if (fx) return fx;
+    const c = A.ctx;
+    // echo for the lead, and a pad bus the kick can duck
+    const send = c.createGain(), dly = c.createDelay(1), fb = c.createGain(), wet = c.createGain(), tone = c.createBiquadFilter();
+    dly.delayTime.value = BEAT * 0.75; fb.gain.value = 0.32; wet.gain.value = 0.32; tone.type = 'lowpass'; tone.frequency.value = 2800;
+    send.connect(dly); dly.connect(tone); tone.connect(fb); fb.connect(dly); tone.connect(wet); wet.connect(A.musicBus);
+    const pad = c.createGain(); pad.gain.value = 1; const padF = c.createBiquadFilter(); padF.type = 'lowpass'; padF.frequency.value = 1100;
+    pad.connect(padF); padF.connect(A.musicBus);
+    return (fx = { send, pad, padF });
+  }
   function env(g, t, a, peak, dur) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); }
-  function pluck(m, t, vol, dur = 1.1) {
-    const c = A.ctx, o = c.createOscillator(), o2 = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain(), g2 = c.createGain();
-    o.type = 'triangle'; o2.type = 'sawtooth'; o.frequency.value = o2.frequency.value = hz(m); o2.detune.value = 4; g2.gain.value = 0.25;
-    f.type = 'lowpass'; f.frequency.setValueAtTime(2600, t); f.frequency.exponentialRampToValueAtTime(500, t + 0.35);
-    o.connect(f); o2.connect(g2); g2.connect(f); f.connect(g); g.connect(A.musicBus);
-    env(g, t, 0.006, vol, dur); o.start(t); o2.start(t); o.stop(t + dur + 0.05); o2.stop(t + dur + 0.05);
+  function osc(type, f, t, end, dest, detune = 0) { const o = A.ctx.createOscillator(); o.type = type; o.frequency.value = f; o.detune.value = detune; o.connect(dest); o.start(t); o.stop(end); return o; }
+  function marimba(m, t, vol) {
+    const c = A.ctx, g = c.createGain(), g2 = c.createGain();
+    g.connect(A.musicBus); g2.connect(A.musicBus);
+    osc('sine', hz(m), t, t + 0.45, g); osc('sine', hz(m) * 4, t, t + 0.1, g2);
+    env(g, t, 0.004, vol, 0.4); env(g2, t, 0.002, vol * 0.35, 0.06);
+  }
+  function squeezebox(notes, t, len, vol) {         // accordion-ish pad: detuned squares, gentle vibrato
+    const c = A.ctx, g = c.createGain(); g.connect(bus().pad);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.25); g.gain.setValueAtTime(vol, t + len - 0.2); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    for (const m of notes) for (const d of [-7, 7]) osc('square', hz(m), t, t + len + 0.05, g, d);
   }
   function whistle(m, t, dur, vol) {
-    const c = A.ctx, o = c.createOscillator(), lfo = c.createOscillator(), lg = c.createGain(), g = c.createGain(), f = c.createBiquadFilter();
+    const c = A.ctx, o = c.createOscillator(), lfo = c.createOscillator(), lg = c.createGain(), g = c.createGain();
     o.type = 'sine'; o.frequency.value = hz(m);
-    lfo.frequency.value = 5.2; lg.gain.value = hz(m) * 0.006; lfo.connect(lg); lg.connect(o.frequency);
-    f.type = 'lowpass'; f.frequency.value = 3200;
-    o.connect(f); f.connect(g); g.connect(A.musicBus);
-    const len = Math.max(0.12, dur * BEAT * 0.95);
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.04);
-    g.gain.setValueAtTime(vol * 0.85, t + len * 0.6); g.gain.exponentialRampToValueAtTime(0.0001, t + len + 0.08);
-    o.start(t); lfo.start(t); o.stop(t + len + 0.12); lfo.stop(t + len + 0.12);
+    lfo.frequency.value = 5.4; lg.gain.value = hz(m) * 0.005; lfo.connect(lg); lg.connect(o.frequency);
+    o.connect(g); g.connect(A.musicBus); g.connect(bus().send);
+    const len = Math.max(0.1, dur * BEAT * 0.9);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.03);
+    g.gain.setValueAtTime(vol * 0.8, t + len * 0.7); g.gain.exponentialRampToValueAtTime(0.0001, t + len + 0.06);
+    o.start(t); lfo.start(t); o.stop(t + len + 0.1); lfo.stop(t + len + 0.1);
   }
-  function drum(t, vol, low) {
+  function kick(t, vol) {
     const c = A.ctx, o = c.createOscillator(), g = c.createGain();
-    o.type = 'sine'; o.frequency.setValueAtTime(low ? 95 : 160, t); o.frequency.exponentialRampToValueAtTime(low ? 48 : 90, t + 0.18);
-    o.connect(g); g.connect(A.musicBus); env(g, t, 0.004, vol, 0.25); o.start(t); o.stop(t + 0.3);
-    const s = c.createBufferSource(), f = c.createBiquadFilter(), g2 = c.createGain();
-    s.buffer = A.noiseBuf; f.type = 'bandpass'; f.frequency.value = low ? 400 : 1800;
-    s.connect(f); f.connect(g2); g2.connect(A.musicBus); env(g2, t, 0.002, vol * 0.25, 0.08); s.start(t); s.stop(t + 0.1);
+    o.type = 'sine'; o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.16);
+    o.connect(g); g.connect(A.musicBus); env(g, t, 0.003, vol, 0.32); o.start(t); o.stop(t + 0.35);
+    // sidechain: the pads dip on every kick, then swell back
+    const p = bus().pad.gain; p.setValueAtTime(0.25, t); p.linearRampToValueAtTime(1, t + BEAT * 0.6);
+  }
+  function hit(t, vol, freq, dur, type = 'bandpass') {
+    const c = A.ctx, sN = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    sN.buffer = A.noiseBuf; f.type = type; f.frequency.value = freq; f.Q.value = 0.8;
+    sN.connect(f); f.connect(g); g.connect(A.musicBus); env(g, t, 0.002, vol, dur); sN.start(t); sN.stop(t + dur + 0.02);
+  }
+  function sub(m, t, len, vol) {
+    const c = A.ctx, g = c.createGain(); g.connect(A.musicBus);
+    osc('sine', hz(m), t, t + len + 0.05, g); osc('triangle', hz(m + 12), t, t + len + 0.05, g);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.02); g.gain.setValueAtTime(vol, t + len * 0.7); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
   }
   function playBar(t) {
-    const [ch, mel] = bars[bar], [root, a, b, cc] = CH[ch], alt = bar % 2 ? root + 7 : root;
-    const busy = S && S.waveActive, boss = busy && S.enemies.some(e => e.type === 'boss');
-    // guitar: bass on 1, light strums on 2 and 3, a little fingerpicked run on the "and"s
-    pluck(alt, t, 0.16, 1.4);
-    for (const beat of [1, 2]) [a, b, cc].forEach((m, i) => pluck(m, t + beat * BEAT + i * 0.012, 0.07, 0.8));
-    pluck(cc + 12, t + 1.5 * BEAT, 0.035, 0.5); pluck(b + 12, t + 2.5 * BEAT, 0.035, 0.5);
-    // melody; the second time round the A part drops an octave for variety
-    let at = 0; const oct = loops % 2 === 1 && bar < 16 ? -12 : 0;
-    for (const [m, d] of mel) { whistle(m + oct, t + at * BEAT, d, 0.075); at += d; }
-    // bodhrán during waves, busier when a Warlord is on the road
-    if (busy) { drum(t, 0.22, true); drum(t + 2 * BEAT, 0.08, false); if (boss) { drum(t + BEAT, 0.12, true); drum(t + 2.5 * BEAT, 0.06, false); } }
-    bar = (bar + 1) % bars.length; if (bar === 0) loops++;
+    const [ch, mel] = SONG[bar], notes = CH[ch], root = ROOT[ch];
+    const busy = !!(S && S.waveActive), boss = busy && S.enemies.some(e => e.type === 'boss');
+    if (fx) fx.padF.frequency.setTargetAtTime(boss ? 2400 : busy ? 1500 : 1000, t, 0.4);
+    squeezebox(notes.slice(0, 3), t, BAR, busy ? 0.022 : 0.03);
+    MARIMBA.forEach((b, i) => marimba(notes[(i + bar) % 4] + 12, t + b * BEAT, i % 3 === 0 ? 0.07 : 0.05));
+    // the hook rests every other A section so it doesn't wear out
+    if (!(loops % 2 === 1 && bar < 8)) for (const [m, at, d] of mel) whistle(m, t + at * BEAT, d, 0.07);
+    if (busy) {
+      for (let b = 0; b < 4; b++) kick(t + b * BEAT, 0.32);
+      hit(t + BEAT, 0.12, 1500, 0.12); hit(t + 3 * BEAT, 0.12, 1500, 0.12);                 // claps on 2 and 4
+      for (let i = 0; i < (boss ? 16 : 8); i++) hit(t + i * BAR / (boss ? 16 : 8), i % 2 ? 0.025 : 0.04, 8000, 0.04, 'highpass');
+      for (const [b, l] of [[0, 1.4], [1.5, 0.4], [2.5, 1.3]]) sub(root, t + b * BEAT, l * BEAT, 0.16);
+    } else if (bar % 4 === 0) hit(t, 0.03, 6000, 0.6, 'highpass');                         // a soft cymbal swell marks the phrase
+    bar = (bar + 1) % SONG.length; if (bar === 0) loops++;
   }
   function tick() {
     if (!A.ctx || !A.on || SET.music <= 0) { next = 0; return; }
     if (A.ctx.state !== 'running') return;
     const now = A.ctx.currentTime;
     if (next < now) next = now + 0.1;
-    while (next < now + 0.35) { playBar(next); next += 3 * BEAT; }
+    while (next < now + 0.4) { playBar(next); next += BAR; }
   }
   return {
     start() { if (!timer) timer = setInterval(tick, 90); },
@@ -2509,14 +2555,27 @@ function render() {
 
   // range of selected / hovered tower
   const sel = ui.selected;
-  if (sel) drawRange(sel.x, sel.y, tStats(sel).range * TILE, true);
+  if (sel) {
+    drawRange(sel.x, sel.y, tStats(sel).range * TILE, true);
+    const ps = ui.preview && ui.preview.t === sel ? previewStats(sel, ui.preview) : null;
+    if (ps && Math.abs(ps.range - tStats(sel).range) > 0.01) {
+      ctx.strokeStyle = 'rgba(76,195,255,0.9)'; ctx.lineWidth = 2; ctx.setLineDash([3, 6]);
+      ctx.beginPath(); ctx.arc(sel.x, sel.y, ps.range * TILE, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+    }
+  }
   else if (!ui.build && ui.hoverTile) {
     const h = towerAt(ui.hoverTile[0], ui.hoverTile[1]);
     if (h) drawRange(h.x, h.y, tStats(h).range * TILE, true);
   }
 
   for (const t of [...S.towers].sort((a, b) => a.y - b.y)) {
-    drawTower(ctx, t.type, t.lvl, t.x, t.y, t.angle, K, t.flash, t.lvl >= 2 ? t.branch : -1);
+    const pv = ui.preview && ui.preview.t === t && ui.preview.kind !== 'mast' ? ui.preview : null;
+    if (pv) {
+      const pl = pv.kind === 'up' ? t.lvl + 1 : 2, pb = pv.kind === 'branch' ? pv.branch : (pl >= 2 ? t.branch : -1);
+      ctx.globalAlpha = 0.55 + 0.25 * Math.sin(performance.now() / 220);
+      drawTower(ctx, t.type, pl, t.x, t.y, t.angle, K, 0, pl >= 2 ? pb : -1);
+      ctx.globalAlpha = 1;
+    } else drawTower(ctx, t.type, t.lvl, t.x, t.y, t.angle, K, t.flash, t.lvl >= 2 ? t.branch : -1);
     if (t.mast) for (let i = 0; i < t.mast.r; i++) {
       const dx = t.x + (i - (t.mast.r - 1) / 2) * 9, dy = t.y + 23 * K;
       ctx.fillStyle = BRANCH_COL[t.mast.s]; ctx.strokeStyle = 'rgba(10,10,8,0.85)'; ctx.lineWidth = 1.2;
@@ -2877,19 +2936,79 @@ let lastSig = '';
 const MODES = [['first', 'First'], ['last', 'Last'], ['strong', 'Strong'], ['close', 'Close']];
 function fmt(n) { return Math.round(n).toLocaleString('en-US'); }
 
-function statRows(a, b) {
-  const row = (label, f, unit = '') => {
+function statRows(a, b, also = []) {
+  const row = (label, f, unit = '', lowerIsBetter) => {
     const va = f(a), vb = b ? f(b) : null;
-    return `<dt>${label}</dt><dd>${va}${unit}${vb != null && vb !== va ? ` <span class="next">→ ${vb}${unit}</span>` : ''}</dd>`;
+    if (va == null && vb == null) return '';
+    const shownA = va == null ? '–' : va + unit;
+    if (vb == null || vb === va) return `<dt>${label}</dt><dd>${shownA}</dd>`;
+    const num = v => v === 'ignored' ? 1 : v === 'normal' ? 0 : parseFloat(v) || 0;
+    const up = num(vb) > num(va) !== !!lowerIsBetter;
+    return `<dt>${label}</dt><dd>${shownA} <span class="${up ? 'next' : 'worse'}">${up ? '▲' : '▼'} ${vb}${unit}</span></dd>`;
   };
+  const has = k => a[k] || (b && b[k]) || also.some(o => o && o[k]);
+  const pct = k => s => s[k] ? Math.round(s[k] * 100) : null;
   let h = row('Damage', s => Math.round(s.dmg)) + row('Shots / sec', s => s.rate.toFixed(2)) + row('Range (tiles)', s => s.range.toFixed(1));
-  if (a.splash) h += row('Splash (tiles)', s => s.splash.toFixed(1));
-  if (a.slow) h += row('Slow', s => Math.round(s.slow * 100), '%');
-  if (a.chain) h += row('Chain jumps', s => s.chain);
-  if (a.burn) h += row('Burn / sec', s => Math.round(s.burn));
-  if (a.freeze) h += row('Freeze every', s => s.freeze, ' pulses');
-  if (a.pierce) h += '<dt>Armor</dt><dd>ignored</dd>';
+  if (has('splash')) h += row('Splash (tiles)', s => s.splash ? s.splash.toFixed(1) : null);
+  if (has('slow')) h += row('Slow', pct('slow'), '%');
+  if (has('slowDur')) h += row('Slow time', s => s.slowDur ? s.slowDur.toFixed(1) : null, 's');
+  if (has('chain')) h += row('Chain jumps', s => s.chain || null);
+  if (has('burn')) h += row('Burn / sec', s => s.burn ? Math.round(s.burn) : null);
+  if (has('freeze')) h += row('Freeze every', s => s.freeze || null, ' pulses', true);
+  if (has('extra')) h += row('Extra targets', s => s.extra || null);
+  if (has('crit')) h += row('Crit chance', pct('crit'), '%');
+  if (has('stun')) h += row('Stun', s => s.stun || null, 's');
+  if (has('brittle')) h += row('Shatter bonus', pct('brittle'), '%');
+  if (has('zap')) h += row('Static slow', pct('zap'), '%');
+  if (has('vsBig')) h += row('Vs. big enemies', s => s.vsBig ? '+' + Math.round(s.vsBig * 100) : null, '%');
+  if (has('bounce')) h += row('Ricochets', s => s.bounce || null);
+  if (has('pierce')) h += row('Armor', s => s.pierce ? 'ignored' : 'normal');
   return h;
+}
+// What a tower would become with the option under the cursor (or the first tap on a touch screen).
+function previewStats(t, p) {
+  if (!p) return null;
+  if (p.kind === 'up') return withMastery(t.type, scaled(baseStats(t.type, t.lvl + 1, 0)), null);
+  if (p.kind === 'branch') return withMastery(t.type, scaled(baseStats(t.type, 2, p.branch)), null);
+  if (p.kind === 'mast') return withMastery(t.type, scaled(baseStats(t.type, 2, t.branch)), { s: p.skill, r: (t.mast ? t.mast.r : 0) + 1 });
+  return null;
+}
+function previewName(t, p) {
+  const d = TOWERS[t.type];
+  if (p.kind === 'up') return `Level ${t.lvl + 2}`;
+  if (p.kind === 'branch') return d.br[p.branch].name;
+  return `${MASTERY[t.type][p.skill].name} ${['', 'I', 'II', 'III'][(t.mast ? t.mast.r : 0) + 1]}`;
+}
+const samePreview = (a, b) => !!a && !!b && a.t === b.t && a.kind === b.kind && a.branch === b.branch && a.skill === b.skill;
+// Redraw just the comparison, so the buttons under the pointer stay put.
+function renderCompare(t) {
+  const p = ui.preview && ui.preview.t === t ? ui.preview : null;
+  const dl = $('sel-stats'), cap = $('cmp-cap');
+  if (!dl) return;
+  // every option on offer contributes its rows, so previewing never changes the panel's height
+  const opts = t.lvl === 0 ? [{ kind: 'up' }] : t.lvl === 1 ? [0, 1].map(branch => ({ kind: 'branch', branch }))
+    : !unlocked('mastery') ? [] : !t.mast ? [0, 1].map(skill => ({ kind: 'mast', skill })) : t.mast.r < 3 ? [{ kind: 'mast', skill: t.mast.s }] : [];
+  dl.innerHTML = statRows(tStats(t), p ? previewStats(t, p) : t.lvl === 0 ? scaled(baseStats(t.type, 1)) : null, opts.map(o => previewStats(t, o)));
+  if (cap) { cap.classList.toggle('off', !p); if (!p) cap.innerHTML = 'Hover an upgrade to compare'; if (p) cap.innerHTML = `Comparing with <b>${previewName(t, p)}</b>${lastPointer === 'touch' ? ' · tap it again to buy' : ''}`; }
+  els.panel.classList.toggle('cmp', !!p);
+  els.info.querySelectorAll('[data-pv]').forEach(b => b.classList.toggle('pv', !!p && b.dataset.pv === pvKey(p)));
+}
+const pvKey = p => p.kind + (p.kind === 'branch' ? p.branch : p.kind === 'mast' ? p.skill : '');
+// Desktop: hover or focus previews and a click buys. Touch: the first tap previews, a second tap buys.
+let lastPointer = 'mouse';
+document.addEventListener('pointerdown', ev => { lastPointer = ev.pointerType || 'mouse'; }, true);
+function wirePreview(t, btn, p, buy) {
+  btn.dataset.pv = pvKey(p);
+  const show = () => { ui.preview = { t, ...p }; renderCompare(t); };
+  const hide = () => { if (samePreview(ui.preview, { t, ...p }) && lastPointer !== 'touch') { ui.preview = null; renderCompare(t); } };
+  btn.addEventListener('pointerenter', ev => { if (ev.pointerType !== 'touch') show(); });
+  btn.addEventListener('focus', show);
+  btn.addEventListener('pointerleave', hide); btn.addEventListener('blur', hide);
+  btn.onclick = () => {
+    if (lastPointer === 'touch' && !samePreview(ui.preview, { t, ...p })) { show(); return; }
+    if (!steady()) return;
+    ui.preview = null; buy(); refreshPanel(true);
+  };
 }
 
 // On small screens the tower card sits right beside the tower instead of over the middle of the map.
@@ -2925,6 +3044,7 @@ function refreshPanel(force) {
   els.panel.classList.toggle('mini', !!t && small);
   els.panel.classList.toggle('left', !!t && !small && t.x > W * 0.55);
   let sig;
+  if (!t && ui.preview) ui.preview = null;
   if (t) sig = `t${t.id}:${t.lvl}:${t.branch}:${t.mode}:${t.mast ? t.mast.s + '.' + t.mast.r : ''}:${S.modVer}:${S.cleared}:${S.gold >= (upgradeCost(t) ?? Infinity)}:${S.gold >= (masteryCost(t) ?? Infinity)}`;
   else if (ui.build) sig = `b${ui.build}:${S.modVer}:${S.gold >= buildCost(ui.build)}`;
   else sig = `w${S.wave}:${S.waveActive}:${S.modVer}:${ui.intel}`;
@@ -2961,16 +3081,19 @@ function refreshPanel(force) {
         <div class="pips">${[0, 1, 2].map(i => `<span class="pip${i <= t.lvl ? ' on' : ''}"></span>`).join('')}</div></div></div>
       ${br ? `<p class="meta">${d.name} · ${br.desc}</p>` : ''}
       <button class="btn stat-toggle" id="stat-toggle" type="button" aria-expanded="${!!ui.statsOpen}">${ui.statsOpen ? 'Hide stats ▴' : 'Show stats ▾'}</button>
-      <dl class="kv">${statRows(tStats(t), next)}</dl>
+      <p class="cmp-cap off" id="cmp-cap">Hover an upgrade to compare</p>
+      <dl class="kv" id="sel-stats">${statRows(tStats(t), next)}</dl>
       ${unlocked('targeting') ? `<div><p class="eyebrow" style="margin-bottom:6px"><span>Targeting</span><span>T to cycle</span></p>
       <div class="seg" role="group" aria-label="Targeting">${MODES.map(([k, l]) => `<button type="button" data-mode="${k}" class="${t.mode === k ? 'on' : ''}" aria-pressed="${t.mode === k}">${l}</button>`).join('')}</div></div>` : ''}
       ${actions}
       <p class="meta" id="sel-meta">${fmt(t.kills)} kills · ${fmt(t.dealt)} damage dealt</p>`;
     $('sel-icon').appendChild(iconCanvas(t.type, 48));
-    const up = $('btn-up'); if (up) up.onclick = () => { if (steady()) upgradeTower(t, 0); refreshPanel(true); };
-    els.info.querySelectorAll('[data-branch]').forEach(b => b.onclick = () => { if (steady()) upgradeTower(t, +b.dataset.branch); refreshPanel(true); });
-    els.info.querySelectorAll('[data-mast]').forEach(b => b.onclick = () => { if (steady()) masterTower(t, +b.dataset.mast); refreshPanel(true); });
-    { const mb = $('btn-mast'); if (mb) mb.onclick = () => { if (steady()) masterTower(t, t.mast.s); refreshPanel(true); }; }
+    if (ui.preview && ui.preview.t !== t) ui.preview = null;
+    const up = $('btn-up'); if (up) wirePreview(t, up, { kind: 'up' }, () => upgradeTower(t, 0));
+    els.info.querySelectorAll('[data-branch]').forEach(b => wirePreview(t, b, { kind: 'branch', branch: +b.dataset.branch }, () => upgradeTower(t, +b.dataset.branch)));
+    els.info.querySelectorAll('[data-mast]').forEach(b => wirePreview(t, b, { kind: 'mast', skill: +b.dataset.mast }, () => masterTower(t, +b.dataset.mast)));
+    { const mb = $('btn-mast'); if (mb) wirePreview(t, mb, { kind: 'mast', skill: t.mast.s }, () => masterTower(t, t.mast.s)); }
+    renderCompare(t);
     $('btn-sell').onclick = () => { if (steady()) sellTower(t); refreshPanel(true); };
     els.info.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { t.mode = b.dataset.mode; refreshPanel(true); });
     $('stat-toggle').onclick = () => { ui.statsOpen = !ui.statsOpen; refreshPanel(true); };
@@ -3554,7 +3677,7 @@ requestAnimationFrame(frame);
 connectCloud();
 
 // Test hook for automated play-throughs.
-window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get decor() { return decor; }, A, SET, Music, masterTower, masteryCost, MASTERY, tStats, loadLatest, saveResume, titleScreen, undoLast, lastUndo, sellTower, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, unlocked, UNLOCK, HEROES, COLS, ROWS, TILE, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero, nextMap, openGallery, closeGallery, pickFromGallery, continueCampaign, loadCheckpoint };
+window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get decor() { return decor; }, A, SET, Music, previewStats, statRows, masterTower, masteryCost, MASTERY, tStats, loadLatest, saveResume, titleScreen, undoLast, lastUndo, sellTower, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, unlocked, UNLOCK, HEROES, COLS, ROWS, TILE, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero, nextMap, openGallery, closeGallery, pickFromGallery, continueCampaign, loadCheckpoint };
 })();
 </script>
 </body>
