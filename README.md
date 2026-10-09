@@ -104,6 +104,8 @@ The gear menu has **Sound** (a quick mute, also `M`), **Full screen** on phones,
 
 ## Music
 
+**If you can't hear anything:** sound starts on your first tap, and any later tap or key press wakes it up again after you switch apps. On iPhone and iPad the game asks for the media audio channel, so it plays even with the ring/silent switch on silent. The device's media volume still applies, and so does the Sound toggle in the ⚙ menu (`M`). A reminder appears when you start a game with sound turned off.
+
 The soundtrack is an original piece written for the game, in a Maritime indie tropical house style: 4/4 at 108 BPM in G major, with a 16-bar loop (an 8-bar "low tide" hook and an 8-bar "high tide" lift over G–D–Em–C). It is played live by Web Audio with no audio files.
 
 - **Between waves:** squeezebox (accordion-style) pads, offbeat marimba in a 3-3-2 pattern, and a penny-whistle hook with a dotted-eighth echo. The hook rests every other A section so it doesn't wear out.
