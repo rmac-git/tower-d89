@@ -50,7 +50,13 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--brass)
 .game { height: 100%; display: grid; gap: 6px 10px; padding: 8px 16px; --rail: 132px;
   grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto minmax(0, 1fr) auto;
   grid-template-areas: "stats ctrl" "cell cell" "build abil"; }
-.game.side { grid-template-columns: var(--rail) minmax(0, 1fr) var(--rail); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "stats cell ctrl" "build cell abil"; padding-block: 6px; }
+.game.side { grid-template-columns: var(--rail) minmax(0, 1fr) var(--rail); grid-template-rows: minmax(0, 1fr); grid-template-areas: "railL cell railR"; padding-block: 6px; }
+.rail { display: contents; }
+.game.side .rail { display: flex; flex-direction: column; gap: 6px; min-width: 0; min-height: 0; }
+.game.side .rail-l { grid-area: railL; }
+.game.side .rail-r { grid-area: railR; }
+.game.side .dock-build { flex: 1; }
+.game.side .dock-abil { flex: 1; min-height: 0; overflow-y: auto; }
 .hud { display: flex; align-items: center; gap: 6px; min-width: 0; flex-wrap: wrap; }
 .hud-stats { grid-area: stats; }
 .hud-ctrl { grid-area: ctrl; justify-content: flex-end; }
@@ -62,7 +68,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--brass)
 
 .stat { display: flex; align-items: center; gap: 6px; height: 34px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 0 10px; }
 .stat svg { width: 14px; height: 14px; fill: var(--danger); flex: none; }
-.stat-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.stat-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
 .stat-value { font-family: var(--font-mono); font-weight: 700; font-size: 16px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .stat-value.lives { color: var(--danger); }
 .stat-value.gold { color: var(--brass); }
@@ -186,6 +192,10 @@ dl.kv dd .next { color: var(--good); }
 .map-btn, .perk { display: flex; flex-direction: column; gap: 3px; text-align: left; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; cursor: pointer; min-width: 0; position: relative; }
 .map-btn:hover, .perk:hover { border-color: var(--brass); }
 .map-btn.on { border-color: var(--brass); background: #2c3b31; }
+.map-btn.done { opacity: 0.7; }
+div.map-btn { cursor: default; }
+div.map-btn:hover { border-color: var(--line); }
+div.map-btn.on:hover { border-color: var(--brass); }
 .map-btn b, .pk-name { font-family: var(--font-display); font-weight: 700; font-size: 21px; letter-spacing: 0.03em; text-transform: uppercase; line-height: 1.05; }
 .map-btn small { color: var(--muted); font-size: 12.5px; line-height: 1.3; }
 .map-btn .best { font-family: var(--font-mono); font-size: 11px; color: var(--brass); margin-top: 2px; }
@@ -232,7 +242,6 @@ dl.kv dd .next { color: var(--good); }
 .shop-detail { display: none; }
 .game.side .shop-detail:not([hidden]) { display: flex; flex-direction: column; gap: 4px; margin-top: -4px; padding: 8px 8px 7px; background: #26352c; border: 1px solid var(--brass); border-top: 0; border-radius: 0 0 var(--radius) var(--radius); font-size: 11.5px; line-height: 1.3; }
 .game.side .shop-item.active { border-radius: var(--radius) var(--radius) 0 0; }
-.shop-detail b { font-family: var(--font-display); font-size: 16px; letter-spacing: 0.03em; text-transform: uppercase; line-height: 1; }
 .shop-detail p { margin: 0; color: var(--muted); }
 .shop-detail dl { display: grid; grid-template-columns: auto 1fr; gap: 1px 6px; margin: 0; }
 .shop-detail dt { color: var(--muted); }
@@ -242,7 +251,9 @@ dl.kv dd .next { color: var(--good); }
 .panel.mini .stat-toggle { display: block; padding: 3px 6px; font-size: 12px; background: none; border-color: var(--line); color: var(--muted); }
 .panel.mini.open dl.kv { display: grid; font-size: 12px; }
 .game.side .abil { flex-direction: column; flex-wrap: nowrap; }
-.game.side .abil-btn { min-width: 0; height: 36px; padding: 0 8px; }
+.game.side .abil-btn { min-width: 0; height: 36px; padding: 0 6px; gap: 5px; }
+.game.side .ab-ic { width: 15px; }
+.game.side .ab-text b { font-size: 11.5px; }
 .game.side .hero-chip .chip-main { flex: 1; }
 .game.side .chip-body { width: auto; flex: 1; }
 .game.side .chip-top b { display: none; }
@@ -379,11 +390,15 @@ dl.kv dd .next { color: var(--good); }
 <body>
 
 <div class="game" id="game-root">
+  <div class="rail rail-l">
   <div class="hud hud-stats" aria-live="polite">
     <div class="stat" id="stat-lives" title="Lives"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14s-5.5-3.4-5.5-7.2A3 3 0 0 1 8 4.6a3 3 0 0 1 5.5 2.2C13.5 10.6 8 14 8 14z"/></svg><span class="stat-value lives" id="v-lives">20</span></div>
     <div class="stat token" id="stat-token" title="BST is an in-game token. It is off-chain: no wallet, no blockchain, no real value."><i class="tok" role="img" aria-label="BST token"></i><span class="stat-value gold" id="v-gold">0</span></div>
-    <div class="stat" title="Wave"><span class="stat-label">Wave</span><span class="stat-value" id="v-wave">0 / 30</span></div>
+    <div class="stat" title="Wave"><span class="stat-label" id="v-wave-l">Map 1</span><span class="stat-value" id="v-wave">0 / 10</span></div>
   </div>
+  <div class="hud dock-build"><div class="shop" id="shop"></div></div>
+  </div>
+  <div class="rail rail-r">
   <div class="hud hud-ctrl">
     <button class="btn primary" id="btn-wave" type="button">Send wave 1</button>
     <div class="peek" id="wave-peek" hidden></div>
@@ -391,6 +406,16 @@ dl.kv dd .next { color: var(--good); }
     <button class="ibtn" id="btn-pause" type="button" title="Pause (P)" aria-label="Pause"></button>
     <button class="ibtn" id="btn-intel" type="button" title="Next wave intel (N)" aria-label="Next wave intel"></button>
     <button class="ibtn" id="btn-menu" type="button" title="Settings" aria-label="Settings" aria-haspopup="true" aria-expanded="false"></button>
+  </div>
+  <div class="hud dock-abil">
+    <div class="hero-chip" id="hero-card" hidden></div>
+    <div class="abil" aria-label="Abilities">
+      <button class="abil-btn" id="ab-hero" type="button" hidden><span class="ab-fill"></span><span class="ab-ic" id="ab-hero-ic"></span><span class="ab-text"></span><span class="ab-cd"></span></button>
+      <button class="abil-btn" id="ab-ult" type="button" hidden><span class="ab-fill"></span><span class="ab-ic" style="color:var(--brass)"></span><span class="ab-text"></span><span class="ab-cd"></span></button>
+      <button class="abil-btn" id="ab-strike" type="button" title="Barrage (Q): five shells on a patch of road you choose"><span class="ab-fill"></span><span class="ab-ic" style="color:#f0a35a"></span><span class="ab-text"><b>Barrage</b></span><span class="ab-cd"></span></button>
+      <button class="abil-btn" id="ab-snap" type="button" title="Cold Snap (W): slow every enemy for 5 seconds"><span class="ab-fill"></span><span class="ab-ic" style="color:var(--ice)"></span><span class="ab-text"><b>Cold Snap</b></span><span class="ab-cd"></span></button>
+    </div>
+  </div>
   </div>
   <div class="cell" id="cell">
     <div class="board" id="board">
@@ -400,16 +425,6 @@ dl.kv dd .next { color: var(--good); }
         <section class="info" id="info"></section>
       </div>
       <div class="toasts" id="toasts" aria-live="polite"></div>
-    </div>
-  </div>
-  <div class="hud dock-build"><div class="shop" id="shop"></div></div>
-  <div class="hud dock-abil">
-    <div class="hero-chip" id="hero-card" hidden></div>
-    <div class="abil" aria-label="Abilities">
-      <button class="abil-btn" id="ab-hero" type="button" hidden><span class="ab-fill"></span><span class="ab-ic" id="ab-hero-ic"></span><span class="ab-text"></span><span class="ab-cd"></span></button>
-      <button class="abil-btn" id="ab-ult" type="button" hidden><span class="ab-fill"></span><span class="ab-ic" style="color:var(--brass)"></span><span class="ab-text"></span><span class="ab-cd"></span></button>
-      <button class="abil-btn" id="ab-strike" type="button" title="Barrage (Q): five shells on a patch of road you choose"><span class="ab-fill"></span><span class="ab-ic" style="color:#f0a35a"></span><span class="ab-text"><b>Barrage</b></span><span class="ab-cd"></span></button>
-      <button class="abil-btn" id="ab-snap" type="button" title="Cold Snap (W): slow every enemy for 5 seconds"><span class="ab-fill"></span><span class="ab-ic" style="color:var(--ice)"></span><span class="ab-text"><b>Cold Snap</b></span><span class="ab-cd"></span></button>
     </div>
   </div>
 </div>
@@ -443,6 +458,7 @@ const TILE = 60, COLS = 16, ROWS = 10, W = COLS * TILE, H = ROWS * TILE;
 const K = TILE / 40;          // art was drawn for 40px tiles; scale it to the board
 const SPEED_K = 0.9, RANGE_K = 0.75;   // the coarser grid has a shorter road, so enemies walk a little slower and towers reach a little less
 const VICTORY_WAVE = 30;
+const WAVES_PER_MAP = 10;   // the campaign marches through the maps in order, ten waves each
 const START_GOLD = 180, START_LIVES = 20;
 const REDUCED_MOTION = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -765,7 +781,7 @@ function waveGroups(w) {
     return [t, Math.max(2, Math.round(n * mult)), gap];
   });
 }
-const hpMul = w => 1 + 0.12 * (w - 1) + 0.029 * (w - 1) ** 2;
+const hpMul = w => 1 + 0.12 * (w - 1) + 0.036 * (w - 1) ** 2;
 const bountyMul = w => 1 + 0.025 * (w - 1);
 const armorAdd = w => Math.floor((w - 1) / 8);
 const waveBonus = w => 20 + w * 3;
@@ -826,15 +842,25 @@ function newState() {
     gold: START_GOLD, lives: START_LIVES, wave: 0, time: 0,
     towers: [], enemies: [], shots: [], particles: [], texts: [], rings: [], bolts: [], tracers: [],
     spawns: [], waveActive: false, over: false, won: false, endless: false,
-    banner: null, nextId: 1, totalKills: 0, cleared: 0,
+    banner: null, nextId: 1, totalKills: 0, cleared: 0, mapI: 0, mapDone: false,
     mods: mods0(), modVer: 0, perks: [], ab: { strike: 15, snap: 30 }, strikes: [], rains: [], buffs: [], hero: null,
   };
 }
-const ui = { build: null, selected: null, hoverTile: null, hoverPx: null, speed: 1, paused: true, started: false, targeting: null, perkOpen: false, perkChoices: [], map: 0, fresh: new Set(), pending: null, portraitOK: false, rotatePaused: false, intel: false, hero: 'maren', heroSel: false, storyOpen: false, skillsOpen: false, chapter: 0, pausedBefore: false };
-const isModal = () => ui.perkOpen || ui.storyOpen || ui.skillsOpen;
+const ui = { build: null, selected: null, hoverTile: null, hoverPx: null, speed: 1, paused: true, started: false, targeting: null, perkOpen: false, perkChoices: [], map: 0, mapOpen: false, newArmed: false, fresh: new Set(), pending: null, portraitOK: false, rotatePaused: false, intel: false, hero: 'maren', heroSel: false, storyOpen: false, skillsOpen: false, chapter: 0, pausedBefore: false };
+const isModal = () => ui.perkOpen || ui.storyOpen || ui.skillsOpen || ui.mapOpen;
+// A checkpoint is saved at the start of every map so a run can be continued or retried from there.
+function saveCheckpoint() {
+  try {
+    const h = S.hero;
+    localStorage.setItem('bastion-line-camp', JSON.stringify({ v: 1, mapI: S.mapI, wave: S.wave, cleared: S.cleared, gold: S.gold, perks: S.perks, mods: S.mods, totalKills: S.totalKills,
+      hero: h && { k: h.k, lvl: h.lvl, xp: h.xp, sp: h.sp, learned: h.learned, evo: h.evo, ult: h.ult, toldSkill: h.toldSkill } }));
+  } catch (e) {}
+}
+function loadCheckpoint() { try { const c = JSON.parse(localStorage.getItem('bastion-line-camp')); return c && c.v === 1 && c.hero ? c : null; } catch (e) { return null; } }
+function clearCheckpoint() { try { localStorage.removeItem('bastion-line-camp'); } catch (e) {} }
 
-function bestWave(i = MAP_I) { try { return +localStorage.getItem('bastion-line-best-' + i) || 0; } catch (e) { return 0; } }
-function saveBest(w) { try { if (w > bestWave()) localStorage.setItem('bastion-line-best-' + MAP_I, String(w)); } catch (e) {} }
+function bestWave() { try { return +localStorage.getItem('bastion-line-best') || 0; } catch (e) { return 0; } }
+function saveBest(w) { try { if (w > bestWave()) localStorage.setItem('bastion-line-best', String(w)); } catch (e) {} }
 
 // ===================================================================
 // Game logic
@@ -1103,9 +1129,11 @@ function update(dt) {
     S.gold += b;
     S.banner = { text: 'Wave ' + S.wave + ' cleared', sub: '+' + b + ' BST', life: 2.2 };
     saveBest(S.wave); sfx('clear');
+    if (S.wave % WAVES_PER_MAP === 0 && S.wave < VICTORY_WAVE && !S.endless) S.mapDone = true;
     if (S.wave >= VICTORY_WAVE && !S.won && !S.endless) { S.won = true; victory(); }
     else if (S.wave % 5 === 4 && S.wave >= 9) offerPerks();
     else if (S.wave % 5 === 0 && S.wave <= 25 && S.hero) showChapter(S.wave / 5);
+    if (S.mapDone && !ui.storyOpen) showMapComplete();
   }
   updateFx(dt);
 }
@@ -1905,7 +1933,7 @@ function shopDetail(k) {
   if (st.chain) rows.push(['Chain', st.chain]);
   rows.push(['Air', d.air ? 'yes' : 'no']);
   d.up.forEach((u, i) => rows.push(['Lv ' + (i + 2), tk(Math.round(u * S.mods.upCost))]));
-  return `<b>${d.name}</b><p>${d.desc}</p><dl>${rows.map(([a, v]) => `<dt>${a}</dt><dd>${v}</dd>`).join('')}</dl>`
+  return `<p>${d.desc}</p><dl>${rows.map(([a, v]) => `<dt>${a}</dt><dd>${v}</dd>`).join('')}</dl>`
     + `<p class="paths">Level 3: ${d.br.map(x => x.name).join(' or ')}</p>`;
 }
 
@@ -2073,7 +2101,9 @@ function refreshHud() {
   const gd = S.gold - lastGold;
   if (gd >= 30 || gd <= -5) { const el = $('stat-token'); el.classList.remove('up', 'down'); void el.offsetWidth; el.classList.add(gd > 0 ? 'up' : 'down'); }
   lastGold = S.gold;
-  els.wave.textContent = S.endless || S.wave > VICTORY_WAVE ? `${S.wave}` : `${S.wave} / ${VICTORY_WAVE}`;
+  const endless = S.endless || S.wave > VICTORY_WAVE;
+  $('v-wave-l').textContent = endless ? 'Wave' : 'Map ' + (S.mapI + 1);
+  els.wave.textContent = endless ? `${S.wave}` : `${Math.min(WAVES_PER_MAP, S.wave - S.mapI * WAVES_PER_MAP)}/${WAVES_PER_MAP}`;
   const kbd = '<span class="kbd">Space</span>';
   setHTML(els.btnWave, S.waveActive ? `Early +${tk(earlyBonus(S.wave + 1))}${kbd}` : `Send wave ${S.wave + 1}${kbd}`);
   els.btnWave.title = S.waveActive ? 'Send the next wave now for bonus BST (Space)' : 'Send the next wave (Space)';
@@ -2157,51 +2187,100 @@ function showOverlay(html, cls = '') { els.card.className = 'overlay-card' + (cl
 function hideOverlay() { els.overlay.hidden = true; }
 
 function titleScreen() {
-  ui.started = false; ui.paused = true; ui.perkOpen = false; ui.targeting = null; ui.storyOpen = false; ui.skillsOpen = false; ui.heroSel = false;
+  ui.started = false; ui.paused = true; ui.perkOpen = false; ui.targeting = null; ui.storyOpen = false; ui.skillsOpen = false; ui.heroSel = false; ui.mapOpen = false; ui.newArmed = false;
+  const cp = loadCheckpoint(), best = bestWave();
+  loadMap(cp ? cp.mapI : 0);
   showOverlay(`
     <h2>Bastion <span>Line</span></h2>
-    <p>Thirty waves are marching on the gate. Build towers, choose upgrade paths, and don’t let ${START_LIVES} of them through.</p>
+    <p>Three roads lead to the gate. Hold each one for ${WAVES_PER_MAP} waves, then march to the next. Your hero and everything they learn come with you.</p>
+    <div class="maps" aria-label="Campaign">${MAPS.map((m, i) => `<div class="map-btn${cp && cp.mapI === i ? ' on' : ''}${cp && cp.mapI > i ? ' done' : ''}"><b>${i + 1}. ${m.name}</b><small>${m.blurb}</small><span class="best">Waves ${i * WAVES_PER_MAP + 1}–${(i + 1) * WAVES_PER_MAP}${cp && cp.mapI > i ? ' · held' : cp && cp.mapI === i ? ' · you are here' : ''}</span></div>`).join('')}</div>
     <p class="chainnote"><i class="tok" aria-hidden="true"></i><span>BST is this game’s in-game token. It is off-chain: no wallet, no blockchain, no real value.</span></p>
-    <div class="maps" role="group" aria-label="Choose a map">${MAPS.map((m, i) => `<button type="button" class="map-btn${i === ui.map ? ' on' : ''}" data-map="${i}"><b>${m.name}</b><small>${m.blurb}</small><span class="best">${bestWave(i) ? 'Best: wave ' + bestWave(i) : 'Unplayed'}</span></button>`).join('')}</div>
-    <p class="tapmsg">Drag a tower from the build menu onto the grass to build it. Tap a built tower to upgrade or sell it.</p>
-    <p class="desk">Press <b>1–5</b> to pick a tower and click grass to build. Click a tower to upgrade it. <b>Space</b> sends the next wave early for a bonus. <b>Q</b> calls a barrage and <b>W</b> slows every enemy.</p>
-    <div class="row"><button class="btn primary" id="ov-start" type="button">Take command</button></div>`);
-  els.card.querySelectorAll('.map-btn').forEach(b => b.onclick = () => {
-    ui.map = +b.dataset.map; loadMap(ui.map);
-    els.card.querySelectorAll('.map-btn').forEach(x => x.classList.toggle('on', x === b));
-  });
-  $('ov-start').onclick = () => { initAudio(); if (COARSE) enterLandscape(); heroSelect(); };
-  $('ov-start').focus();
+    ${best ? `<p>Best so far: wave ${best} of ${VICTORY_WAVE}</p>` : ''}
+    <div class="row">${cp ? `<button class="btn primary" id="ov-continue" type="button">Continue · Map ${cp.mapI + 1}, wave ${cp.wave + 1}</button><button class="btn" id="ov-start" type="button">New campaign</button>` : `<button class="btn primary" id="ov-start" type="button">Start campaign</button>`}</div>`);
+  const go = $('ov-continue');
+  if (go) go.onclick = () => { initAudio(); if (COARSE) enterLandscape(); continueCampaign(cp); };
+  $('ov-start').onclick = () => {
+    if (cp && !ui.newArmed) { ui.newArmed = true; $('ov-start').textContent = 'Tap again to start over'; setTimeout(() => { ui.newArmed = false; const b = $('ov-start'); if (b) b.textContent = 'New campaign'; }, 3000); return; }
+    initAudio(); if (COARSE) enterLandscape(); heroSelect();
+  };
+  (go || $('ov-start')).focus();
   refreshHud();
 }
-function toTitle() { S = newState(); loadMap(ui.map); ui.selected = null; ui.build = null; renderHeroUI(); refreshPanel(true); titleScreen(); }
+function toTitle() { S = newState(); loadMap(0); ui.selected = null; ui.build = null; renderHeroUI(); refreshPanel(true); titleScreen(); }
 function gameOver() {
   S.over = true; saveBest(S.wave - 1); sfx('lose');
   setTimeout(() => {
+    const cp = loadCheckpoint();
     showOverlay(`
       <h2>The gate <span>fell</span></h2>
-      <p>You held through ${Math.max(0, S.wave - 1)} wave${S.wave - 1 === 1 ? '' : 's'} on ${MAPS[MAP_I].name} with ${fmt(S.totalKills)} enemies defeated.</p>
-      <p>Best on this map: wave ${bestWave()}</p>
-      <div class="row"><button class="btn primary" id="ov-again" type="button">Try again</button><button class="btn" id="ov-maps" type="button">Change map</button></div>`);
-    $('ov-again').onclick = () => restart(false); $('ov-maps').onclick = toTitle; $('ov-again').focus();
+      <p>${MAPS[S.mapI].name} fell on wave ${S.wave}. ${fmt(S.totalKills)} enemies defeated so far.</p>
+      <p>Retrying starts this map again from wave ${S.mapI * WAVES_PER_MAP + 1}, with your hero as they were when you arrived.</p>
+      <div class="row">${cp ? '<button class="btn primary" id="ov-again" type="button">Retry this map</button>' : ''}<button class="btn" id="ov-title" type="button">Back to title</button></div>`);
+    if (cp) { $('ov-again').onclick = () => continueCampaign(loadCheckpoint()); $('ov-again').focus(); }
+    $('ov-title').onclick = toTitle;
   }, 600);
 }
 function victory() {
-  ui.paused = true; sfx('win');
+  ui.paused = true; sfx('win'); clearCheckpoint();
   showOverlay(`
     <h2>The line <span>held</span></h2>
     ${S.hero ? `<p class="story">${md(HEROES[S.hero.k].end[S.hero.evo === 'b' ? 1 : 0])}</p>` : ''}
-    <p>All ${VICTORY_WAVE} waves defeated with ${S.lives} li${S.lives === 1 ? 'fe' : 'ves'} left and ${fmt(S.totalKills)} enemies down.</p>
-    <div class="row"><button class="btn primary" id="ov-endless" type="button">Keep going (endless)</button><button class="btn" id="ov-maps" type="button">Change map</button></div>`);
+    <p>All three roads held through ${VICTORY_WAVE} waves, with ${fmt(S.totalKills)} enemies defeated.</p>
+    <div class="row"><button class="btn primary" id="ov-endless" type="button">Keep going (endless)</button><button class="btn" id="ov-title" type="button">Back to title</button></div>`);
   $('ov-endless').onclick = () => { S.endless = true; hideOverlay(); ui.paused = false; refreshHud(); };
-  $('ov-maps').onclick = toTitle;
+  $('ov-title').onclick = toTitle;
+}
+function resetUi() {
+  lastGold = S.gold; ui.fresh = new Set(); $('toasts').replaceChildren();
+  ui.selected = null; ui.build = null; ui.targeting = null; ui.pending = null; ui.heroSel = false;
+  ui.perkOpen = false; ui.storyOpen = false; ui.skillsOpen = false; ui.mapOpen = false; ui.paused = false; ui.started = true;
 }
 function restart(intro = true) {
-  S = newState(); loadMap(ui.map); S.hero = makeHero(ui.hero); lastGold = S.gold; ui.fresh = new Set(); $('toasts').replaceChildren();
-  ui.selected = null; ui.build = null; ui.targeting = null; ui.pending = null; ui.heroSel = false;
-  ui.perkOpen = false; ui.storyOpen = false; ui.skillsOpen = false; ui.paused = false; ui.started = true; ui.intel = true;
+  S = newState(); loadMap(0); S.hero = makeHero(ui.hero);
+  resetUi(); ui.intel = true;
+  saveCheckpoint();
   hideOverlay(); renderHeroUI(); refreshPanel(true); refreshHud();
   if (intro) showChapter(0);
+}
+function continueCampaign(c) {
+  if (!c) { toTitle(); return; }
+  S = newState(); S.mapI = c.mapI; loadMap(c.mapI);
+  Object.assign(S, { wave: c.wave, cleared: c.cleared, gold: c.gold, perks: c.perks || [], totalKills: c.totalKills || 0 });
+  S.mods = Object.assign(mods0(), c.mods || {}); S.modVer = 1;
+  ui.hero = c.hero.k;
+  const h = S.hero = makeHero(c.hero.k);
+  Object.assign(h, { lvl: c.hero.lvl, xp: c.hero.xp, sp: c.hero.sp, learned: c.hero.learned || {}, evo: c.hero.evo, ult: c.hero.ult, toldSkill: c.hero.toldSkill });
+  recomputeFx(h); h.maxHp = hMax(h); h.hp = h.maxHp; if (h.ult) h.ab.r = 3;
+  resetUi(); ui.intel = false;
+  hideOverlay(); renderHeroUI(); refreshPanel(true); refreshHud();
+  S.banner = { text: `Map ${S.mapI + 1}: ${MAPS[S.mapI].name}`, sub: `Waves ${S.mapI * WAVES_PER_MAP + 1}–${(S.mapI + 1) * WAVES_PER_MAP}`, life: 2.6 };
+}
+function showMapComplete() {
+  if (ui.mapOpen || !S.mapDone) return;
+  ui.mapOpen = true; ui.paused = true; ui.targeting = null; sfx('clear');
+  const salvage = S.towers.reduce((a, t) => a + t.spent, 0), next = MAPS[S.mapI + 1];
+  showOverlay(`
+    <p class="chap" style="color:var(--good)">Map ${S.mapI + 1} of ${MAPS.length} held</p>
+    <h2>${MAPS[S.mapI].name} <span>held</span></h2>
+    <p>${S.lives} of ${START_LIVES} lives left · ${fmt(S.totalKills)} enemies defeated so far</p>
+    <div class="unlock"><b>Next: ${next.name}</b><span>${next.blurb} Waves ${(S.mapI + 1) * WAVES_PER_MAP + 1}–${(S.mapI + 2) * WAVES_PER_MAP}.</span>
+      <span class="meta">Your crews salvage every tower for its full cost: +${salvage} BST. You start the new road with ${S.gold + salvage} BST and full lives, and ${S.hero ? HEROES[S.hero.k].name.split(' ')[0] + ' marches with you' : 'your upgrades carry over'}.</span></div>
+    <div class="row"><button class="btn primary" id="ov-next" type="button">March to ${next.name}</button></div>`, 'wide story-card');
+  $('ov-next').onclick = nextMap; $('ov-next').focus();
+}
+function nextMap() {
+  if (!ui.mapOpen) return;
+  S.gold += S.towers.reduce((a, t) => a + t.spent, 0);
+  S.towers = []; S.shots = []; S.strikes = []; S.rains = []; S.buffs = []; S.particles = []; S.texts = []; S.rings = []; S.bolts = []; S.tracers = [];
+  S.mapI++; S.mapDone = false; S.lives = START_LIVES;
+  loadMap(S.mapI);
+  const h = S.hero;
+  if (h) { const f = makeHero(h.k); Object.assign(h, { x: f.x, y: f.y, post: f.post, dest: null, dead: false, hp: h.maxHp }); }
+  ui.mapOpen = false; ui.paused = false; ui.selected = null; ui.build = null; ui.heroSel = false; ui.pending = null;
+  saveCheckpoint();
+  hideOverlay(); refreshPanel(true); refreshHud();
+  S.banner = { text: `Map ${S.mapI + 1}: ${MAPS[S.mapI].name}`, sub: `Waves ${S.mapI * WAVES_PER_MAP + 1}–${(S.mapI + 1) * WAVES_PER_MAP}`, life: 2.6 };
+  toast(`New road: ${MAPS[S.mapI].name}`, MAPS[S.mapI].blurb);
 }
 function heroSelect() {
   showOverlay(`
@@ -2240,6 +2319,7 @@ function closeStory(i = 0) {
   if (n === 4) { h.ult = true; h.ab.r = S.time + 3; h.sp++; }
   ui.storyOpen = false; ui.paused = false; hideOverlay(); sfx('upgrade');
   renderHeroUI(); refreshPanel(true); refreshHud();
+  if (S.mapDone) showMapComplete();
 }
 function openSkills() {
   if (!S.hero || !ui.started || S.over || (isModal() && !ui.skillsOpen)) return;
@@ -2381,6 +2461,7 @@ window.addEventListener('keydown', ev => {
     else if (k === 'enter' || k === ' ' || n === 1) { ev.preventDefault(); closeStory(0); }
     return;
   }
+  if (ui.mapOpen) { if (k === 'enter' || k === ' ') { ev.preventDefault(); nextMap(); } return; }
   if (ui.perkOpen) { const n = +k; if (n >= 1 && n <= 3) pickPerk(n - 1); return; }
   const idx = ['1', '2', '3', '4', '5'].indexOf(k);
   if (idx >= 0) { selectBuild(ui.build === TOWER_KEYS[idx] ? null : TOWER_KEYS[idx]); return; }
@@ -2465,7 +2546,7 @@ renderHeroUI(); refreshPanel(true); refreshHud(); titleScreen(); fitBoard(); upd
 requestAnimationFrame(frame);
 
 // Test hook for automated play-throughs.
-window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, unlocked, UNLOCK, HEROES, COLS, ROWS, TILE, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero };
+window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, unlocked, UNLOCK, HEROES, COLS, ROWS, TILE, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero, nextMap, continueCampaign, loadCheckpoint };
 })();
 </script>
 </body>

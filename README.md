@@ -4,7 +4,7 @@ A browser tower defense game in one HTML file. There's no build step: open `inde
 
 ## How to play
 
-Hold the gate for 30 waves on one of three maps. If 20 lives' worth of enemies get through, you lose. After wave 30 you can keep playing in endless mode.
+The game is a campaign across three maps, ten waves each: Switchback (waves 1–10), The Serpent (11–20) and Short Fuse (21–30). When a map is held you march to the next one: towers stay behind but are salvaged for their full cost, lives refill to 20, and your hero, skills, story, upgrade unlocks and field orders carry over. A checkpoint is saved at the start of every map, so the title screen offers **Continue**, and losing lets you **Retry this map** instead of starting over. After wave 30 you can keep playing in endless mode.
 
 | Tower | Cost | Role | Level 3 paths |
 |---|---|---|---|
@@ -22,7 +22,7 @@ The second upgrade splits into two paths, so two players end up with different d
 
 **Enemies:** Footman, Courier (fast), Ironclad (armored), Mite (swarms), Kite (flies straight to the gate along the dotted line, so Mortars can't hit it), Mender (heals nearby enemies), and a Warlord boss every 10 waves.
 
-**Maps:** Switchback (long and winding), The Serpent (four long climbs), Short Fuse (a short road, hard). Your best wave is saved per map.
+**Maps:** Switchback (long and winding), The Serpent (four long climbs), Short Fuse (a short road, hard), played in that order. Your best wave is saved.
 
 **Keys:** `H` commands the hero · `E` / `R` hero skill and ultimate · `K` skill tree · `1`–`5` pick a tower · `Space` sends the next wave (sending it early pays bonus gold) · `U` / `I` pick upgrade path A / B · `S` sells · `T` changes targeting · `Q` / `W` abilities · `N` next-wave intel · `Esc` closes menus · `F` changes speed · `P` pauses · `M` mutes · `Esc` cancels.
 
