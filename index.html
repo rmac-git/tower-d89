@@ -439,7 +439,9 @@ dl.kv dd .next { color: var(--good); }
 // ===================================================================
 // Constants & data
 // ===================================================================
-const TILE = 40, COLS = 24, ROWS = 15, W = COLS * TILE, H = ROWS * TILE;
+const TILE = 60, COLS = 16, ROWS = 10, W = COLS * TILE, H = ROWS * TILE;
+const K = TILE / 40;          // art was drawn for 40px tiles; scale it to the board
+const SPEED_K = 0.9, RANGE_K = 0.75;   // the coarser grid has a shorter road, so enemies walk a little slower and towers reach a little less
 const VICTORY_WAVE = 30;
 const START_GOLD = 180, START_LIVES = 20;
 const REDUCED_MOTION = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -447,11 +449,11 @@ const REDUCED_MOTION = window.matchMedia && matchMedia('(prefers-reduced-motion:
 // Maps: path waypoints in tile coordinates (enemies enter left, exit right at the gate).
 const MAPS = [
   { name: 'Switchback', blurb: 'A long winding road with plenty of corners.', seed: 42,
-    wp: [[-1, 2], [5, 2], [5, 7], [2, 7], [2, 12], [10, 12], [10, 4], [15, 4], [15, 11], [20, 11], [20, 6], [24, 6]] },
+    wp: [[-1, 1], [3, 1], [3, 4], [1, 4], [1, 8], [6, 8], [6, 2], [10, 2], [10, 7], [13, 7], [13, 4], [16, 4]] },
   { name: 'The Serpent', blurb: 'Four long climbs. Made for slow fields.', seed: 11,
-    wp: [[-1, 12], [4, 12], [4, 3], [9, 3], [9, 10], [14, 10], [14, 3], [19, 3], [19, 12], [24, 12]] },
+    wp: [[-1, 8], [2, 8], [2, 2], [5, 2], [5, 7], [9, 7], [9, 2], [12, 2], [12, 8], [16, 8]] },
   { name: 'Short Fuse', blurb: 'A short road. Enemies arrive fast. Hard.', seed: 5,
-    wp: [[-1, 7], [6, 7], [6, 2], [12, 2], [12, 12], [18, 12], [18, 7], [24, 7]] },
+    wp: [[-1, 5], [4, 5], [4, 1], [8, 1], [8, 8], [12, 8], [12, 5], [16, 5]] },
 ];
 let WAYPOINTS, segs, pathLen, pathSet, rockSet, airA, airB, airLen, MAP_I = 0;
 
@@ -506,7 +508,7 @@ const mods0 = () => ({ dmg: 1, rate: 1, range: 0, hp: 1, speed: 1, armor: 0, bou
 function baseStats(type, lvl, branch) { const d = TOWERS[type]; return lvl < 2 ? d.lv[lvl] : d.br[branch || 0]; }
 function scaled(st) {
   const m = S.mods;
-  return { ...st, dmg: st.dmg * m.dmg, rate: st.rate * m.rate, range: st.range + m.range, burn: st.burn && st.burn * m.dmg };
+  return { ...st, dmg: st.dmg * m.dmg, rate: st.rate * m.rate, range: st.range * RANGE_K + m.range, burn: st.burn && st.burn * m.dmg };
 }
 function tStats(t) {
   if (t._s && t._v === S.modVer && t._l === t.lvl && t._b === t.branch) return t._s;
@@ -795,7 +797,7 @@ function loadMap(i) {
   rockSet = new Set();
   const r = rng(m.seed);
   let tries = 0;
-  while (rockSet.size < 16 && tries++ < 500) {
+  while (rockSet.size < 7 && tries++ < 500) {
     const x = Math.floor(r() * COLS), y = Math.floor(r() * ROWS), k = x + ',' + y;
     if (!pathSet.has(k)) rockSet.add(k);
   }
@@ -905,7 +907,7 @@ function spawnEnemy(type, w) {
   const d = ENEMIES[type];
   const hp = Math.round(d.hp * hpMul(w) * S.mods.hp);
   S.enemies.push({
-    id: S.nextId++, type, hp, maxHp: hp, speed: d.speed * S.mods.speed, armor: d.armor + (d.armor > 0 ? armorAdd(w) + S.mods.armor : 0),
+    id: S.nextId++, type, hp, maxHp: hp, speed: d.speed * S.mods.speed * SPEED_K, armor: d.armor + (d.armor > 0 ? armorAdd(w) + S.mods.armor : 0),
     bounty: Math.round(d.bounty * bountyMul(w) * S.mods.bounty), xp: Math.round(d.bounty * bountyMul(w)), air: !!d.air, d: -Math.random() * 6, x: -TILE, y: (2.5) * TILE,
     slowT: 0, slowF: 0, healT: 1, hitT: 0, wob: Math.random() * 6.28, alive: true,
   });
@@ -970,7 +972,7 @@ function fireTower(t, dt) {
   }
   if (t.cd > 0 || !target) return;
   t.cd = 1 / st.rate; t.flash = 0.12;
-  const mx = t.x + Math.cos(t.angle) * 14, my = t.y + Math.sin(t.angle) * 14;
+  const mx = t.x + Math.cos(t.angle) * 14 * K, my = t.y + Math.sin(t.angle) * 14 * K;
   switch (t.type) {
     case 'arrow':
       S.shots.push({ kind: 'arrow', x: mx, y: my, target, dmg: st.dmg, pierce: st.pierce, tower: t, speed: 760 }); sfx('arrow');
@@ -985,7 +987,7 @@ function fireTower(t, dt) {
     }
     case 'tesla': {
       const hit = [target]; let cur = target, dmg = st.dmg;
-      const pts = [[t.x, t.y - 14], [target.x, target.y]];
+      const pts = [[t.x, t.y - 14 * K], [target.x, target.y]];
       hurt(target, dmg, t, true);
       for (let i = 1; i < st.chain; i++) {
         let nxt = null, nd = 1.8 * TILE;
@@ -1468,7 +1470,7 @@ function drawBackground() {
     const [tx, ty] = k.split(',').map(Number), cx = (tx + 0.5) * TILE, cy = (ty + 0.5) * TILE;
     const n = 2 + Math.floor(r() * 2);
     for (let i = 0; i < n; i++) {
-      const ox = (r() - 0.5) * 18, oy = (r() - 0.5) * 14, rad = 6 + r() * 7;
+      const ox = (r() - 0.5) * 18 * K, oy = (r() - 0.5) * 14 * K, rad = (6 + r() * 7) * K;
       g.fillStyle = 'rgba(0,0,0,0.35)';
       g.beginPath(); g.ellipse(cx + ox + 2, cy + oy + 4, rad, rad * 0.7, 0, 0, Math.PI * 2); g.fill();
       g.fillStyle = `hsl(150, 6%, ${32 + r() * 12}%)`;
@@ -1481,13 +1483,15 @@ function drawBackground() {
   g.setLineDash([3, 9]); g.strokeStyle = 'rgba(143,211,232,0.3)'; g.lineWidth = 2; g.lineCap = 'round';
   g.beginPath(); g.moveTo(airA[0], airA[1]); g.lineTo(airB[0], airB[1]); g.stroke(); g.setLineDash([]);
   // the bastion gate at the exit
-  const gx = W - 18, gy = (WAYPOINTS[WAYPOINTS.length - 1][1] + 0.5) * TILE;
+  const gx = W - 18 * K, gy = (WAYPOINTS[WAYPOINTS.length - 1][1] + 0.5) * TILE;
+  g.save(); g.translate(gx * (1 - K), gy * (1 - K)); g.scale(K, K);   // draw the gate around its anchor at board scale
   g.fillStyle = '#3d3a33'; g.fillRect(gx - 6, gy - 34, 26, 68);
   g.fillStyle = '#56524a';
   for (const cx of [gx - 6, gx + 4, gx + 14]) g.fillRect(cx, gy - 42, 6, 8);
   g.fillStyle = '#1a140c'; g.beginPath(); g.moveTo(gx - 6, gy + 18); g.lineTo(gx - 6, gy - 8); g.quadraticCurveTo(gx + 4, gy - 22, gx + 14, gy - 8); g.lineTo(gx + 14, gy + 18); g.fill();
   g.fillStyle = '#d9a84e'; g.fillRect(gx + 2, gy - 60, 2, 20);
   g.beginPath(); g.moveTo(gx + 4, gy - 60); g.lineTo(gx + 18, gy - 55); g.lineTo(gx + 4, gy - 50); g.fill();
+  g.restore();
   // spawn marker
   g.fillStyle = 'rgba(226,101,76,0.6)';
   const sy = (WAYPOINTS[0][1] + 0.5) * TILE;
@@ -1548,13 +1552,13 @@ function drawTower(c, type, lvl, x, y, angle, scale = 1, flash = 0, branch = -1)
 }
 
 function drawEnemy(c, e) {
-  const d = ENEMIES[e.type], r = d.size;
-  const bob = e.air ? Math.sin(e.wob) * 2 - 10 : Math.abs(Math.sin(e.wob)) * -1.5;
+  const d = ENEMIES[e.type], r = d.size, R = r * K;
+  const bob = (e.air ? Math.sin(e.wob) * 2 - 10 : Math.abs(Math.sin(e.wob)) * -1.5) * K;
   c.save();
   // shadow
   c.fillStyle = 'rgba(0,0,0,' + (e.air ? 0.22 : 0.35) + ')';
-  c.beginPath(); c.ellipse(e.x + 1, e.y + r * 0.55, r * 0.95, r * 0.45, 0, 0, Math.PI * 2); c.fill();
-  c.translate(e.x, e.y + bob);
+  c.beginPath(); c.ellipse(e.x + 1, e.y + R * 0.55, R * 0.95, R * 0.45, 0, 0, Math.PI * 2); c.fill();
+  c.translate(e.x, e.y + bob); c.scale(K, K);
   const fill = e.hitT > 0 ? '#ffffff' : d.color;
   c.fillStyle = fill;
   switch (e.type) {
@@ -1597,7 +1601,7 @@ function drawEnemy(c, e) {
   c.restore();
   // health bar
   if (e.hp < e.maxHp) {
-    const bw = Math.max(16, r * 2.2), bx = e.x - bw / 2, by = e.y + bob - r - 8;
+    const bw = Math.max(16, R * 2.2), bx = e.x - bw / 2, by = e.y + bob - R - 8;
     c.fillStyle = 'rgba(0,0,0,0.6)'; c.fillRect(bx - 1, by - 1, bw + 2, 5);
     const f = Math.max(0, e.hp / e.maxHp);
     c.fillStyle = f > 0.5 ? '#8fc76c' : f > 0.25 ? '#e9c75c' : '#e2654c';
@@ -1686,12 +1690,12 @@ function render() {
   }
 
   for (const t of S.towers) {
-    drawTower(ctx, t.type, t.lvl, t.x, t.y, t.angle, 1, t.flash, t.lvl >= 2 ? t.branch : -1);
-    if (t === sel) { ctx.strokeStyle = '#d9a84e'; ctx.lineWidth = 2; roundRect(ctx, t.x - 19, t.y - 19, 38, 38, 7); ctx.stroke(); }
+    drawTower(ctx, t.type, t.lvl, t.x, t.y, t.angle, K, t.flash, t.lvl >= 2 ? t.branch : -1);
+    if (t === sel) { ctx.strokeStyle = '#d9a84e'; ctx.lineWidth = 2; roundRect(ctx, t.x - 19 * K, t.y - 19 * K, 38 * K, 38 * K, 7 * K); ctx.stroke(); }
     else if (!S.over) {
       const uc = upgradeCost(t);
       if (uc != null && S.gold >= uc) {
-        const ay = t.y - 25 + Math.sin(performance.now() / 260 + t.id) * 2;
+        const ay = t.y - 26 * K + Math.sin(performance.now() / 260 + t.id) * 2;
         ctx.fillStyle = '#8fc76c'; ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(t.x, ay - 6); ctx.lineTo(t.x + 6, ay + 1); ctx.lineTo(t.x + 2.5, ay + 1); ctx.lineTo(t.x + 2.5, ay + 5); ctx.lineTo(t.x - 2.5, ay + 5); ctx.lineTo(t.x - 2.5, ay + 1); ctx.lineTo(t.x - 6, ay + 1); ctx.closePath(); ctx.fill(); ctx.stroke();
       }
@@ -1712,15 +1716,15 @@ function render() {
     if (ui.heroSel) {
       drawRange(hh.x, hh.y, (hd.range + hh.fx.range) * TILE, true);
       if (hh.fx.auraRate || hh.fx.auraDmg) { ctx.strokeStyle = hd.color; ctx.globalAlpha = 0.5; ctx.setLineDash([2, 6]); ctx.beginPath(); ctx.arc(hh.x, hh.y, (3.5 + hh.fx.auraR) * TILE, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1; }
-      ctx.strokeStyle = hd.color; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(hh.x, hh.y, 17, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = hd.color; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(hh.x, hh.y, 17 * K, 0, Math.PI * 2); ctx.stroke();
     }
     if (hh.dest) {
       const [dx, dy] = hh.dest; ctx.strokeStyle = hd.color; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(dx - 5, dy - 5); ctx.lineTo(dx + 5, dy + 5); ctx.moveTo(dx + 5, dy - 5); ctx.lineTo(dx - 5, dy + 5); ctx.stroke();
     }
-    drawHero(ctx, hh.k, hh.x, hh.y, { angle: hh.angle, flash: hh.flash > 0 });
-    if (S.time < hh.invuln || hh.shield > 0) { ctx.strokeStyle = 'rgba(255,240,200,0.85)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(hh.x, hh.y, 15, 0, Math.PI * 2); ctx.stroke(); }
-    const bw = 28, bx = hh.x - bw / 2, by = hh.y - 25;
+    drawHero(ctx, hh.k, hh.x, hh.y, { angle: hh.angle, flash: hh.flash > 0, scale: K });
+    if (S.time < hh.invuln || hh.shield > 0) { ctx.strokeStyle = 'rgba(255,240,200,0.85)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(hh.x, hh.y, 15 * K, 0, Math.PI * 2); ctx.stroke(); }
+    const bw = 28 * K, bx = hh.x - bw / 2, by = hh.y - 25 * K;
     ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.fillRect(bx - 1, by - 1, bw + 2, 6);
     ctx.fillStyle = '#8fc76c'; ctx.fillRect(bx, by, bw * Math.max(0, hh.hp / hh.maxHp), 4);
     ctx.font = '700 10px "JetBrains Mono", monospace'; ctx.textAlign = 'left'; ctx.fillStyle = hd.color; ctx.fillText(hh.lvl, bx + bw + 3, by + 5);
@@ -1797,7 +1801,7 @@ function render() {
     const [tx, ty] = ui.hoverTile, x = (tx + 0.5) * TILE, y = (ty + 0.5) * TILE;
     const ok = tileFree(tx, ty) && S.gold >= buildCost(ui.build);
     drawRange(x, y, (TOWERS[ui.build].lv[0].range + S.mods.range) * TILE, ok);
-    ctx.globalAlpha = 0.65; drawTower(ctx, ui.build, 0, x, y, -Math.PI / 2); ctx.globalAlpha = 1;
+    ctx.globalAlpha = 0.65; drawTower(ctx, ui.build, 0, x, y, -Math.PI / 2, K); ctx.globalAlpha = 1;
     ctx.strokeStyle = ok ? '#d9a84e' : '#e2654c'; ctx.lineWidth = 2; ctx.strokeRect(tx * TILE + 1, ty * TILE + 1, TILE - 2, TILE - 2);
     if (ok && ui.pending) {
       const ly = Math.max(18, y - 30);
@@ -2461,7 +2465,7 @@ renderHeroUI(); refreshPanel(true); refreshHud(); titleScreen(); fitBoard(); upd
 requestAnimationFrame(frame);
 
 // Test hook for automated play-throughs.
-window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, unlocked, UNLOCK, HEROES, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero };
+window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, unlocked, UNLOCK, HEROES, COLS, ROWS, TILE, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero };
 })();
 </script>
 </body>
