@@ -894,7 +894,7 @@ let S;
 function newState() {
   return {
     gold: START_GOLD, lives: START_LIVES, wave: 0, time: 0,
-    towers: [], enemies: [], shots: [], particles: [], texts: [], rings: [], bolts: [], tracers: [],
+    towers: [], enemies: [], shots: [], particles: [], texts: [], rings: [], bolts: [], tracers: [], slashes: [],
     spawns: [], waveActive: false, over: false, won: false, endless: false,
     banner: null, nextId: 1, totalKills: 0, cleared: 0, mapI: 0, mapDone: false,
     mods: mods0(), modVer: 0, perks: [], ab: { strike: 15, snap: 30 }, strikes: [], rains: [], buffs: [], hero: null,
@@ -1026,6 +1026,17 @@ function pickTarget(t, rangePx, canAir) {
   return best;
 }
 
+// Height of a tower's weapon above its tile centre, in board pixels, so shots leave the weapon itself.
+function towerTop(t) {
+  const l = t.lvl, br = l >= 2 ? t.branch : -1;
+  switch (t.type) {
+    case 'arrow': return (11 + l * 4) * K;
+    case 'sniper': return (17 + l * 3) * K;
+    case 'tesla': return (16 + l * 3 + (br === 1 ? 7 : 0)) * K;
+    case 'cannon': return 6 * K;
+    default: return 6 * K;
+  }
+}
 function fireTower(t, dt) {
   const def = TOWERS[t.type], st0 = tStats(t), bs = boost(t), st = bs ? { ...st0, dmg: st0.dmg * bs.dmg, rate: st0.rate * bs.rate } : st0;
   t.cd -= dt; t.flash = Math.max(0, t.flash - dt);
@@ -1052,7 +1063,8 @@ function fireTower(t, dt) {
   }
   if (t.cd > 0 || !target) return;
   t.cd = 1 / st.rate; t.flash = 0.12;
-  const mx = t.x + Math.cos(t.angle) * 14 * K, my = t.y + Math.sin(t.angle) * 14 * K;
+  const top = towerTop(t), reach = (t.type === 'sniper' ? 22 + t.lvl * 3 : t.type === 'cannon' ? 14 + t.lvl * 2 : 13) * K;
+  const mx = t.x + Math.cos(t.angle) * reach, my = t.y - top + Math.sin(t.angle) * reach;
   switch (t.type) {
     case 'arrow':
       S.shots.push({ kind: 'arrow', x: mx, y: my, target, dmg: st.dmg, pierce: st.pierce, tower: t, speed: 760 }); sfx('arrow');
@@ -1067,7 +1079,7 @@ function fireTower(t, dt) {
     }
     case 'tesla': {
       const hit = [target]; let cur = target, dmg = st.dmg;
-      const pts = [[t.x, t.y - 14 * K], [target.x, target.y]];
+      const pts = [[t.x, t.y - top], [target.x, target.y]];
       hurt(target, dmg, t, true);
       for (let i = 1; i < st.chain; i++) {
         let nxt = null, nd = 1.8 * TILE;
@@ -1079,11 +1091,13 @@ function fireTower(t, dt) {
         if (!nxt) break;
         dmg *= 0.85; hit.push(nxt); pts.push([nxt.x, nxt.y]); hurt(nxt, dmg, t, true); cur = nxt;
       }
-      S.bolts.push({ pts, life: 0.16, max: 0.16 }); sfx('tesla');
+      S.bolts.push({ pts, life: 0.2, max: 0.2 }); sfx('tesla');
+      for (const q of pts.slice(1)) burst(q[0], q[1], '#e9dcff', 3, 60);
       break;
     }
     case 'sniper':
-      S.tracers.push({ x1: mx, y1: my, x2: target.x, y2: target.y, life: 0.18, max: 0.18 });
+      S.tracers.push({ x1: mx, y1: my, x2: target.x, y2: target.y, life: 0.22, max: 0.22 });
+      burst(target.x, target.y, '#fff3d6', 6, 120);
       hurt(target, st.dmg, t, !!st.pierce); sfx('sniper');
       if (!target.alive) floatText(target.x, target.y - 22, 'Headshot', '#e9e2c9');
       break;
@@ -1092,16 +1106,17 @@ function fireTower(t, dt) {
 
 function updateShots(dt) {
   for (const s of S.shots) {
-    if (s.kind === 'arrow') {
+    if (s.kind === 'arrow' || s.kind === 'bolt') {
       if (!s.target.alive) { s.dead = true; continue; }
       const dx = s.target.x - s.x, dy = s.target.y - s.y, dist = Math.hypot(dx, dy), step = s.speed * dt;
       s.a = Math.atan2(dy, dx);
       if (dist <= step + 4) {
+        burst(s.target.x, s.target.y, s.col || '#fff3d6', s.kind === 'bolt' ? 8 : 4, s.kind === 'bolt' ? 90 : 60);
         hurt(s.target, s.dmg, s.tower, !!s.pierce);
         if (s.ignite && s.target.alive) { s.target.burnT = 3; s.target.burnD = s.dmg * 0.4; s.target.burnSrc = s.tower; }
         s.dead = true;
       }
-      else { s.x += dx / dist * step; s.y += dy / dist * step; }
+      else { (s.tr || (s.tr = [])).push([s.x, s.y]); if (s.tr.length > 7) s.tr.shift(); s.x += dx / dist * step; s.y += dy / dist * step; }
     } else if (s.kind === 'shell') {
       s.t += dt;
       if (s.t >= s.dur) {
@@ -1297,9 +1312,11 @@ function heroAttack(h, d, t) {
       if (e === t) hurt(e, dmg, h, pierce);
       else if (R && Math.hypot(e.x - t.x, e.y - t.y) <= R) hurt(e, dmg * 0.6, h, pierce);
     }
-    ring(t.x, t.y, 4, R || 14, 0.18, d.color); sfx('arrow');
+    S.slashes.push({ x: h.x, y: h.y, a: Math.atan2(t.y - h.y, t.x - h.x), r: Math.max(16 * K, Math.hypot(t.x - h.x, t.y - h.y)), life: 0.2, max: 0.2, col: d.color });
+    burst(t.x, t.y, '#fff3d6', 5, 80); if (R) ring(t.x, t.y, 4, R, 0.2, d.color); sfx('arrow');
   } else {
-    S.shots.push({ kind: 'arrow', x: h.x, y: h.y - 6, target: t, dmg, pierce, tower: h, speed: 720, col: d.shot, ignite: h.fx.burn > 0 });
+    const tip = (h.k === 'ilse' ? 17 : 23) * K, a = Math.atan2(t.y - h.y, t.x - h.x);
+    S.shots.push({ kind: 'bolt', x: h.x + Math.cos(a) * tip, y: h.y + Math.sin(a) * tip, target: t, dmg, pierce, tower: h, speed: 460, col: h.k === 'ilse' ? '#ff8a3c' : '#8ff0d8', big: h.k === 'ilse', ignite: h.fx.burn > 0 });
     sfx('arrow');
   }
 }
@@ -1475,7 +1492,8 @@ function updateFx(dt) {
   S.particles = S.particles.filter(p => p.life > 0);
   for (const t of S.texts) { t.life -= dt; t.y -= 26 * dt; }
   S.texts = S.texts.filter(t => t.life > 0);
-  for (const arr of [S.rings, S.bolts, S.tracers]) for (const r of arr) r.life -= dt;
+  for (const arr of [S.rings, S.bolts, S.tracers, S.slashes]) for (const r of arr) r.life -= dt;
+  S.slashes = S.slashes.filter(r => r.life > 0);
   S.rings = S.rings.filter(r => r.life > 0);
   if (S.buffs.length) S.buffs = S.buffs.filter(b => b.until > S.time);
   S.bolts = S.bolts.filter(r => r.life > 0);
@@ -1959,15 +1977,31 @@ function render() {
 
   // shots
   for (const s of S.shots) {
-    if (s.kind === 'arrow') {
-      ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(s.a || 0);
-      ctx.strokeStyle = s.col || '#ece6d2'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-8, 0); ctx.lineTo(4, 0); ctx.stroke();
-      ctx.restore();
+    if (s.kind === 'arrow' || s.kind === 'bolt') {
+      if (s.tr) for (let i = 0; i < s.tr.length; i++) {
+        const [qx, qy] = s.tr[i], f = (i + 1) / (s.tr.length + 1);
+        ctx.globalAlpha = f * (s.kind === 'bolt' ? 0.75 : 0.4); ctx.fillStyle = s.col || '#fff3d6';
+        ctx.beginPath(); ctx.arc(qx, qy, (s.kind === 'bolt' ? (s.big ? 3.4 : 2.4) : 1.3) * K * f + 0.5, 0, 6.283); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      if (s.kind === 'bolt') {
+        const rr = (s.big ? 5 : 3.6) * K, bg2 = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, rr * 2.2);
+        bg2.addColorStop(0, '#ffffff'); bg2.addColorStop(0.35, s.col); bg2.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = bg2; ctx.beginPath(); ctx.arc(s.x, s.y, rr * 2.2, 0, 6.283); ctx.fill();
+      } else {
+        ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(s.a || 0); ctx.scale(K, K);
+        ctx.strokeStyle = 'rgba(20,14,8,0.6)'; ctx.lineWidth = 3.2; ctx.beginPath(); ctx.moveTo(-9, 0); ctx.lineTo(4, 0); ctx.stroke();
+        ctx.strokeStyle = '#f4ecd6'; ctx.lineWidth = 1.8; ctx.stroke();
+        ctx.fillStyle = '#dfe6ee'; ctx.beginPath(); ctx.moveTo(7, 0); ctx.lineTo(3, -2.6); ctx.lineTo(3, 2.6); ctx.fill();
+        ctx.fillStyle = '#c0453a'; ctx.fillRect(-9, -1.8, 3, 3.6);
+        ctx.restore();
+      }
     } else {
-      const p = s.t / s.dur, x = s.sx + (s.tx - s.sx) * p, y = s.sy + (s.ty - s.sy) * p, hgt = Math.sin(p * Math.PI) * 40;
-      ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#2a2420'; ctx.beginPath(); ctx.arc(x, y - hgt, 5, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = 'rgba(240,163,90,0.8)'; ctx.beginPath(); ctx.arc(x - 1, y - hgt - 1, 1.6, 0, Math.PI * 2); ctx.fill();
+      const p = s.t / s.dur, x = s.sx + (s.tx - s.sx) * p, y = s.sy + (s.ty - s.sy) * p, hgt = Math.sin(p * Math.PI) * 46 * K;
+      ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(x, y, 4 * K, 2 * K, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(200,190,170,0.35)'; ctx.beginPath(); ctx.arc(x - 3 * K, y - hgt + 3 * K, 3.5 * K, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#2a2420'; ctx.beginPath(); ctx.arc(x, y - hgt, 5 * K, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(255,170,90,0.9)'; ctx.beginPath(); ctx.arc(x - 1.5 * K, y - hgt - 1.5 * K, 1.8 * K, 0, Math.PI * 2); ctx.fill();
     }
   }
   for (const e of S.enemies) if (e.air) drawEnemy(ctx, e);
@@ -1975,19 +2009,19 @@ function render() {
   // effects
   for (const r of S.rings) {
     const p = 1 - r.life / r.max;
-    ctx.strokeStyle = r.color; ctx.globalAlpha = (1 - p) * 0.8; ctx.lineWidth = 2;
+    ctx.strokeStyle = r.color; ctx.globalAlpha = (1 - p) * 0.85; ctx.lineWidth = 2.6;
     ctx.beginPath(); ctx.arc(r.x, r.y, r.r0 + (r.r1 - r.r0) * p, 0, Math.PI * 2); ctx.stroke();
   }
   ctx.globalAlpha = 1;
   for (const b of S.bolts) {
     ctx.globalAlpha = b.life / b.max;
-    for (const [w, col] of [[5, 'rgba(177,140,240,0.45)'], [1.8, '#f1e9ff']]) {
+    for (const [w, col] of [[6 * K, 'rgba(177,140,240,0.45)'], [2 * K, '#f6f0ff']]) {
       ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath();
       ctx.moveTo(b.pts[0][0], b.pts[0][1]);
       for (let i = 1; i < b.pts.length; i++) {
         const [ax, ay] = b.pts[i - 1], [bx, by] = b.pts[i];
         for (let k = 1; k <= 4; k++) {
-          const t = k / 4, jitter = k < 4 ? (Math.random() - 0.5) * 12 : 0;
+          const t = k / 4, jitter = k < 4 ? (Math.random() - 0.5) * 12 * K : 0;
           ctx.lineTo(ax + (bx - ax) * t + jitter, ay + (by - ay) * t + jitter);
         }
       }
@@ -1996,8 +2030,17 @@ function render() {
   }
   for (const t of S.tracers) {
     ctx.globalAlpha = t.life / t.max;
-    ctx.strokeStyle = '#fff3d6'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(t.x1, t.y1); ctx.lineTo(t.x2, t.y2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(t.x1, t.y1); ctx.lineTo(t.x2, t.y2);
+    ctx.strokeStyle = 'rgba(255,220,150,0.45)'; ctx.lineWidth = 5 * K; ctx.stroke();
+    ctx.strokeStyle = '#fffaf0'; ctx.lineWidth = 1.6 * K; ctx.stroke();
+  }
+  for (const sl of S.slashes) {
+    const p = 1 - sl.life / sl.max;
+    ctx.globalAlpha = 1 - p; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(sl.x, sl.y, sl.r, sl.a - 0.9 + p * 0.6, sl.a + 0.4 + p * 0.6);
+    ctx.strokeStyle = '#fffbe8'; ctx.lineWidth = 4.5 * K * (1 - p * 0.5); ctx.stroke();
+    ctx.strokeStyle = sl.col; ctx.lineWidth = 1.6 * K; ctx.stroke();
+    ctx.lineCap = 'butt';
   }
   ctx.globalAlpha = 1;
   for (const p of S.particles) {
@@ -2041,8 +2084,25 @@ function render() {
 
   // pending barrage impacts and the aiming reticle
   for (const k of S.strikes) {
-    ctx.strokeStyle = 'rgba(226,101,76,0.55)'; ctx.lineWidth = 2;
+    ctx.strokeStyle = k.col ? 'rgba(255,160,80,0.6)' : 'rgba(226,101,76,0.55)'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(k.x, k.y, k.r || 1.1 * TILE, 0, Math.PI * 2); ctx.stroke();
+    const rem = k.at - S.time;
+    if (rem < 0.6) {   // the meteor or shell falling in for its last moments, kept short so it stays on the board
+      const f = 1 - Math.max(0, rem) / 0.6, sx = k.x + (k.col ? 70 : 0) * (1 - f), sy = k.y - Math.min(170, k.y + 10) * (1 - f);
+      if (k.col) {
+        const tg = ctx.createLinearGradient(sx, sy, sx + 40, sy - 95);
+        tg.addColorStop(0, 'rgba(255,170,80,0.9)'); tg.addColorStop(1, 'rgba(255,170,80,0)');
+        ctx.strokeStyle = tg; ctx.lineWidth = 7 * K; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx + 40, sy - 95); ctx.stroke(); ctx.lineCap = 'butt';
+        const mg = ctx.createRadialGradient(sx, sy, 0, sx, sy, 9 * K);
+        mg.addColorStop(0, '#fff6d8'); mg.addColorStop(0.4, k.col); mg.addColorStop(1, 'rgba(255,120,40,0)');
+        ctx.fillStyle = mg; ctx.beginPath(); ctx.arc(sx, sy, 9 * K, 0, 6.283); ctx.fill();
+      } else {
+        ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 2 * K;
+        ctx.beginPath(); ctx.moveTo(sx, sy - 44 * K); ctx.lineTo(sx, sy); ctx.stroke();
+        ctx.fillStyle = '#2a2420'; ctx.beginPath(); ctx.arc(sx, sy, 5 * K, 0, 6.283); ctx.fill();
+      }
+    }
   }
   if (ui.targeting === 'strike' && ui.hoverPx) {
     const [x, y] = ui.hoverPx, R = 1.6 * TILE;
@@ -2522,7 +2582,7 @@ function showMapComplete() {
 function nextMap() {
   if (!ui.mapOpen) return;
   S.gold += S.towers.reduce((a, t) => a + t.spent, 0);
-  S.towers = []; S.shots = []; S.strikes = []; S.rains = []; S.buffs = []; S.particles = []; S.texts = []; S.rings = []; S.bolts = []; S.tracers = [];
+  S.towers = []; S.shots = []; S.slashes = []; S.strikes = []; S.rains = []; S.buffs = []; S.particles = []; S.texts = []; S.rings = []; S.bolts = []; S.tracers = [];
   S.mapI++; S.mapDone = false; S.lives = START_LIVES;
   loadMap(S.mapI);
   const h = S.hero;
