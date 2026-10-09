@@ -188,6 +188,19 @@ dl.kv dd .next { color: var(--good); }
 .game.side .shop { flex-direction: column; flex-wrap: nowrap; }
 .game.side .shop-item { flex-direction: row; justify-content: space-between; width: auto; padding: 3px 8px 3px 4px; }
 .game.side .shop-name { display: none; }
+.game.side .dock-build { overflow-y: auto; min-height: 0; overscroll-behavior: contain; }
+.shop-detail { display: none; }
+.game.side .shop-detail:not([hidden]) { display: flex; flex-direction: column; gap: 4px; margin-top: -4px; padding: 8px 8px 7px; background: #26352c; border: 1px solid var(--brass); border-top: 0; border-radius: 0 0 var(--radius) var(--radius); font-size: 11.5px; line-height: 1.3; }
+.game.side .shop-item.active { border-radius: var(--radius) var(--radius) 0 0; }
+.shop-detail b { font-family: var(--font-display); font-size: 16px; letter-spacing: 0.03em; text-transform: uppercase; line-height: 1; }
+.shop-detail p { margin: 0; color: var(--muted); }
+.shop-detail dl { display: grid; grid-template-columns: auto 1fr; gap: 1px 6px; margin: 0; }
+.shop-detail dt { color: var(--muted); }
+.shop-detail dd { margin: 0; text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.shop-detail .paths { color: var(--ink); }
+.stat-toggle { display: none; }
+.panel.mini .stat-toggle { display: block; padding: 3px 6px; font-size: 12px; background: none; border-color: var(--line); color: var(--muted); }
+.panel.mini.open dl.kv { display: grid; font-size: 12px; }
 .game.side .abil { flex-direction: column; flex-wrap: nowrap; }
 .game.side .abil-btn { min-width: 0; height: 36px; padding: 0 8px; }
 .game.side .hero-chip .chip-main { flex: 1; }
@@ -1740,7 +1753,22 @@ for (const k of TOWER_KEYS) {
   cost.innerHTML = `<span class="cc" data-v="${d.cost}">${tk(d.cost)}</span><span class="kbd">key ${d.key}</span>`;
   b.appendChild(cost);
   b.addEventListener('click', () => selectBuild(ui.build === k ? null : k));
+  b.setAttribute('aria-expanded', 'false');
   els.shop.appendChild(b);
+  const det = document.createElement('div');
+  det.className = 'shop-detail'; det.dataset.for = k; det.hidden = true;
+  els.shop.appendChild(det);
+}
+function shopDetail(k) {
+  const d = TOWERS[k], st = scaled(d.lv[0]);
+  const rows = [['Damage', Math.round(st.dmg)], ['Shots/s', st.rate.toFixed(2)], ['Range', st.range.toFixed(1)]];
+  if (st.splash) rows.push(['Splash', st.splash.toFixed(1)]);
+  if (st.slow) rows.push(['Slow', Math.round(st.slow * 100) + '%']);
+  if (st.chain) rows.push(['Chain', st.chain]);
+  rows.push(['Air', d.air ? 'yes' : 'no']);
+  d.up.forEach((u, i) => rows.push(['Upgrade ' + (i + 1), tk(Math.round(u * S.mods.upCost))]));
+  return `<b>${d.name}</b><p>${d.desc}</p><dl>${rows.map(([a, v]) => `<dt>${a}</dt><dd>${v}</dd>`).join('')}</dl>`
+    + `<p class="paths">Level 3: ${d.br.map(x => x.name).join(' or ')}</p>`;
 }
 
 function selectBuild(type) { ui.build = type; ui.pending = null; if (type) { ui.selected = null; ui.targeting = null; ui.heroSel = false; } refreshPanel(true); }
@@ -1775,15 +1803,23 @@ function placePanel(t) {
   pn.style.top = Math.round(Math.max(4, Math.min(bd.clientHeight - ph - 4, ty - ph / 2))) + 'px';
 }
 function refreshPanel(force) {
-  for (const b of els.shop.children) {
+  for (const det of els.shop.querySelectorAll('.shop-detail')) {
+    const open = det.dataset.for === ui.build;
+    if (open && det.dataset.v !== S.modVer + ':' + ui.build) { det.dataset.v = S.modVer + ':' + ui.build; det.innerHTML = shopDetail(det.dataset.for); }
+    if (det.hidden === open) { det.hidden = !open; if (open && force) det.scrollIntoView({ block: 'nearest' }); }
+    if (!open) det.dataset.v = '';
+  }
+  for (const b of els.shop.querySelectorAll('.shop-item')) {
     const ty = b.dataset.type, c = buildCost(ty);
+    b.setAttribute('aria-expanded', String(ty === ui.build));
     b.classList.toggle('active', ty === ui.build);
     b.classList.toggle('poor', S.gold < c);
     const cc = b.querySelector('.cc');
     if (cc && cc.dataset.v !== String(c)) { cc.dataset.v = c; cc.innerHTML = tk(c); }
   }
   const t = ui.selected, small = matchMedia('(orientation: landscape) and (max-height: 560px), (max-width: 700px)').matches;
-  els.panel.hidden = !(t || ui.intel || (ui.build && !small));
+  els.panel.hidden = !(t || ui.intel || (ui.build && !$('game-root').classList.contains('side')));
+  els.panel.classList.toggle('open', !!ui.statsOpen);
   els.panel.classList.toggle('mini', !!t && small);
   els.panel.classList.toggle('left', !!t && !small && t.x > W * 0.55);
   let sig;
@@ -1810,6 +1846,7 @@ function refreshPanel(force) {
       <div class="sel-head"><span id="sel-icon"></span><div><h3>${br ? br.name : d.name}</h3>
         <div class="pips">${[0, 1, 2].map(i => `<span class="pip${i <= t.lvl ? ' on' : ''}"></span>`).join('')}</div></div></div>
       ${br ? `<p class="meta">${d.name} · ${br.desc}</p>` : ''}
+      <button class="btn stat-toggle" id="stat-toggle" type="button" aria-expanded="${!!ui.statsOpen}">${ui.statsOpen ? 'Hide stats ▴' : 'Show stats ▾'}</button>
       <dl class="kv">${statRows(tStats(t), next)}</dl>
       <div><p class="eyebrow" style="margin-bottom:6px"><span>Targeting</span><span>T to cycle</span></p>
       <div class="seg" role="group" aria-label="Targeting">${MODES.map(([k, l]) => `<button type="button" data-mode="${k}" class="${t.mode === k ? 'on' : ''}" aria-pressed="${t.mode === k}">${l}</button>`).join('')}</div></div>
@@ -1820,6 +1857,7 @@ function refreshPanel(force) {
     els.info.querySelectorAll('[data-branch]').forEach(b => b.onclick = () => { upgradeTower(t, +b.dataset.branch); refreshPanel(true); });
     $('btn-sell').onclick = () => { sellTower(t); refreshPanel(true); };
     els.info.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { t.mode = b.dataset.mode; refreshPanel(true); });
+    $('stat-toggle').onclick = () => { ui.statsOpen = !ui.statsOpen; refreshPanel(true); };
     placePanel(t);
   } else if (ui.build) {
     const d = TOWERS[ui.build], c = buildCost(ui.build);
