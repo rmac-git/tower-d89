@@ -965,19 +965,77 @@ function newState() {
 }
 const ui = { build: null, selected: null, hoverTile: null, hoverPx: null, speed: 1, paused: true, started: false, targeting: null, perkOpen: false, perkChoices: [], map: 0, mapOpen: false, galleryOpen: false, galleryPaused: false, buildPause: false, newArmed: false, fresh: new Set(), pending: null, portraitOK: false, rotatePaused: false, intel: false, hero: 'maren', heroSel: false, storyOpen: false, skillsOpen: false, chapter: 0, pausedBefore: false };
 const isModal = () => ui.perkOpen || ui.storyOpen || ui.skillsOpen || ui.mapOpen || ui.galleryOpen;
-// A checkpoint is saved at the start of every map so a run can be continued or retried from there.
-function saveCheckpoint() {
+// Saves. A checkpoint is kept at the start of every map (for "Retry this map"), and the game
+// autosaves between waves, towers and all, so Continue picks up where you left off.
+// Both live in this browser and, when the page runs on claude.ai, in your account too.
+const KEY_CAMP = 'bastion-line-camp', KEY_RESUME = 'bastion-line-resume', KEY_BEST = 'bastion-line-best';
+function snapshot(full) {
+  const h = S.hero;
+  const c = { v: 1, at: Date.now(), mapI: S.mapI, wave: S.wave, cleared: S.cleared, gold: S.gold, perks: S.perks, mods: S.mods, totalKills: S.totalKills,
+    hero: h && { k: h.k, lvl: h.lvl, xp: h.xp, sp: h.sp, learned: h.learned, evo: h.evo, ult: h.ult, toldSkill: h.toldSkill } };
+  if (full) Object.assign(c, { lives: S.lives, endless: S.endless, won: S.won, mapDone: S.mapDone, perkDue: ui.perkOpen,
+    towers: S.towers.map(t => ({ type: t.type, lvl: t.lvl, branch: t.branch, tx: t.tx, ty: t.ty, spent: t.spent, mode: t.mode, kills: t.kills, dealt: t.dealt })) });
+  return c;
+}
+function store(key, val) { try { if (val == null) localStorage.removeItem(key); else localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val)); } catch (e) {} }
+function readSave(key) { try { const c = JSON.parse(localStorage.getItem(key)); return c && c.v === 1 && c.hero ? c : null; } catch (e) { return null; } }
+function saveCheckpoint() { store(KEY_CAMP, snapshot(false)); pushCloud(); }
+function saveResume() { if (!S.hero || S.over) return; store(KEY_RESUME, snapshot(true)); lastSaveSig = saveSig(); pushCloud(); }
+function loadCheckpoint() { return readSave(KEY_CAMP); }
+// Continue uses whichever save is newer: the between-wave autosave or the map checkpoint.
+function loadLatest() { const a = readSave(KEY_RESUME), b = readSave(KEY_CAMP); return a && (!b || (a.at || 0) >= (b.at || 0)) ? a : b; }
+function clearResume() { store(KEY_RESUME, null); pushCloud(); }
+function clearCheckpoint() { store(KEY_CAMP, null); store(KEY_RESUME, null); pushCloud(); }
+// Between waves, save whenever something worth keeping changed (towers, gold, upgrades).
+let lastSaveSig = '';
+const saveSig = () => `${S.mapI}:${S.wave}:${S.gold}:${S.lives}:${S.perks.length}:${S.towers.map(t => t.tx + '.' + t.ty + '.' + t.lvl + t.branch + t.mode).join(',')}:${S.hero ? S.hero.lvl + '.' + Object.keys(S.hero.learned || {}).length : ''}`;
+function autosave() {
+  if (!ui.started || S.over || S.waveActive || S.won && !S.endless) return;
+  if (saveSig() !== lastSaveSig) saveResume();
+}
+
+// Cloud copy: one private document per player, kept with the artifact on claude.ai.
+const cloud = { ref: null, busy: false, dirty: false };
+async function pushCloud() {
+  if (!cloud.ref) return;
+  if (cloud.busy) { cloud.dirty = true; return; }
+  cloud.busy = true;
   try {
-    const h = S.hero;
-    localStorage.setItem('bastion-line-camp', JSON.stringify({ v: 1, mapI: S.mapI, wave: S.wave, cleared: S.cleared, gold: S.gold, perks: S.perks, mods: S.mods, totalKills: S.totalKills,
-      hero: h && { k: h.k, lvl: h.lvl, xp: h.xp, sp: h.sp, learned: h.learned, evo: h.evo, ult: h.ult, toldSkill: h.toldSkill } }));
+    let raw = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
+    await cloud.ref.set({ camp: raw(KEY_CAMP), resume: raw(KEY_RESUME), best: bestWave(), at: Date.now() });
+  } catch (e) { if (e && (e.code === 'invalid_argument' || e.code === 'revoked' || e.code === 'not_granted')) cloud.ref = null; }
+  cloud.busy = false;
+  if (cloud.dirty) { cloud.dirty = false; pushCloud(); }
+}
+async function connectCloud() {
+  try {
+    if (!window.claude || typeof window.claude.use !== 'function') return;
+    const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    if (!db || !user) return;
+    const id = await user.id(); if (!id) return;
+    const ref = db.doc('data/users/' + id + '/save');
+    const snap = await ref.get();
+    let pulled = false, localNewer = false;
+    if (snap.exists) {
+      const d = snap.data() || {};
+      for (const [key, field] of [[KEY_CAMP, 'camp'], [KEY_RESUME, 'resume']]) {
+        let remote = null; try { remote = d[field] ? JSON.parse(d[field]) : null; } catch (e) {}
+        const local = readSave(key);
+        if (remote && (!local || (remote.at || 0) > (local.at || 0))) { store(key, d[field]); pulled = true; }
+        else if (local && (!remote || (local.at || 0) > (remote.at || 0))) localNewer = true;
+      }
+      if ((+d.best || 0) > bestWave()) { store(KEY_BEST, String(d.best)); pulled = true; }
+    } else localNewer = !!(readSave(KEY_CAMP) || readSave(KEY_RESUME));
+    cloud.ref = ref;
+    if (pulled && !ui.started && els.card.classList.contains('title-card') && !els.overlay.hidden) titleScreen();
+    if (localNewer) pushCloud();
   } catch (e) {}
 }
-function loadCheckpoint() { try { const c = JSON.parse(localStorage.getItem('bastion-line-camp')); return c && c.v === 1 && c.hero ? c : null; } catch (e) { return null; } }
-function clearCheckpoint() { try { localStorage.removeItem('bastion-line-camp'); } catch (e) {} }
+window.addEventListener('pagehide', () => autosave());
+document.addEventListener('visibilitychange', () => { if (document.hidden) autosave(); });
 
-function bestWave() { try { return +localStorage.getItem('bastion-line-best') || 0; } catch (e) { return 0; } }
-function saveBest(w) { try { if (w > bestWave()) localStorage.setItem('bastion-line-best', String(w)); } catch (e) {} }
+function bestWave() { try { return +localStorage.getItem(KEY_BEST) || 0; } catch (e) { return 0; } }
+function saveBest(w) { try { if (w > bestWave()) localStorage.setItem(KEY_BEST, String(w)); } catch (e) {} }
 
 // ===================================================================
 // Game logic
@@ -1302,6 +1360,7 @@ function update(dt) {
     else if (S.wave % 5 === 4 && S.wave >= 9) offerPerks();
     else if (S.wave % 5 === 0 && S.wave <= 25 && S.hero) showChapter(S.wave / 5);
     if (S.mapDone && !ui.storyOpen) showMapComplete();
+    if (!S.won || S.endless) saveResume();
   }
   updateFx(dt);
 }
@@ -2815,7 +2874,7 @@ function hideOverlay() { els.overlay.hidden = true; }
 
 function titleScreen() {
   ui.started = false; ui.paused = true; ui.perkOpen = false; ui.targeting = null; ui.storyOpen = false; ui.skillsOpen = false; ui.heroSel = false; ui.mapOpen = false; ui.newArmed = false;
-  const cp = loadCheckpoint(), best = bestWave();
+  const cp = loadLatest(), best = bestWave();
   loadMap(cp ? cp.mapI : 0);
   showOverlay(`
     <h2>Hold the <span>Cove</span></h2>
@@ -2833,7 +2892,7 @@ function titleScreen() {
 }
 function toTitle() { S = newState(); loadMap(0); ui.selected = null; ui.build = null; renderHeroUI(); refreshPanel(true); titleScreen(); }
 function gameOver() {
-  S.over = true; saveBest(S.wave - 1); sfx('lose');
+  S.over = true; saveBest(S.wave - 1); sfx('lose'); clearResume();
   setTimeout(() => {
     const cp = loadCheckpoint();
     showOverlay(`
@@ -2863,7 +2922,7 @@ function resetUi() {
 function restart(intro = true) {
   S = newState(); loadMap(0); S.hero = makeHero(ui.hero);
   resetUi(); ui.intel = true;
-  saveCheckpoint();
+  store(KEY_RESUME, null); saveCheckpoint(); lastSaveSig = saveSig();
   hideOverlay(); renderHeroUI(); refreshPanel(true); refreshHud();
   if (intro) showChapter(0);
 }
@@ -2876,9 +2935,20 @@ function continueCampaign(c) {
   const h = S.hero = makeHero(c.hero.k);
   Object.assign(h, { lvl: c.hero.lvl, xp: c.hero.xp, sp: c.hero.sp, learned: c.hero.learned || {}, evo: c.hero.evo, ult: c.hero.ult, toldSkill: c.hero.toldSkill });
   recomputeFx(h); h.maxHp = hMax(h); h.hp = h.maxHp; if (h.ult) h.ab.r = 3;
+  for (const o of c.towers || []) {
+    if (!TOWERS[o.type] || !tileFree(o.tx, o.ty)) continue;
+    S.towers.push({ id: S.nextId++, type: o.type, lvl: o.lvl, tx: o.tx, ty: o.ty, x: (o.tx + 0.5) * TILE, y: (o.ty + 0.5) * TILE, cd: 0.2, angle: -Math.PI / 2,
+      mode: o.mode || 'first', branch: o.branch || 0, spent: o.spent, kills: o.kills || 0, dealt: o.dealt || 0, flash: 0 });
+  }
+  if (c.lives) S.lives = c.lives;
+  S.endless = !!c.endless; S.won = !!c.won;
   resetUi(); ui.intel = false;
   hideOverlay(); renderHeroUI(); refreshPanel(true); refreshHud();
-  S.banner = { text: `Map ${S.mapI + 1}: ${MAPS[S.mapI].name}`, sub: `Waves ${S.mapI * WAVES_PER_MAP + 1}–${(S.mapI + 1) * WAVES_PER_MAP}`, life: 2.6 };
+  lastSaveSig = saveSig();
+  if (c.towers) S.banner = { text: 'Welcome back', sub: `${MAPS[S.mapI].name} · wave ${S.wave + 1} is next`, life: 2.4 };
+  else S.banner = { text: `Map ${S.mapI + 1}: ${MAPS[S.mapI].name}`, sub: `Waves ${S.mapI * WAVES_PER_MAP + 1}–${(S.mapI + 1) * WAVES_PER_MAP}`, life: 2.6 };
+  if (c.mapDone) { S.mapDone = true; showMapComplete(); }
+  else if (c.perkDue) offerPerks();
 }
 function showMapComplete() {
   if (ui.mapOpen || !S.mapDone) return;
@@ -2902,7 +2972,7 @@ function nextMap() {
   const h = S.hero;
   if (h) { const f = makeHero(h.k); Object.assign(h, { x: f.x, y: f.y, post: f.post, dest: null, dead: false, hp: h.maxHp }); }
   ui.mapOpen = false; ui.paused = false; ui.selected = null; ui.build = null; ui.heroSel = false; ui.pending = null;
-  saveCheckpoint();
+  store(KEY_RESUME, null); saveCheckpoint(); lastSaveSig = saveSig();
   hideOverlay(); refreshPanel(true); refreshHud();
   S.banner = { text: `Map ${S.mapI + 1}: ${MAPS[S.mapI].name}`, sub: `Waves ${S.mapI * WAVES_PER_MAP + 1}–${(S.mapI + 1) * WAVES_PER_MAP}`, life: 2.6 };
   toast(`New road: ${MAPS[S.mapI].name}`, MAPS[S.mapI].blurb);
@@ -2988,7 +3058,7 @@ function pickPerk(i) {
   if (!p || !ui.perkOpen) return;
   p.apply(S.mods); S.modVer++; S.perks.push(p.id);
   ui.perkOpen = false; ui.paused = false; hideOverlay(); sfx('upgrade');
-  refreshPanel(true); refreshHud();
+  refreshPanel(true); refreshHud(); saveResume();
 }
 
 // ===================================================================
@@ -3128,7 +3198,7 @@ window.addEventListener('keydown', ev => {
 // ===================================================================
 // Loop
 // ===================================================================
-let last = performance.now(), uiTimer = 0;
+let last = performance.now(), uiTimer = 0, saveTimer = 3;
 function frame(now) {
   const real = Math.min(0.1, (now - last) / 1000); last = now;
   updateCritters(real);
@@ -3139,6 +3209,7 @@ function frame(now) {
   render();
   uiTimer -= real;
   if (uiTimer <= 0) { uiTimer = 0.15; refreshHud(); refreshPanel(false); }
+  saveTimer -= real; if (saveTimer <= 0) { saveTimer = 3; autosave(); }
   requestAnimationFrame(frame);
 }
 
@@ -3184,9 +3255,10 @@ els.ab.strike.querySelector('.ab-ic').innerHTML = IC.shells; els.ab.snap.querySe
 S = newState(); loadMap(ui.map);
 renderHeroUI(); refreshPanel(true); refreshHud(); titleScreen(); fitBoard(); updateOrientation();
 requestAnimationFrame(frame);
+connectCloud();
 
 // Test hook for automated play-throughs.
-window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get decor() { return decor; }, undoLast, lastUndo, sellTower, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, unlocked, UNLOCK, HEROES, COLS, ROWS, TILE, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero, nextMap, openGallery, closeGallery, pickFromGallery, continueCampaign, loadCheckpoint };
+window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get decor() { return decor; }, loadLatest, saveResume, titleScreen, undoLast, lastUndo, sellTower, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, unlocked, UNLOCK, HEROES, COLS, ROWS, TILE, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero, nextMap, openGallery, closeGallery, pickFromGallery, continueCampaign, loadCheckpoint };
 })();
 </script>
 </body>

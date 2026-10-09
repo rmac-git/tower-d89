@@ -76,6 +76,12 @@ The game is built for landscape and the battlefield always takes as much of the 
 
 **Settings (⚙):** sound, full screen, larger text, and quit to title (tap twice to confirm).
 
+## Saving
+
+The game saves itself. After every wave, and whenever you build, upgrade or sell between waves, it records your towers, BST, lives, hero, skills and field orders. Close the page at any point and **Continue** on the title screen picks up at the next wave. Quitting in the middle of a wave takes you back to the start of that wave. A choice you were in the middle of, such as field orders or the map-held screen, is offered again.
+
+Saves live in the browser. When the game is opened as an artifact on claude.ai, it also keeps a private copy in your account (the artifact's `db` storage, under your own user, so nobody else can read it). That copy follows you to other devices, and whichever save is newer wins. If you lose a map, the autosave is dropped and **Retry this map** or **Continue** restarts that map from its first wave.
+
 ## Mistakes
 
 Undo takes back your last build, upgrade or sale with a full refund. The Undo button next to Build (or `Z`, or `Ctrl`/`Cmd`+`Z`) works for 10 seconds of game time. Its tooltip shows how many seconds are left, and the button hides once there is nothing left to undo. Undoing several times in a row steps back through your recent actions.
