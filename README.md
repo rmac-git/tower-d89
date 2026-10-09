@@ -14,11 +14,13 @@ The game is a campaign across three maps, ten waves each: Switchback (waves 1–
 | Tesla Coil (4) | 120g | Chain lightning, ignores armor | Storm (10 jumps) or Arc Lance (one huge bolt) |
 | Longshot (5) | 150g | Long range, heavy hits | Assassin (armor-piercing) or Gunner (fast fire) |
 
+**Build sites:** towers go on stone build sites beside the road, 12 per map (11 on Short Fuse), not on any open tile. Sites are placed so each one covers road the others don't, and no two touch. While you're placing a tower the open sites glow, and a click or tap anywhere near a site snaps to it. Towers are drawn about a third larger than before and hit 1.55× harder, so a few well-developed towers do the work that used to take dozens. Most of your BST goes into upgrading, choosing paths and mastering the towers you have. Saved games with towers on old non-site tiles get those towers refunded at full cost.
+
 The second upgrade splits into two paths, so two players end up with different defenses. Selling refunds 70% of what you spent. Each tower can target **First**, **Last**, **Strong** or **Close**.
 
 **Compare before you buy:** select a tower and hover an upgrade, path or mastery button (or tab to it) to preview it. The stats list shows each value as current ▲ new or current ▼ new, so better and worse don't depend on colour. Every stat any of the options touches is listed, so the panel doesn't jump while you compare. On the map the tower shows its upgraded form, and a dotted blue ring shows the new range. On touch screens the first tap previews and a second tap on the same button buys; tapping the other option switches the comparison.
 
-**Mastery (after wave 12):** once a tower is in its final form, it can learn one of two skills and rank that skill up three times. Choosing one skill locks the other for that tower, so two Archers can end up very different. Rank costs are 1×, 1.5× and 2.2× the tower's build cost. Small diamonds under the tower show its rank: orange for the first skill and blue for the second. `U` and `I` pick a skill, then `U` buys the next rank. Undo works on mastery too.
+**Mastery (after wave 8):** once a tower is in its final form, it can learn one of two skills and rank that skill up three times. Choosing one skill locks the other for that tower, so two Archers can end up very different. Rank costs are 1.2×, 2× and 3× the tower's build cost. Small diamonds under the tower show its rank: orange for the first skill and blue for the second. `U` and `I` pick a skill, then `U` buys the next rank. Undo works on mastery too.
 
 | Tower | Skill A | Skill B |
 | --- | --- | --- |
@@ -53,8 +55,8 @@ The game starts simple and adds one system at a time. Each unlock arrives with a
 | 6 | Level 3 upgrade paths |
 | 7 | Cold Snap |
 | 8 | Tower targeting |
+| 8 | Tower mastery |
 | 9 | Field orders (then every fifth wave) |
-| 12 | Tower mastery |
 | 20 | Hero ultimate |
 
 The skill tree button (★) appears with the hero's first skill point. The first wave shows tips on the board.
@@ -81,7 +83,7 @@ All prices and rewards use **BST**, the game's in-game token (the hex coin with 
 
 The game is built for landscape and the battlefield always takes as much of the screen as possible. On wide-short screens such as phones in landscape, the stats and build menu sit in a narrow rail on the left and the controls, hero and abilities in a rail on the right. On other screens they sit in slim strips above and below the board. Tap a tower in the build rail to expand its stats like an accordion (tap again to collapse). Tower and wave details appear in a small floating card only while something is selected, and on phones a placed tower's card has a Show stats toggle (the ⓘ button or `N` shows next-wave intel). In portrait on a touch device the game shows a "Turn your phone sideways" screen (with a "Play in portrait anyway" button) and pauses until you rotate. Tapping **Take command** also requests full screen and a landscape lock where the browser allows it.
 
-**Build gallery:** the Build button (or `B`) opens a gallery of every tower with its art, cost, stats and level 3 paths. The battle pauses while it is open, and stays paused while you place the tower you picked, then picks up where it was. Esc or right-click cancels. Keys `1`–`5` still pick a tower directly on desktop. On touch screens, tap a grass tile to preview the tower and tap it again to place it. Tapping near a built tower selects it.
+**Build gallery:** the Build button (or `B`) opens a gallery of every tower with its art, cost, stats and level 3 paths. The battle pauses while it is open, and stays paused while you place the tower you picked, then picks up where it was. Esc or right-click cancels. Keys `1`–`5` still pick a tower directly on desktop. On touch screens, tap a stone site to preview the tower and tap it again to place it. Tapping near a built tower selects it.
 
 **Layout:** the battlefield takes most of the screen. Your BST balance sits at the top of the control rail in large type, with lives and map progress beneath it. On wide screens such as phones in landscape the rail runs down the right side; otherwise it is a single strip across the top.
 

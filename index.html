@@ -506,7 +506,7 @@ div.map-btn.on:hover { border-color: var(--brass); }
 <div class="game" id="game-root">
   <div class="cell" id="cell">
     <div class="board" id="board">
-      <canvas id="game" aria-label="Battlefield. Press Build to choose a tower, then click an empty grass tile to place it."></canvas>
+      <canvas id="game" aria-label="Battlefield. Press Build to choose a tower, then click a glowing stone site to place it."></canvas>
       <div class="panel" id="panel" hidden>
         <button class="panel-x" id="panel-x" type="button" aria-label="Close">×</button>
         <section class="info" id="info"></section>
@@ -585,14 +585,14 @@ function buzz(pattern) { if (SET.vibrate && CAN_VIBRATE) try { navigator.vibrate
 
 // Maps: path waypoints in tile coordinates (enemies enter left, exit right at the gate).
 const MAPS = [
-  { name: 'Switchback', blurb: 'A long winding road with plenty of corners.', seed: 42,
+  { name: 'Switchback', blurb: 'A long winding road with plenty of corners.', seed: 42, sites: 12,
     wp: [[-1, 1], [3, 1], [3, 4], [1, 4], [1, 8], [6, 8], [6, 2], [10, 2], [10, 7], [13, 7], [13, 4], [16, 4]] },
-  { name: 'The Serpent', blurb: 'Four long climbs. Made for slow fields.', seed: 11,
+  { name: 'The Serpent', blurb: 'Four long climbs. Made for slow fields.', seed: 11, sites: 12,
     wp: [[-1, 8], [2, 8], [2, 2], [5, 2], [5, 7], [9, 7], [9, 2], [12, 2], [12, 8], [16, 8]] },
-  { name: 'Short Fuse', blurb: 'A short road. Enemies arrive fast. Hard.', seed: 5,
+  { name: 'Short Fuse', blurb: 'A short road. Enemies arrive fast. Hard.', seed: 5, sites: 11,
     wp: [[-1, 5], [4, 5], [4, 1], [8, 1], [8, 8], [12, 8], [12, 5], [16, 5]] },
 ];
-let WAYPOINTS, segs, pathLen, pathSet, rockSet, decor, bigDecor = [], critters = [], scene = {}, airA, airB, airLen, MAP_I = 0;
+let WAYPOINTS, segs, pathLen, pathSet, rockSet, siteSet = new Set(), decor, bigDecor = [], critters = [], scene = {}, airA, airB, airLen, MAP_I = 0;
 
 const TOWERS = {
   arrow: {
@@ -665,7 +665,7 @@ const MASTERY = {
     { name: 'Ricochet', fx: r => ({ bounce: r }), text: r => `Each shot bounces to ${r} more ${r > 1 ? 'enemies' : 'enemy'} at 40% damage` },
   ],
 };
-const MAST_COST = [1.0, 1.5, 2.2];
+const MAST_COST = [1.2, 2.0, 3.0];
 function masteryCost(t) {
   if (t.lvl < 2 || !unlocked('mastery')) return null;
   const r = t.mast ? t.mast.r : 0; if (r >= 3) return null;
@@ -694,9 +694,11 @@ function withMastery(type, st, m) {
 }
 const mods0 = () => ({ dmg: 1, rate: 1, range: 0, hp: 1, speed: 1, armor: 0, bounty: 1, build: 1, upCost: 1, sell: 0.7, cd: 1 });
 function baseStats(type, lvl, branch) { const d = TOWERS[type]; return lvl < 2 ? d.lv[lvl] : d.br[branch || 0]; }
+// Fewer build sites means each tower carries more of the defense.
+const TOWER_POWER = 1.55;
 function scaled(st) {
   const m = S.mods;
-  return { ...st, dmg: st.dmg * m.dmg, rate: st.rate * m.rate, range: st.range * RANGE_K + m.range, burn: st.burn && st.burn * m.dmg };
+  return { ...st, dmg: st.dmg * m.dmg * TOWER_POWER, rate: st.rate * m.rate, range: st.range * RANGE_K + m.range, burn: st.burn && st.burn * m.dmg * TOWER_POWER };
 }
 function tStats(t) {
   const mk = t.mast ? t.mast.s * 10 + t.mast.r : 0;
@@ -742,7 +744,7 @@ const tk = n => `${n}<i class="tok" role="img" aria-label="BST"></i>`;
 const ABIL = { strike: { cd: 40, name: 'Barrage' }, snap: { cd: 55, name: 'Cold Snap' } };
 
 // New systems arrive one at a time, after the listed wave is cleared, so the first minutes stay simple.
-const UNLOCK = { heroSkill: 1, frost: 2, strike: 3, tesla: 4, sniper: 5, paths: 6, snap: 7, targeting: 8, mastery: 12 };
+const UNLOCK = { heroSkill: 1, frost: 2, strike: 3, tesla: 4, sniper: 5, paths: 6, snap: 7, targeting: 8, mastery: 8 };
 const UNLOCK_MSG = {
   heroSkill: h => [`New hero skill: ${HEROES[h.k].active.name}`, HEROES[h.k].active.text],
   frost: () => ['New tower: Frost Spire', 'Slows every enemy near it.'],
@@ -1148,6 +1150,27 @@ function loadMap(i) {
     if (t) decor.set(t + '', i % 2 ? 'rock' : 'trees');
   }
   rockSet = new Set(decor.keys());
+  // Build sites: a handful of stone plots beside the road. Each one is greedily placed where it
+  // covers the most road nobody else covers yet, and no two sites touch.
+  siteSet = new Set();
+  const nSites = m.sites || 12, roadTiles = [...pathSet].map(k => k.split(',').map(Number));
+  const cands = [];
+  for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
+    const k = x + ',' + y; if (pathSet.has(k) || rockSet.has(k)) continue;
+    const near = roadTiles.filter(([px, py]) => Math.hypot(px - x, py - y) <= 2.6);
+    if (near.length && roadTiles.some(([px, py]) => Math.max(Math.abs(px - x), Math.abs(py - y)) <= 1)) cands.push({ x, y, near });
+  }
+  const covered = new Map();
+  while (siteSet.size < nSites && cands.length) {
+    let best = null, bs = -Infinity;
+    for (const c of cands) {
+      const v = c.near.reduce((a, [px, py]) => a + 1 / (1 + 1.5 * (covered.get(px + ',' + py) || 0)), 0) + r() * 0.3;
+      if (v > bs) { bs = v; best = c; }
+    }
+    siteSet.add(best.x + ',' + best.y);
+    for (const [px, py] of best.near) covered.set(px + ',' + py, (covered.get(px + ',' + py) || 0) + 1);
+    for (let i = cands.length - 1; i >= 0; i--) if (Math.max(Math.abs(cands[i].x - best.x), Math.abs(cands[i].y - best.y)) <= 1) cands.splice(i, 1);
+  }
   critters = [];
   for (const { tx, ty, type: kind } of bigDecor) {
     const n = { chickens: 6, goats: 4, rabbits: 6 }[kind]; if (!n) continue;
@@ -1272,7 +1295,7 @@ function saveBest(w) { try { if (w > bestWave()) localStorage.setItem(KEY_BEST, 
 function tileFree(tx, ty) {
   if (tx < 0 || ty < 0 || tx >= COLS || ty >= ROWS) return false;
   const k = tx + ',' + ty;
-  if (pathSet.has(k) || rockSet.has(k)) return false;
+  if (pathSet.has(k) || rockSet.has(k) || !siteSet.has(k)) return false;
   return !S.towers.some(t => t.tx === tx && t.ty === ty);
 }
 function nearTower(px, py) {
@@ -1421,11 +1444,11 @@ function pickTarget(t, rangePx, canAir) {
 function towerTop(t) {
   const l = t.lvl, br = l >= 2 ? t.branch : -1;
   switch (t.type) {
-    case 'arrow': return (11 + l * 4) * K;
-    case 'sniper': return (17 + l * 3) * K;
-    case 'tesla': return (16 + l * 3 + (br === 1 ? 7 : 0)) * K;
-    case 'cannon': return 6 * K;
-    default: return 6 * K;
+    case 'arrow': return (11 + l * 4) * TK;
+    case 'sniper': return (17 + l * 3) * TK;
+    case 'tesla': return (16 + l * 3 + (br === 1 ? 7 : 0)) * TK;
+    case 'cannon': return 6 * TK;
+    default: return 6 * TK;
   }
 }
 function fireTower(t, dt) {
@@ -1455,7 +1478,7 @@ function fireTower(t, dt) {
   }
   if (t.cd > 0 || !target) return;
   t.cd = 1 / st.rate; t.flash = 0.12;
-  const top = towerTop(t), reach = (t.type === 'sniper' ? 22 + t.lvl * 3 : t.type === 'cannon' ? 14 + t.lvl * 2 : 13) * K;
+  const top = towerTop(t), reach = (t.type === 'sniper' ? 22 + t.lvl * 3 : t.type === 'cannon' ? 14 + t.lvl * 2 : 13) * TK;
   const mx = t.x + Math.cos(t.angle) * reach, my = t.y - top + Math.sin(t.angle) * reach;
   switch (t.type) {
     case 'arrow': {
@@ -1935,11 +1958,17 @@ function notice(x, y, text) {
   S.texts = S.texts.filter(t => !t.note);
   S.texts.push({ x: Math.max(110, Math.min(W - 110, x)), y: Math.max(34, Math.min(H - 12, y)), text, color: '#ffd7a0', note: true, life: 1.6, max: 1.6 });
 }
+function snapTile(px, py) {
+  let best = null, bd = 0.95 * TILE;
+  for (const k of siteSet) { const [x, y] = k.split(',').map(Number), d = Math.hypot((x + 0.5) * TILE - px, (y + 0.5) * TILE - py); if (d < bd) { bd = d; best = [x, y]; } }
+  return best || [Math.floor(px / TILE), Math.floor(py / TILE)];
+}
 function buildBlock(type, tx, ty) {
   if (tx < 0 || ty < 0 || tx >= COLS || ty >= ROWS) return 'Off the map';
   const k = tx + ',' + ty;
   if (pathSet.has(k)) return 'Can’t build on the road';
   if (rockSet.has(k)) return ({ water: 'That’s the ocean', lighthouse: 'The lighthouse stays', dome: 'The glamping dome is booked', chickens: 'Leave the chickens be', goats: 'Leave the goats in peace', rabbits: 'Don’t bother the rabbits', trees: 'Spruce in the way', rock: 'Granite in the way' })[decor.get(k)] || 'Something is in the way';
+  if (!siteSet.has(k)) return 'Build on a stone site';
   if (towerAt(tx, ty)) return 'A tower is already here';
   const c = buildCost(type);
   return S.gold < c ? `Need ${c - S.gold} more BST` : '';
@@ -1990,6 +2019,7 @@ function shard(c, x, y, w, h, H, S, L) {
   poly(c, [x, y - h, x + w, y - h * 0.38, x, y], hsl(H, S, L - 8), INK);
 }
 const BRANCH_COL = ['#ff9b54', '#7fd7ff'];
+const TK = K * 1.35;   // towers are drawn larger than the tile art
 
 function updateCritters(dt) {
   for (const a of critters) {
@@ -2096,11 +2126,14 @@ function drawBackground() {
     if ((i + j) % 2) { tri(P(i, j), P(i + 1, j), P(i + 1, j + 1)); tri(P(i, j), P(i + 1, j + 1), P(i, j + 1)); }
     else { tri(P(i, j), P(i + 1, j), P(i, j + 1)); tri(P(i + 1, j), P(i + 1, j + 1), P(i, j + 1)); }
   }
-  // soft build pads on every open tile, so the spaces read clearly
-  for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
-    const k = x + ',' + y; if (pathSet.has(k) || rockSet.has(k)) continue;
-    roundRect(g, x * TILE + 5, y * TILE + 5, TILE - 10, TILE - 10, 9);
-    g.fillStyle = 'rgba(255,255,255,0.045)'; g.fill(); g.strokeStyle = 'rgba(8,20,14,0.16)'; g.lineWidth = 1.2; g.stroke();
+  // build sites: low-poly granite plots with a worn rim
+  for (const k of siteSet) {
+    const [x, y] = k.split(',').map(Number), cx = (x + 0.5) * TILE, cy = (y + 0.55) * TILE, R = TILE * 0.47, n = 8, pts = [];
+    for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2 + Math.PI / 8, rr = R * (0.94 + r() * 0.08); pts.push([cx + Math.cos(a) * rr, cy + Math.sin(a) * rr * 0.72]); }
+    g.fillStyle = 'rgba(8,20,14,0.35)'; g.beginPath(); g.ellipse(cx + 3, cy + 6, R * 1.02, R * 0.74, 0, 0, 6.283); g.fill();
+    for (let i = 0; i < n; i++) { const p = pts[i], q = pts[(i + 1) % n], lit = Math.cos(Math.atan2((p[1] + q[1]) / 2 - cy, (p[0] + q[0]) / 2 - cx) - LIGHT); poly(g, [cx, cy, p[0], p[1], q[0], q[1]], hsl(20, 8, 46 + lit * 9 + r() * 4)); }
+    g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.closePath(); g.strokeStyle = INK; g.lineWidth = 1.2; g.stroke();
+    g.beginPath(); g.ellipse(cx, cy, R * 0.62, R * 0.44, 0, 0, 6.283); g.strokeStyle = 'rgba(255,240,215,0.22)'; g.lineWidth = 1.4; g.stroke();
   }
   // coastline: the shore rises and falls along the coast, with coves biting into the meadow
   const seaTop = x => {
@@ -2548,10 +2581,12 @@ function render() {
 
   // build grid
   if (ui.build) {
-    ctx.strokeStyle = 'rgba(236,230,210,0.05)'; ctx.lineWidth = 1; ctx.beginPath();
-    for (let x = 1; x < COLS; x++) { ctx.moveTo(x * TILE, 0); ctx.lineTo(x * TILE, H); }
-    for (let y = 1; y < ROWS; y++) { ctx.moveTo(0, y * TILE); ctx.lineTo(W, y * TILE); }
-    ctx.stroke();
+    const pulse = 0.55 + 0.35 * Math.sin(performance.now() / 260);
+    for (const k of siteSet) {
+      const [x, y] = k.split(',').map(Number); if (towerAt(x, y)) continue;
+      ctx.strokeStyle = `rgba(217,168,78,${pulse})`; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.ellipse((x + 0.5) * TILE, (y + 0.55) * TILE, TILE * 0.5, TILE * 0.36, 0, 0, Math.PI * 2); ctx.stroke();
+    }
   }
 
   // range of selected / hovered tower
@@ -2574,19 +2609,19 @@ function render() {
     if (pv) {
       const pl = pv.kind === 'up' ? t.lvl + 1 : 2, pb = pv.kind === 'branch' ? pv.branch : (pl >= 2 ? t.branch : -1);
       ctx.globalAlpha = 0.55 + 0.25 * Math.sin(performance.now() / 220);
-      drawTower(ctx, t.type, pl, t.x, t.y, t.angle, K, 0, pl >= 2 ? pb : -1);
+      drawTower(ctx, t.type, pl, t.x, t.y, t.angle, TK, 0, pl >= 2 ? pb : -1);
       ctx.globalAlpha = 1;
-    } else drawTower(ctx, t.type, t.lvl, t.x, t.y, t.angle, K, t.flash, t.lvl >= 2 ? t.branch : -1);
+    } else drawTower(ctx, t.type, t.lvl, t.x, t.y, t.angle, TK, t.flash, t.lvl >= 2 ? t.branch : -1);
     if (t.mast) for (let i = 0; i < t.mast.r; i++) {
-      const dx = t.x + (i - (t.mast.r - 1) / 2) * 9, dy = t.y + 23 * K;
+      const dx = t.x + (i - (t.mast.r - 1) / 2) * 9, dy = t.y + 23 * TK;
       ctx.fillStyle = BRANCH_COL[t.mast.s]; ctx.strokeStyle = 'rgba(10,10,8,0.85)'; ctx.lineWidth = 1.2;
       ctx.beginPath(); ctx.moveTo(dx, dy - 4.5); ctx.lineTo(dx + 4, dy); ctx.lineTo(dx, dy + 4.5); ctx.lineTo(dx - 4, dy); ctx.closePath(); ctx.fill(); ctx.stroke();
     }
-    if (t === sel) { ctx.strokeStyle = '#d9a84e'; ctx.lineWidth = 2; roundRect(ctx, t.x - 19 * K, t.y - 19 * K, 38 * K, 38 * K, 7 * K); ctx.stroke(); }
+    if (t === sel) { ctx.strokeStyle = '#d9a84e'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.ellipse(t.x, t.y + 7 * TK, 24 * TK, 14 * TK, 0, 0, Math.PI * 2); ctx.stroke(); }
     else if (!S.over) {
       const uc = upgradeCost(t) ?? (t.mast ? null : masteryCost(t));
       if (uc != null && S.gold >= uc) {
-        const ay = t.y - 34 * K + Math.sin(performance.now() / 260 + t.id) * 2;
+        const ay = t.y - 36 * TK + Math.sin(performance.now() / 260 + t.id) * 2;
         ctx.fillStyle = '#4cc3ff'; ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(t.x, ay - 6); ctx.lineTo(t.x + 6, ay + 1); ctx.lineTo(t.x + 2.5, ay + 1); ctx.lineTo(t.x + 2.5, ay + 5); ctx.lineTo(t.x - 2.5, ay + 5); ctx.lineTo(t.x - 2.5, ay + 1); ctx.lineTo(t.x - 6, ay + 1); ctx.closePath(); ctx.fill(); ctx.stroke();
       }
@@ -2717,7 +2752,7 @@ function render() {
     const [tx, ty] = ui.hoverTile, x = (tx + 0.5) * TILE, y = (ty + 0.5) * TILE;
     const ok = tileFree(tx, ty) && S.gold >= buildCost(ui.build);
     drawRange(x, y, (TOWERS[ui.build].lv[0].range + S.mods.range) * TILE, ok);
-    ctx.globalAlpha = 0.65; drawTower(ctx, ui.build, 0, x, y, -Math.PI / 2, K); ctx.globalAlpha = 1;
+    ctx.globalAlpha = 0.65; drawTower(ctx, ui.build, 0, x, y, -Math.PI / 2, TK); ctx.globalAlpha = 1;
     ctx.strokeStyle = ok ? '#d9a84e' : '#ff8c42'; ctx.lineWidth = 2; ctx.strokeRect(tx * TILE + 1, ty * TILE + 1, TILE - 2, TILE - 2);
     if (!ok) { ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(tx * TILE + 14, ty * TILE + 14); ctx.lineTo(tx * TILE + TILE - 14, ty * TILE + TILE - 14); ctx.moveTo(tx * TILE + TILE - 14, ty * TILE + 14); ctx.lineTo(tx * TILE + 14, ty * TILE + TILE - 14); ctx.stroke(); }
     if (ok && ui.pending) {
@@ -2764,8 +2799,8 @@ function render() {
   let tip = '';
   if (ui.started && !ui.targeting && !ui.heroSel && !ui.pending && !isModal()) {
     const act = COARSE ? 'Tap' : 'Click';
-    if (ui.build && ui.buildPause) tip = `Paused · ${act} open grass to place the ${TOWERS[ui.build].name}`;
-    else if (S.wave === 0) tip = !S.towers.length ? (ui.build ? `${act} open grass next to the road` : 'Press Build to choose your first tower') : 'Build another tower, or press Send wave 1 when ready';
+    if (ui.build && ui.buildPause) tip = `Paused · ${act} a glowing stone site to place the ${TOWERS[ui.build].name}`;
+    else if (S.wave === 0) tip = !S.towers.length ? (ui.build ? `${act} a glowing stone site by the road` : 'Press Build to choose your first tower') : 'Build another tower, or press Send wave 1 when ready';
   }
   if (tip) {
     ctx.font = '600 14px Barlow, sans-serif'; ctx.textAlign = 'center';
@@ -2861,7 +2896,7 @@ window.addEventListener('pointermove', ev => {
     if (ui.build !== drag.k) { ui.build = drag.k; ui.selected = null; ui.targeting = null; ui.heroSel = false; ui.fresh.delete(drag.k); refreshPanel(false); }
   }
   const pt = dragPoint(ev);
-  if (pt) { ui.hoverPx = pt; ui.hoverTile = [Math.floor(pt[0] / TILE), Math.floor(pt[1] / TILE)]; } else ui.hoverTile = null;
+  if (pt) { ui.hoverPx = pt; ui.hoverTile = snapTile(pt[0], pt[1]); } else ui.hoverTile = null;
 });
 function endDrag(ev) {
   if (!drag || ev.pointerId !== drag.id) return;
@@ -3106,7 +3141,7 @@ function refreshPanel(force) {
       <div class="sel-head"><span id="sel-icon"></span><div><h3>${d.name}</h3><p class="meta">${d.desc}</p></div></div>
       <dl class="kv">${statRows(scaled(d.lv[0]), null)}<dt>Upgrades</dt><dd>${d.up.map(u => tk(Math.round(u * S.mods.upCost))).join(' · ')}</dd></dl>
       <p class="meta">The second upgrade splits into two paths: ${d.br.map(b => b.name).join(' or ')}.</p>
-      <p class="meta">${S.gold >= c ? 'Click any open grass tile to build. Right-click or Esc to stop.' : `Need ${tk(c - S.gold)} more.`}</p>`;
+      <p class="meta">${S.gold >= c ? 'Click a glowing stone site to build. Right-click or Esc to stop.' : `Need ${tk(c - S.gold)} more.`}</p>`;
     $('sel-icon').appendChild(iconCanvas(ui.build, 48));
   } else {
     const nextW = S.wave + 1, groups = waveGroups(nextW);
@@ -3298,7 +3333,7 @@ function continueCampaign(c) {
   Object.assign(h, { lvl: c.hero.lvl, xp: c.hero.xp, sp: c.hero.sp, learned: c.hero.learned || {}, evo: c.hero.evo, ult: c.hero.ult, toldSkill: c.hero.toldSkill });
   recomputeFx(h); h.maxHp = hMax(h); h.hp = h.maxHp; if (h.ult) h.ab.r = 3;
   for (const o of c.towers || []) {
-    if (!TOWERS[o.type] || !tileFree(o.tx, o.ty)) continue;
+    if (!TOWERS[o.type] || !tileFree(o.tx, o.ty)) { if (TOWERS[o.type]) S.gold += o.spent || 0; continue; }
     S.towers.push({ id: S.nextId++, type: o.type, lvl: o.lvl, tx: o.tx, ty: o.ty, x: (o.tx + 0.5) * TILE, y: (o.ty + 0.5) * TILE, cd: 0.2, angle: -Math.PI / 2,
       mode: o.mode || 'first', branch: o.branch || 0, spent: o.spent, kills: o.kills || 0, dealt: o.dealt || 0, flash: 0, mast: o.mast && MASTERY[o.type] ? o.mast : null });
   }
@@ -3432,7 +3467,7 @@ function evPx(ev) {
   const r = canvas.getBoundingClientRect();
   return [(ev.clientX - r.left) / r.width * W, (ev.clientY - r.top) / r.height * H];
 }
-canvas.addEventListener('pointermove', ev => { const [x, y] = evPx(ev); ui.hoverPx = [x, y]; ui.hoverTile = [Math.floor(x / TILE), Math.floor(y / TILE)]; });
+canvas.addEventListener('pointermove', ev => { const [x, y] = evPx(ev); ui.hoverPx = [x, y]; ui.hoverTile = ui.build ? snapTile(x, y) : [Math.floor(x / TILE), Math.floor(y / TILE)]; });
 canvas.addEventListener('pointerleave', ev => { if (ev.pointerType === 'touch') return; ui.hoverTile = null; ui.hoverPx = null; });
 canvas.addEventListener('contextmenu', ev => {
   ev.preventDefault();
@@ -3442,7 +3477,7 @@ canvas.addEventListener('contextmenu', ev => {
 });
 canvas.addEventListener('pointerdown', ev => {
   if (ev.button !== 0 || S.over || !ui.started || isModal()) return;
-  const [px, py] = evPx(ev), tx = Math.floor(px / TILE), ty = Math.floor(py / TILE);
+  const [px, py] = evPx(ev), [tx, ty] = ui.build ? snapTile(px, py) : [Math.floor(px / TILE), Math.floor(py / TILE)];
   ui.hoverPx = [px, py]; ui.hoverTile = [tx, ty];
   if (ui.targeting) { useAbility(ui.targeting, px, py); ui.targeting = null; refreshHud(); return; }
   const touch = ev.pointerType === 'touch', h = S.hero;
@@ -3696,7 +3731,7 @@ requestAnimationFrame(frame);
 connectCloud();
 
 // Test hook for automated play-throughs.
-window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get decor() { return decor; }, A, SET, Music, previewStats, statRows, masterTower, masteryCost, MASTERY, tStats, loadLatest, saveResume, titleScreen, undoLast, lastUndo, sellTower, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, unlocked, UNLOCK, HEROES, COLS, ROWS, TILE, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero, nextMap, openGallery, closeGallery, pickFromGallery, continueCampaign, loadCheckpoint };
+window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get decor() { return decor; }, get sites() { return siteSet; }, A, SET, Music, previewStats, statRows, masterTower, masteryCost, MASTERY, tStats, loadLatest, saveResume, titleScreen, undoLast, lastUndo, sellTower, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, unlocked, UNLOCK, HEROES, COLS, ROWS, TILE, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero, nextMap, openGallery, closeGallery, pickFromGallery, continueCampaign, loadCheckpoint };
 })();
 </script>
 </body>
