@@ -24,7 +24,7 @@ The second upgrade splits into two paths, so two players end up with different d
 
 **Maps:** Switchback (long and winding), The Serpent (four long climbs), Short Fuse (a short road, hard), played in that order. Your best wave is saved.
 
-**Keys:** `B` opens the build gallery · `H` commands the hero · `E` / `R` hero skill and ultimate · `K` skill tree · `1`–`5` pick a tower · `Space` sends the next wave (sending it early pays bonus gold) · `U` / `I` pick upgrade path A / B · `S` sells · `T` changes targeting · `Q` / `W` abilities · `N` next-wave intel · `Esc` closes menus · `F` changes speed · `P` pauses · `M` mutes · `Esc` cancels.
+**Keys:** `B` opens the build gallery · `H` commands the hero · `E` / `R` hero skill and ultimate · `K` skill tree · `1`–`5` pick a tower · `Space` sends the next wave (sending it early pays bonus gold) · `U` / `I` pick upgrade path A / B · `S` sells · `T` changes targeting · `Q` / `W` abilities · `N` next-wave intel · `Z` or `Ctrl`/`Cmd`+`Z` undoes your last build, upgrade or sale · `Esc` closes menus · `F` changes speed · `P` pauses · `M` mutes · `Esc` cancels.
 
 ## Learning curve
 
@@ -76,9 +76,29 @@ The game is built for landscape and the battlefield always takes as much of the 
 
 **Settings (⚙):** sound, full screen, larger text, and quit to title (tap twice to confirm).
 
+## Mistakes
+
+Undo takes back your last build, upgrade or sale with a full refund. The Undo button next to Build (or `Z`, or `Ctrl`/`Cmd`+`Z`) works for 10 seconds of game time. Its tooltip shows how many seconds are left, and the button hides once there is nothing left to undo. Undoing several times in a row steps back through your recent actions.
+
+## Colour-blind friendly
+
+The palette is safe for protanopia and deuteranopia. Good and bad are shown as sky blue and orange, never green and red. Invalid build spots get an orange outline and an X. Every enemy has its own shape as well as a colour from the Okabe-Ito palette:
+
+| Enemy | Shape | Colour |
+| --- | --- | --- |
+| Footman | Circle | Yellow |
+| Courier | Dart | Sky blue |
+| Ironclad | Square | Pale grey |
+| Mite | Small dot | Pink |
+| Kite | Flapping diamond | White |
+| Mender | Hexagon with a plus | Blue |
+| Warlord | Star with a crown | Orange |
+
+All enemies have dark outlines, and the same shapes appear in the next-wave peek and the scouting report. Health bars go from blue to yellow to orange.
+
 ## Art direction
 
-Low-poly and flat-shaded, lit from the top-left. The map is a jittered triangle mesh shaded from a gentle height field: a cool teal meadow, a warm sand road with a darker bank, soft build pads on every open tile, low-poly pines and rocks, a cave mouth where enemies emerge, and a stone keep at the gate. Towers stand on faceted stone plinths and grow taller and add parts as they level (studs on the plinth count levels, and a coloured gem marks the chosen path). Following Kingdom Rush's approach, each upgrade changes the silhouette, not just the stats. Heroes have outlined, two-tone silhouettes, a pulsing ground ring and small idle animations.
+Low-poly and flat-shaded, lit from the top-left. The map is a jittered triangle mesh shaded from a gentle height field: a green Nova Scotia meadow, a warm sand road with a darker bank, and soft build pads on every open tile. The Atlantic runs along the bottom past a pink-granite shore with lupins and a red-and-white lighthouse. A geodesic glamping dome sits near the middle with a cedar deck, string lights and a fire pit. Fenced pastures of chickens, goats and rabbits wander off the road, and there are spruce stands and granite boulders. There is also a cave mouth where enemies emerge, and a stone keep at the gate. Towers stand on faceted stone plinths and grow taller and add parts as they level (studs on the plinth count levels, and a coloured gem marks the chosen path). Following Kingdom Rush's approach, each upgrade changes the silhouette, not just the stats. Heroes have outlined, two-tone silhouettes, a pulsing ground ring and small idle animations.
 
 ## Tuning
 
