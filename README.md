@@ -1,4 +1,4 @@
-# Lupin Line
+# Hold the Cove
 
 A browser tower defense game in one HTML file. There's no build step: open `index.html` in a browser.
 
