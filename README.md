@@ -74,6 +74,10 @@ On touch screens, drag a tower from the build menu onto the map; the preview flo
 
 **Settings (⚙):** sound, full screen, larger text, and quit to title (tap twice to confirm).
 
+## Art direction
+
+Low-poly and flat-shaded, lit from the top-left. The map is a jittered triangle mesh shaded from a gentle height field: a cool teal meadow, a warm sand road with a darker bank, soft build pads on every open tile, low-poly pines and rocks, a cave mouth where enemies emerge, and a stone keep at the gate. Towers stand on faceted stone plinths and grow taller and add parts as they level (studs on the plinth count levels, and a coloured gem marks the chosen path). Following Kingdom Rush's approach, each upgrade changes the silhouette, not just the stats. Heroes have outlined, two-tone silhouettes, a pulsing ground ring and small idle animations.
+
 ## Tuning
 
 The board is a 16 × 10 grid of 60px tiles (`TILE`, `COLS`, `ROWS`), with `SPEED_K` and `RANGE_K` tuning enemy speed and tower reach for that grid. All balance data is at the top of the script in `index.html`: `TOWERS` (including each `br` path), `ENEMIES`, `MAPS`, `PERKS`, `ABIL`, `SCRIPTED` waves, and the `hpMul` / `waveBonus` / `earlyBonus` curves. `window.__bastion` exposes the game state and core functions so you can run automated play-throughs.
