@@ -95,6 +95,15 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--brass)
 /* ---------- Floating detail card ---------- */
 .panel { position: absolute; top: 8px; right: 8px; width: min(280px, 46%); max-height: calc(100% - 16px); overflow-y: auto; background: rgba(20, 29, 24, 0.94); border: 1px solid var(--line); border-radius: 8px; padding: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); }
 .panel.left { right: auto; left: 8px; }
+.toasts { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); width: min(360px, 90%); display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
+.toast { pointer-events: auto; display: flex; flex-direction: column; gap: 1px; text-align: center; background: rgba(20, 29, 24, 0.96); border: 1px solid var(--brass); border-radius: 8px; padding: 7px 14px; font-size: 13px; line-height: 1.3; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4); animation: toastin 0.3s ease-out; cursor: pointer; }
+.toast b { color: var(--brass); font-weight: 600; }
+.toast span { color: var(--muted); font-size: 12px; }
+@keyframes toastin { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
+.shop-item { position: relative; }
+.shop-item.new::after { content: 'NEW'; position: absolute; top: -6px; right: -5px; background: var(--good); color: #10200a; font: 700 9px/1 var(--font-mono); padding: 2px 4px; border-radius: 6px; }
+.node.locked .n-desc { display: none; }
+.node.locked { padding-block: 5px; }
 .panel-x { position: absolute; top: 4px; right: 4px; width: 28px; height: 28px; border: 0; background: none; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; border-radius: 4px; }
 .panel-x:hover { color: var(--ink); }
 .info { display: flex; flex-direction: column; gap: 9px; }
@@ -205,6 +214,8 @@ dl.kv dd .next { color: var(--good); }
 .game.side .abil-btn { min-width: 0; height: 36px; padding: 0 8px; }
 .game.side .hero-chip .chip-main { flex: 1; }
 .game.side .chip-body { width: auto; flex: 1; }
+.game.side .chip-top b { display: none; }
+.game.side .chip-top { justify-content: flex-end; }
 
 .branches { display: grid; gap: 6px; }
 .branch { display: flex; flex-direction: column; gap: 2px; text-align: left; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 10px; cursor: pointer; }
@@ -331,7 +342,7 @@ dl.kv dd .next { color: var(--good); }
   .n-desc { font-size: 11.5px; }
 }
 @media (orientation: landscape) and (max-height: 560px) and (max-width: 700px) { .game { --rail: 92px; } }
-@media (prefers-reduced-motion: reduce) { .stat.flash, .stat.token.up, .stat.token.down { animation: none; } .rot-phone { animation: none; transform: rotate(-90deg); } }
+@media (prefers-reduced-motion: reduce) { .toast { animation: none; } .stat.flash, .stat.token.up, .stat.token.down { animation: none; } .rot-phone { animation: none; transform: rotate(-90deg); } }
 </style>
 </head>
 <body>
@@ -357,6 +368,7 @@ dl.kv dd .next { color: var(--good); }
         <button class="panel-x" id="panel-x" type="button" aria-label="Close">×</button>
         <section class="info" id="info"></section>
       </div>
+      <div class="toasts" id="toasts" aria-live="polite"></div>
     </div>
   </div>
   <div class="hud dock-build"><div class="shop" id="shop"></div></div>
@@ -491,6 +503,20 @@ const IC = {
 const setHTML = (el, html) => { if (el._h !== html) { el._h = html; el.innerHTML = html; } };
 const tk = n => `${n}<i class="tok" role="img" aria-label="BST"></i>`;
 const ABIL = { strike: { cd: 40, name: 'Barrage' }, snap: { cd: 55, name: 'Cold Snap' } };
+
+// New systems arrive one at a time, after the listed wave is cleared, so the first minutes stay simple.
+const UNLOCK = { heroSkill: 1, frost: 2, strike: 3, tesla: 4, sniper: 5, paths: 6, snap: 7, targeting: 8 };
+const UNLOCK_MSG = {
+  heroSkill: h => [`New hero skill: ${HEROES[h.k].active.name}`, HEROES[h.k].active.text],
+  frost: () => ['New tower: Frost Spire', 'Slows every enemy near it.'],
+  strike: () => ['New ability: Barrage', 'Tap it, then tap the road to drop five shells.'],
+  tesla: () => ['New tower: Tesla Coil', 'Lightning jumps between enemies and ignores armor.'],
+  sniper: () => ['New tower: Longshot', 'Huge range. Hits armored enemies hard.'],
+  paths: () => ['Upgrade paths unlocked', 'Level 2 towers can now specialize into one of two forms.'],
+  snap: () => ['New ability: Cold Snap', 'Slows every enemy on the map for 5 seconds.'],
+  targeting: () => ['Tower targeting unlocked', 'Select a tower to choose which enemy it shoots first.'],
+};
+const unlocked = k => !(k in UNLOCK) || (S.cleared || 0) >= UNLOCK[k];
 
 // ---------- Heroes ----------
 const XP_NEXT = [95, 240, 450, 720, 1090, 1550, 2130, 2850, 3700];   // total xp to reach levels 2..10
@@ -754,11 +780,11 @@ function newState() {
     gold: START_GOLD, lives: START_LIVES, wave: 0, time: 0,
     towers: [], enemies: [], shots: [], particles: [], texts: [], rings: [], bolts: [], tracers: [],
     spawns: [], waveActive: false, over: false, won: false, endless: false,
-    banner: null, nextId: 1, totalKills: 0,
+    banner: null, nextId: 1, totalKills: 0, cleared: 0,
     mods: mods0(), modVer: 0, perks: [], ab: { strike: 15, snap: 30 }, strikes: [], rains: [], buffs: [], hero: null,
   };
 }
-const ui = { build: null, selected: null, hoverTile: null, hoverPx: null, speed: 1, paused: true, started: false, targeting: null, perkOpen: false, perkChoices: [], map: 0, pending: null, portraitOK: false, rotatePaused: false, intel: false, hero: 'maren', heroSel: false, storyOpen: false, skillsOpen: false, chapter: 0, pausedBefore: false };
+const ui = { build: null, selected: null, hoverTile: null, hoverPx: null, speed: 1, paused: true, started: false, targeting: null, perkOpen: false, perkChoices: [], map: 0, fresh: new Set(), pending: null, portraitOK: false, rotatePaused: false, intel: false, hero: 'maren', heroSel: false, storyOpen: false, skillsOpen: false, chapter: 0, pausedBefore: false };
 const isModal = () => ui.perkOpen || ui.storyOpen || ui.skillsOpen;
 
 function bestWave(i = MAP_I) { try { return +localStorage.getItem('bastion-line-best-' + i) || 0; } catch (e) { return 0; } }
@@ -782,7 +808,7 @@ function towerAt(tx, ty) { return S.towers.find(t => t.tx === tx && t.ty === ty)
 
 function placeTower(type, tx, ty) {
   const cost = buildCost(type);
-  if (!tileFree(tx, ty) || S.gold < cost) return null;
+  if (!unlocked(type) || !tileFree(tx, ty) || S.gold < cost) return null;
   S.gold -= cost;
   const t = {
     id: S.nextId++, type, lvl: 0, tx, ty, x: (tx + 0.5) * TILE, y: (ty + 0.5) * TILE,
@@ -793,7 +819,7 @@ function placeTower(type, tx, ty) {
   burst(t.x, t.y, '#b9a77a', 10, 60); sfx('build');
   return t;
 }
-function upgradeCost(t) { const d = TOWERS[t.type]; return t.lvl < d.up.length ? Math.round(d.up[t.lvl] * S.mods.upCost) : null; }
+function upgradeCost(t) { const d = TOWERS[t.type]; if (t.lvl === 1 && !unlocked('paths')) return null; return t.lvl < d.up.length ? Math.round(d.up[t.lvl] * S.mods.upCost) : null; }
 function upgradeTower(t, branch = 0) {
   const c = upgradeCost(t);
   if (c == null || S.gold < c) return false;
@@ -1024,17 +1050,36 @@ function update(dt) {
   S.enemies = S.enemies.filter(e => e.alive);
   if (S.waveActive && !S.spawns.length && !S.enemies.length) {
     S.waveActive = false;
+    const before = S.cleared;
+    S.cleared = Math.max(S.cleared, S.wave);
+    for (const [k, w] of Object.entries(UNLOCK)) if (w > before && w <= S.cleared) announce(k);
     const b = waveBonus(S.wave);
     S.gold += b;
     S.banner = { text: 'Wave ' + S.wave + ' cleared', sub: '+' + b + ' BST', life: 2.2 };
     saveBest(S.wave); sfx('clear');
     if (S.wave >= VICTORY_WAVE && !S.won && !S.endless) { S.won = true; victory(); }
-    else if (S.wave % 5 === 4) offerPerks();
+    else if (S.wave % 5 === 4 && S.wave >= 9) offerPerks();
     else if (S.wave % 5 === 0 && S.wave <= 25 && S.hero) showChapter(S.wave / 5);
   }
   updateFx(dt);
 }
 
+function toast(title, body) {
+  const box = $('toasts'); if (!box) return;
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.innerHTML = `<b>${title}</b>${body ? `<span>${body}</span>` : ''}`;
+  el.onclick = () => el.remove();
+  box.appendChild(el);
+  while (box.children.length > 3) box.firstChild.remove();
+  setTimeout(() => el.remove(), 6500);
+}
+function announce(k) {
+  if (k === 'heroSkill' && !S.hero) return;
+  const [title, body] = UNLOCK_MSG[k](S.hero);
+  if (TOWERS[k]) ui.fresh.add(k);
+  toast(title, body); sfx('perk');
+}
 function strikeBlast(k) {
   const R = k.r || 1.1 * TILE, dmg = k.dmg || 60 + 5 * S.wave;
   for (const e of S.enemies) if (e.alive && e.d >= 0 && Math.hypot(e.x - k.x, e.y - k.y) <= R) {
@@ -1084,6 +1129,7 @@ function heroXp(e) {
   h.xp += (e.xp || 1) * (near ? 1 : 0.4) * (1 + h.fx.xp);
   while (h.lvl < 10 && h.xp >= XP_NEXT[h.lvl - 1]) {
     h.lvl++; h.sp++; h.maxHp = hMax(h); h.hp = h.maxHp;
+    if (!h.toldSkill) { h.toldSkill = true; toast('Skill point earned', `Tap ★ next to ${HEROES[h.k].name.split(' ')[0]} to learn a new skill.`); }
     floatText(h.x, h.y - 26, 'Level ' + h.lvl, '#ffffff'); ring(h.x, h.y, 6, 44, 0.6, HEROES[h.k].color); sfx('upgrade');
     S.banner = { text: HEROES[h.k].name.split(' ')[0] + ' reached level ' + h.lvl, sub: 'New skill point. Open Skills (K) to spend it.', life: 2.2 };
   }
@@ -1257,6 +1303,7 @@ function useHero(which) {
   const h = S.hero;
   if (!h || h.dead || S.over || !ui.started || isModal()) return false;
   if (which === 'r' && !h.ult) { sfx('nope'); return false; }
+  if (which === 'e' && !unlocked('heroSkill')) return false;
   if (S.time < h.ab[which]) { sfx('nope'); return false; }
   const d = HEROES[h.k];
   if (!CAST[h.k][which](h, d)) { sfx('nope'); return false; }
@@ -1271,7 +1318,7 @@ function toggleHeroSel() {
 }
 function abilLeft(k) { return Math.max(0, S.ab[k] - S.time); }
 function useAbility(k, x, y) {
-  if (S.over || !ui.started || isModal()) return false;
+  if (S.over || !ui.started || isModal() || !unlocked(k)) return false;
   if (abilLeft(k) > 0) { sfx('nope'); return false; }
   if (k === 'strike') {
     for (let i = 0; i < 5; i++) {
@@ -1288,7 +1335,7 @@ function useAbility(k, x, y) {
   return true;
 }
 function toggleStrike() {
-  if (S.over || !ui.started || isModal()) return;
+  if (S.over || !ui.started || isModal() || !unlocked('strike')) return;
   if (ui.targeting) { ui.targeting = null; return; }
   if (abilLeft('strike') > 0) { sfx('nope'); return; }
   ui.targeting = 'strike'; ui.build = null; ui.selected = null; refreshPanel(true);
@@ -1702,6 +1749,14 @@ function render() {
     ctx.fillStyle = '#ece6d2'; ctx.fillText('Click to call the barrage · Esc to cancel', W / 2, 25);
   }
 
+  if (S.wave === 0 && ui.started && !ui.targeting && !ui.heroSel && !ui.pending) {
+    const act = COARSE ? 'Tap' : 'Click';
+    const tip = !S.towers.length ? (ui.build ? `${act} an open grass tile next to the road` : `${act} the Archer in the build menu to start`) : 'Build another tower, or press Send wave 1 when ready';
+    ctx.font = '600 14px Barlow, sans-serif'; ctx.textAlign = 'center';
+    const tw = ctx.measureText(tip).width + 20;
+    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(W / 2 - tw / 2, 8, tw, 24);
+    ctx.fillStyle = '#f3d58a'; ctx.fillText(tip, W / 2, 25);
+  }
   if (ui.heroSel && S.hero && !S.hero.dead && !ui.targeting) {
     const nm = HEROES[S.hero.k].name.split(' ')[0];
     const msg = `${COARSE ? 'Tap' : 'Click'} the map to move ${nm}`;
@@ -1771,7 +1826,7 @@ function shopDetail(k) {
     + `<p class="paths">Level 3: ${d.br.map(x => x.name).join(' or ')}</p>`;
 }
 
-function selectBuild(type) { ui.build = type; ui.pending = null; if (type) { ui.selected = null; ui.targeting = null; ui.heroSel = false; } refreshPanel(true); }
+function selectBuild(type) { if (type && !unlocked(type)) return; if (type) ui.fresh.delete(type); ui.build = type; ui.pending = null; if (type) { ui.selected = null; ui.targeting = null; ui.heroSel = false; } refreshPanel(true); }
 
 let lastSig = '';
 const MODES = [['first', 'First'], ['last', 'Last'], ['strong', 'Strong'], ['close', 'Close']];
@@ -1814,6 +1869,8 @@ function refreshPanel(force) {
     b.setAttribute('aria-expanded', String(ty === ui.build));
     b.classList.toggle('active', ty === ui.build);
     b.classList.toggle('poor', S.gold < c);
+    b.hidden = !unlocked(ty);
+    b.classList.toggle('new', ui.fresh.has(ty));
     const cc = b.querySelector('.cc');
     if (cc && cc.dataset.v !== String(c)) { cc.dataset.v = c; cc.innerHTML = tk(c); }
   }
@@ -1823,7 +1880,7 @@ function refreshPanel(force) {
   els.panel.classList.toggle('mini', !!t && small);
   els.panel.classList.toggle('left', !!t && !small && t.x > W * 0.55);
   let sig;
-  if (t) sig = `t${t.id}:${t.lvl}:${t.branch}:${t.mode}:${S.modVer}:${S.gold >= (upgradeCost(t) ?? Infinity)}`;
+  if (t) sig = `t${t.id}:${t.lvl}:${t.branch}:${t.mode}:${S.modVer}:${S.cleared}:${S.gold >= (upgradeCost(t) ?? Infinity)}`;
   else if (ui.build) sig = `b${ui.build}:${S.modVer}:${S.gold >= buildCost(ui.build)}`;
   else sig = `w${S.wave}:${S.waveActive}:${S.modVer}:${ui.intel}`;
   if (t) { const m = $('sel-meta'); if (m) m.textContent = `${fmt(t.kills)} kills · ${fmt(t.dealt)} damage dealt`; }
@@ -1834,7 +1891,7 @@ function refreshPanel(force) {
     const d = TOWERS[t.type], c = upgradeCost(t), max = c == null, br = t.lvl >= 2 ? d.br[t.branch] : null;
     const sell = `<button class="btn danger" id="btn-sell" type="button" ${c != null && t.lvl === 1 ? 'style="width:100%"' : ''}>Sell · ${tk(sellValue(t))}</button>`;
     let actions;
-    if (max) actions = `<div class="actions"><button class="btn" type="button" disabled>Max level</button>${sell}</div>`;
+    if (max) actions = `<div class="actions"><button class="btn" type="button" disabled>${t.lvl === 1 ? 'Paths after wave ' + UNLOCK.paths : 'Max level'}</button>${sell}</div>`;
     else if (t.lvl === 1) actions = `<div><p class="eyebrow" style="margin-bottom:6px"><span>Choose a path</span><span>U · I</span></p><div class="branches">${d.br.map((b, i) => {
       const s = scaled(b);
       return `<button type="button" class="branch" data-branch="${i}" ${S.gold < c ? 'disabled' : ''}><span class="br-top"><b>${b.name}</b><span class="br-cost">${tk(c)}</span></span><span class="br-desc">${b.desc}</span><span class="br-stats">${Math.round(s.dmg)} dmg · ${s.rate.toFixed(1)}/s · ${s.range.toFixed(1)} range</span></button>`;
@@ -1848,8 +1905,8 @@ function refreshPanel(force) {
       ${br ? `<p class="meta">${d.name} · ${br.desc}</p>` : ''}
       <button class="btn stat-toggle" id="stat-toggle" type="button" aria-expanded="${!!ui.statsOpen}">${ui.statsOpen ? 'Hide stats ▴' : 'Show stats ▾'}</button>
       <dl class="kv">${statRows(tStats(t), next)}</dl>
-      <div><p class="eyebrow" style="margin-bottom:6px"><span>Targeting</span><span>T to cycle</span></p>
-      <div class="seg" role="group" aria-label="Targeting">${MODES.map(([k, l]) => `<button type="button" data-mode="${k}" class="${t.mode === k ? 'on' : ''}" aria-pressed="${t.mode === k}">${l}</button>`).join('')}</div></div>
+      ${unlocked('targeting') ? `<div><p class="eyebrow" style="margin-bottom:6px"><span>Targeting</span><span>T to cycle</span></p>
+      <div class="seg" role="group" aria-label="Targeting">${MODES.map(([k, l]) => `<button type="button" data-mode="${k}" class="${t.mode === k ? 'on' : ''}" aria-pressed="${t.mode === k}">${l}</button>`).join('')}</div></div>` : ''}
       ${actions}
       <p class="meta" id="sel-meta">${fmt(t.kills)} kills · ${fmt(t.dealt)} damage dealt</p>`;
     $('sel-icon').appendChild(iconCanvas(t.type, 48));
@@ -1915,6 +1972,7 @@ function refreshHud() {
   setHTML(els.btnIntel, IC.intel); els.btnIntel.classList.toggle('on', ui.intel); els.btnIntel.disabled = !ui.started;
   for (const k of ['strike', 'snap']) {
     const b = els.ab[k], left = abilLeft(k), total = ABIL[k].cd * S.mods.cd;
+    b.hidden = !unlocked(k);
     b.classList.toggle('ready', left === 0);
     b.classList.toggle('armed', ui.targeting === k);
     b.querySelector('.ab-fill').style.width = (left === 0 ? 100 : (1 - left / total) * 100) + '%';
@@ -1926,6 +1984,7 @@ function refreshHud() {
     const st = { hero: [h.ab.e, cdOf(h, d.active.cd), true], ult: [h.ab.r, cdOf(h, d.ult.cd), h.ult] };
     for (const k of ['hero', 'ult']) {
       const b = els.ab[k], [at, total, on] = st[k], left = Math.max(0, at - S.time);
+      b.hidden = k === 'hero' ? !unlocked('heroSkill') : !h.ult;
       b.disabled = !on;
       b.classList.toggle('ready', on && left === 0 && !h.dead);
       b.querySelector('.ab-fill').style.width = (!on ? 0 : left === 0 ? 100 : Math.max(0, (1 - left / total) * 100)) + '%';
@@ -1937,6 +1996,7 @@ function refreshHud() {
     $('hc-lvl').textContent = 'Lv ' + h.lvl;
     $('hc-state').textContent = h.dead ? `Fallen · back in ${Math.max(0, Math.ceil(h.respawnAt - S.time))}s` : `${Math.ceil(h.hp)} / ${h.maxHp} health${h.lvl < 10 ? ` · ${Math.floor(h.xp - prev)} / ${next - prev} xp` : ' · max level'}`;
     const sp = $('hc-sp'); sp.hidden = h.sp <= 0; sp.textContent = h.sp;
+    $('hc-skills').hidden = h.sp <= 0 && !Object.keys(h.learned).length;
     $('hc-sel').classList.toggle('on', ui.heroSel);
   }
 }
@@ -2006,7 +2066,7 @@ function victory() {
   $('ov-maps').onclick = toTitle;
 }
 function restart(intro = true) {
-  S = newState(); loadMap(ui.map); S.hero = makeHero(ui.hero); lastGold = S.gold;
+  S = newState(); loadMap(ui.map); S.hero = makeHero(ui.hero); lastGold = S.gold; ui.fresh = new Set(); $('toasts').replaceChildren();
   ui.selected = null; ui.build = null; ui.targeting = null; ui.pending = null; ui.heroSel = false;
   ui.perkOpen = false; ui.storyOpen = false; ui.skillsOpen = false; ui.paused = false; ui.started = true; ui.intel = true;
   hideOverlay(); renderHeroUI(); refreshPanel(true); refreshHud();
@@ -2062,17 +2122,16 @@ function closeSkills() {
 function renderSkills() {
   const h = S.hero, d = HEROES[h.k];
   const prev = h.lvl <= 1 ? 0 : XP_NEXT[h.lvl - 2], next = XP_NEXT[h.lvl - 1];
-  const form = h.evo ? d.evo[h.evo === 'a' ? 0 : 1].name : 'chosen after wave 10';
   showOverlay(`
     <p class="chap" style="color:${d.color}">${d.name} · ${d.title}</p>
     <h2>Skill <span>tree</span></h2>
-    <div class="skillhead"><span>Damage <b>${Math.round(heroDmg(h))}${d.pierce || h.fx.pierce ? ' (ignores armor)' : ''}</b></span><span>Attacks/s <b>${(d.rate * (1 + h.fx.rate)).toFixed(2)}</b></span><span>Reach <b>${(d.range + h.fx.range).toFixed(1)} tiles</b></span><span>Health <b>${Math.ceil(h.hp)} / ${h.maxHp}</b></span><span>Kills <b>${fmt(h.kills)}</b></span></div>
-    <div class="skillhead"><span>Level <b>${h.lvl}</b>${h.lvl < 10 ? ` · ${Math.floor(h.xp - prev)} / ${next - prev} xp` : ' · max'}</span><span>Skill points <b>${h.sp}</b></span><span>${d.active.name} form <b>${form}</b></span><span>${d.ult.name} <b>${h.ult ? 'unlocked' : 'after wave 20'}</b></span></div>
+    <div class="skillhead"><span>Level <b>${h.lvl}</b>${h.lvl < 10 ? ` · ${Math.floor(h.xp - prev)} / ${next - prev} xp` : ''}</span><span><b>${h.sp}</b> skill point${h.sp === 1 ? '' : 's'} to spend</span></div>
+    <div class="skillhead" style="font-size:12px">${Math.round(heroDmg(h))} damage · ${(d.rate * (1 + h.fx.rate)).toFixed(1)} attacks/s · ${(d.range + h.fx.range).toFixed(1)} reach · ${Math.ceil(h.hp)}/${h.maxHp} health</div>
     <div class="tree">${d.tree.map((br, bi) => `<div class="tbranch"><h4>${br.name}</h4>${br.nodes.map((n, ti) => {
       const id = '' + bi + ti, learned = !!h.learned[id], locked = ti > 0 && !h.learned['' + bi + (ti - 1)], poor = !learned && !locked && h.sp < ti + 1;
-      return `<button type="button" class="node${learned ? ' learned' : ''}${locked ? ' locked' : ''}${poor ? ' poor' : ''}" data-id="${id}" ${learned || locked ? 'disabled' : ''}><span class="n-top"><b>${n.name}</b><span class="n-cost">${learned ? 'Learned' : (ti + 1) + (ti ? ' points' : ' point')}</span></span><span class="n-desc">${n.desc}</span></button>`;
+      return `<button type="button" class="node${learned ? ' learned' : ''}${locked ? ' locked' : ''}${poor ? ' poor' : ''}" data-id="${id}" ${learned || locked ? 'disabled' : ''}><span class="n-top"><b>${n.name}</b><span class="n-cost">${learned ? 'Learned' : (ti + 1) + (ti ? ' pts' : ' pt')}</span></span><span class="n-desc">${n.desc}</span></button>`;
     }).join('')}</div>`).join('')}</div>
-    <p class="meta">Heroes earn a point every level and at chapters 2 and 4. Each tier needs the one above it.</p>
+    ${h.sp ? '' : '<p class="meta">Level up to earn more skill points.</p>'}
     <div class="row"><button class="btn primary" id="sk-close" type="button">Back to the fight</button></div>`, 'wide xl');
   els.card.querySelectorAll('[data-id]').forEach(b => b.onclick = () => { if (learn(b.dataset.id)) { sfx('upgrade'); renderSkills(); } else sfx('nope'); });
   $('sk-close').onclick = closeSkills;
@@ -2182,7 +2241,7 @@ window.addEventListener('keydown', ev => {
   else if (ui.selected && k === 'u') { upgradeTower(ui.selected, 0); refreshPanel(true); }
   else if (ui.selected && k === 'i' && ui.selected.lvl === 1) { upgradeTower(ui.selected, 1); refreshPanel(true); }
   else if (ui.selected && (k === 's' || k === 'delete' || k === 'backspace')) { sellTower(ui.selected); refreshPanel(true); }
-  else if (ui.selected && k === 't') {
+  else if (ui.selected && k === 't' && unlocked('targeting')) {
     const i = MODES.findIndex(m => m[0] === ui.selected.mode);
     ui.selected.mode = MODES[(i + 1) % MODES.length][0]; refreshPanel(true);
   }
@@ -2247,7 +2306,7 @@ renderHeroUI(); refreshPanel(true); refreshHud(); titleScreen(); fitBoard(); upd
 requestAnimationFrame(frame);
 
 // Test hook for automated play-throughs.
-window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, HEROES, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero };
+window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, unlocked, UNLOCK, HEROES, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero };
 })();
 </script>
 </body>

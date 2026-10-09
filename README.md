@@ -18,13 +18,33 @@ The second upgrade splits into two paths, so two players end up with different d
 
 **Abilities:** *Barrage* (`Q`, 40s cooldown) drops five armor-piercing shells on a patch of road you choose. *Cold Snap* (`W`, 55s) slows every enemy for five seconds.
 
-**Field orders:** before every fifth wave you pick one of three perks. Each gives a bonus and a cost, such as +20% damage for +1 enemy armor.
+**Field orders:** from wave 10 on, before every fifth wave you pick one of three perks. Each gives a bonus and a cost, such as +20% damage for +1 enemy armor.
 
 **Enemies:** Footman, Courier (fast), Ironclad (armored), Mite (swarms), Kite (flies straight to the gate along the dotted line, so Mortars can't hit it), Mender (heals nearby enemies), and a Warlord boss every 10 waves.
 
 **Maps:** Switchback (long and winding), The Serpent (four long climbs), Short Fuse (a short road, hard). Your best wave is saved per map.
 
 **Keys:** `H` commands the hero · `E` / `R` hero skill and ultimate · `K` skill tree · `1`–`5` pick a tower · `Space` sends the next wave (sending it early pays bonus gold) · `U` / `I` pick upgrade path A / B · `S` sells · `T` changes targeting · `Q` / `W` abilities · `N` next-wave intel · `F` changes speed · `P` pauses · `M` mutes · `Esc` cancels.
+
+## Learning curve
+
+The game starts simple and adds one system at a time. Each unlock arrives with a short message on the board, and new towers get a NEW badge.
+
+| After clearing wave | Unlocks |
+|---|---|
+| Start | Archer, Mortar, your hero |
+| 1 | Hero signature skill |
+| 2 | Frost Spire |
+| 3 | Barrage |
+| 4 | Tesla Coil |
+| 5 | Longshot |
+| 6 | Level 3 upgrade paths |
+| 7 | Cold Snap |
+| 8 | Tower targeting |
+| 9 | Field orders (then every fifth wave) |
+| 20 | Hero ultimate |
+
+The skill tree button (★) appears with the hero's first skill point. The first wave shows tips on the board.
 
 ## Heroes
 
