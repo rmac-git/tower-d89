@@ -1,10 +1,10 @@
-# Bastion Line
+# Lupin Line
 
 A browser tower defense game in one HTML file. There's no build step: open `index.html` in a browser.
 
 ## How to play
 
-The game is a campaign across three maps, ten waves each: Switchback (waves 1–10), The Serpent (11–20) and Short Fuse (21–30). When a map is held you march to the next one: towers stay behind but are salvaged for their full cost, lives refill to 20, and your hero, skills, story, upgrade unlocks and field orders carry over. A checkpoint is saved at the start of every map, so the title screen offers **Continue**, and losing lets you **Retry this map** instead of starting over. After wave 30 you can keep playing in endless mode.
+The game is a campaign across three maps, ten waves each: Switchback (waves 1–10), The Serpent (11–20) and Short Fuse (21–30). When a map is held you march to the next one: towers stay behind but are salvaged for their full cost, lives refill to 20, and your hero, skills, story, upgrade unlocks and field orders carry over. A checkpoint is saved at the start of every map, so the title screen offers **Continue**. The title screen is kept to the name, one line and the buttons, and each map is introduced when you reach it. and losing lets you **Retry this map** instead of starting over. After wave 30 you can keep playing in endless mode.
 
 | Tower | Cost | Role | Level 3 paths |
 |---|---|---|---|

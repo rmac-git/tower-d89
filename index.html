@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Bastion Line</title>
+<title>Lupin Line</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
@@ -94,6 +94,9 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--brass)
 .peek { display: flex; align-items: center; gap: 7px; height: 34px; padding: 0 9px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); font-family: var(--font-mono); font-size: 12px; color: var(--muted); white-space: nowrap; }
 .peek-l { font-family: var(--font-body); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
 .pk-e { display: inline-flex; align-items: center; gap: 3px; color: var(--ink); font-weight: 700; }
+.title-card { max-width: 440px; text-align: center; }
+.title-card .tagline { margin: 0 0 4px; }
+.title-card .best-line { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
 .pk-e i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 .sh-runner { clip-path: polygon(100% 50%, 0 0, 0 100%); border-radius: 0 !important; }
 .sh-tank { border-radius: 1px !important; }
@@ -506,7 +509,7 @@ div.map-btn.on:hover { border-color: var(--brass); }
   <div class="rot-card">
     <div class="rot-phone" aria-hidden="true"></div>
     <h2>Turn your phone sideways</h2>
-    <p>Bastion Line is built for landscape so the whole battlefield fits on screen.</p>
+    <p>Lupin Line is built for landscape so the whole battlefield fits on screen.</p>
     <button class="btn" id="rot-skip" type="button">Play in portrait anyway</button>
   </div>
 </div>
@@ -669,7 +672,7 @@ const HEROES = {
       ['Banner', [['Rally Standard', 'Nearby towers fire 10% faster', { auraRate: 0.1 }], ['Warding Colors', 'Nearby towers deal 12% more damage. Wider reach.', { auraDmg: 0.12, auraR: 1.5 }], ['Heart of the Line', '+30% skill power. Skills recharge 20% faster.', { skill: 0.3, cdr: 0.2 }]]],
     ],
     story: [
-      { t: 'The Gate Is Yours', p: ['Eleven years you held the Bastion Line. Then the High Marshal, Corvane, rode north with half the garrison and came home wearing the Warlord’s crown.', 'Tonight the gate is yours alone, Captain. Your orders are the same as ever: *nothing gets through.*'] },
+      { t: 'The Gate Is Yours', p: ['Eleven years you held the Lupin Line. Then the High Marshal, Corvane, rode north with half the garrison and came home wearing the Warlord’s crown.', 'Tonight the gate is yours alone, Captain. Your orders are the same as ever: *nothing gets through.*'] },
       { t: 'A Torn Banner', p: ['Between waves you find your old company’s banner in the mud, torn and unclaimed. Some of them marched with Corvane. Some of them died stopping him.', 'You tuck the cloth into your belt and tell no one how much it weighs.'] },
       { t: 'The Face in the Helm', p: ['The first Warlord fell at the foot of the gate, and for one breath it looked at you like Corvane waking from a dream. Then it was ash, and the next one was already walking up the road.', 'He taught you how to fight. You know exactly how he thinks. Which lesson do you carry into the next wave?'] },
       { t: 'The Deserter', p: ['A deserter limps up the road with both hands raised, swearing that Corvane doesn’t command the army. The army commands Corvane.', 'Nobody believes the story but you. You open the gate for exactly as long as it takes to pull the deserter inside.'] },
@@ -2815,12 +2818,10 @@ function titleScreen() {
   const cp = loadCheckpoint(), best = bestWave();
   loadMap(cp ? cp.mapI : 0);
   showOverlay(`
-    <h2>Bastion <span>Line</span></h2>
-    <p>Three roads lead to the gate. Hold each one for ${WAVES_PER_MAP} waves, then march to the next. Your hero and everything they learn come with you.</p>
-    <div class="maps" aria-label="Campaign">${MAPS.map((m, i) => `<div class="map-btn${cp && cp.mapI === i ? ' on' : ''}${cp && cp.mapI > i ? ' done' : ''}"><b>${i + 1}. ${m.name}</b><small>${m.blurb}</small><span class="best">Waves ${i * WAVES_PER_MAP + 1}–${(i + 1) * WAVES_PER_MAP}${cp && cp.mapI > i ? ' · held' : cp && cp.mapI === i ? ' · you are here' : ''}</span></div>`).join('')}</div>
-    <p class="chainnote"><i class="tok" aria-hidden="true"></i><span>BST is this game’s in-game token. It is off-chain: no wallet, no blockchain, no real value.</span></p>
-    ${best ? `<p>Best so far: wave ${best} of ${VICTORY_WAVE}</p>` : ''}
-    <div class="row">${cp ? `<button class="btn primary" id="ov-continue" type="button">Continue · Map ${cp.mapI + 1}, wave ${cp.wave + 1}</button><button class="btn" id="ov-start" type="button">New campaign</button>` : `<button class="btn primary" id="ov-start" type="button">Start campaign</button>`}</div>`);
+    <h2>Lupin <span>Line</span></h2>
+    <p class="tagline">Hold the coast road. Keep the dome safe.</p>
+    <div class="row">${cp ? `<button class="btn primary" id="ov-continue" type="button">Continue · wave ${cp.wave + 1}</button><button class="btn" id="ov-start" type="button">New campaign</button>` : `<button class="btn primary" id="ov-start" type="button">Play</button>`}</div>
+    ${best ? `<p class="best-line">Best: wave ${best} of ${VICTORY_WAVE}</p>` : ''}`, 'title-card');
   const go = $('ov-continue');
   if (go) go.onclick = () => { initAudio(); if (COARSE) enterLandscape(); continueCampaign(cp); };
   $('ov-start').onclick = () => {
