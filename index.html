@@ -47,10 +47,11 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--brass)
 
 
 /* ---------- Game frame: the board, plus one rail on the right (below it in portrait) ---------- */
-.game { height: 100%; display: grid; gap: 8px 10px; padding: 8px 16px; --rail: 210px;
+.game { height: 100%; display: grid; gap: 8px; padding: 8px 16px; --rail: 210px; justify-content: center; align-content: center;
   grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "rail" "cell"; }
 .game.side { grid-template-columns: minmax(0, 1fr) var(--rail); grid-template-rows: minmax(0, 1fr); grid-template-areas: "cell rail"; }
 .rail { grid-area: rail; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; min-height: 0; }
+.game:not(.side) .rail { min-height: min-content; }
 .game.side .rail { flex-direction: column; flex-wrap: nowrap; align-items: stretch; overflow-y: auto; overscroll-behavior: contain; }
 .cell { grid-area: cell; position: relative; min-width: 0; min-height: 0; }
 .board { position: absolute; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); background: var(--panel); touch-action: manipulation; }
@@ -3638,14 +3639,31 @@ const mqCompact = matchMedia('(orientation: landscape) and (max-height: 560px)')
 const mqPortrait = matchMedia('(orientation: portrait) and (pointer: coarse)');
 const rootEl = $('game-root'), cellEl = $('cell'), boardEl = $('board'), rotateEl = $('rotate'), fsBtn = $('btn-full');
 // Try both layouts (HUD strips above/below, or rails beside) and keep whichever gives the bigger board.
+// Size the board, then shrink its grid track to fit it exactly so the controls sit right against
+// the battlefield and any spare room ends up as an even margin around the whole group.
 function fitBoard() {
-  const measure = side => { rootEl.classList.toggle('side', side); const r = cellEl.getBoundingClientRect(); return { k: Math.min(r.width / 960, r.height / 600), w: r.width, h: r.height }; };
+  rootEl.style.gridTemplateColumns = rootEl.style.gridTemplateRows = '';
+  const cs = getComputedStyle(rootEl), rail = $('rail');
+  const innerW = rootEl.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const innerH = rootEl.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  const measure = side => {
+    rootEl.classList.toggle('side', side);
+    // measure from the rail's real size: a scrollable rail can otherwise be squeezed out of view
+    const w = side ? innerW - rail.offsetWidth - parseFloat(cs.columnGap) : innerW, h = side ? innerH : innerH - rail.scrollHeight - parseFloat(cs.rowGap);
+    return { k: Math.max(0, Math.min(w / 960, h / 600)), w, h, rh: rail.scrollHeight };
+  };
   const stack = measure(false), side = measure(true);
   const useSide = side.k > stack.k * 1.02;
   const m = useSide ? side : measure(false);
   const bw = Math.max(0, Math.floor(960 * m.k)), bh = Math.max(0, Math.floor(600 * m.k));
   boardEl.style.width = bw + 'px'; boardEl.style.height = bh + 'px';
-  boardEl.style.left = Math.floor((m.w - bw) / 2) + 'px'; boardEl.style.top = Math.floor((m.h - bh) / 2) + 'px';
+  if (useSide) {
+    // spare width goes to the controls (bigger buttons) rather than empty margins
+    const railW = rail.offsetWidth, spare = innerW - bw - parseFloat(cs.columnGap) - railW;
+    rootEl.style.gridTemplateColumns = `${bw}px ${Math.round(railW + Math.max(0, Math.min(spare, railW * 0.8)))}px`; rootEl.style.gridTemplateRows = `${bh}px`;
+  }
+  else rootEl.style.gridTemplateRows = `auto ${bh}px`;   // the control strip keeps the full width
+  boardEl.style.left = useSide ? '0px' : Math.floor((cellEl.getBoundingClientRect().width - bw) / 2) + 'px'; boardEl.style.top = '0px';
 }
 function updateOrientation() {
   const show = mqPortrait.matches && !ui.portraitOK;
@@ -3667,7 +3685,8 @@ fsBtn.onclick = () => { try { if (document.fullscreenElement) document.exitFulls
 $('rot-skip').onclick = () => { ui.portraitOK = true; updateOrientation(); };
 window.addEventListener('resize', () => { fitBoard(); updateOrientation(); });
 window.addEventListener('orientationchange', () => setTimeout(() => { fitBoard(); updateOrientation(); }, 200));
-if (window.ResizeObserver) new ResizeObserver(fitBoard).observe(rootEl);
+// refit when the window changes, and when the controls grow or shrink (a hero card or ability appearing)
+if (window.ResizeObserver) { const ro = new ResizeObserver(() => fitBoard()); ro.observe(rootEl); ro.observe($('rail')); }
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitBoard);
 
 els.ab.strike.querySelector('.ab-ic').innerHTML = IC.shells; els.ab.snap.querySelector('.ab-ic').innerHTML = IC.flake;
