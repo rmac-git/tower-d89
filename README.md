@@ -87,6 +87,19 @@ The game is built for landscape and the battlefield always takes as much of the 
 
 **Settings (⚙):** sound, full screen, larger text, and quit to title (tap twice to confirm).
 
+## Settings
+
+The gear menu has **Sound** (a quick mute, also `M`), **Full screen** on phones, **Settings** and **Quit to title**. The title screen has a Settings link too. Settings are kept on this device. The panel pauses the game while it's open and has:
+
+- **Sound:** separate Music and Sound effects volumes.
+- **Gameplay:** **Send waves automatically** starts the next wave 3 seconds after one is cleared (it stops at the end of each map). **Pause when you leave** pauses the game and silences it when you switch apps or tabs.
+- **Display and accessibility:** **Larger text**. **Bigger shots** makes arrows, shells, bolts and lightning about 1.7× larger, like the projectile-size option in Bloons TD 6. **Fewer effects** cuts sparks and flashes, and turns on automatically if your device asks for reduced motion. **Vibration** buzzes when you lose a life, a Warlord arrives or the gate falls; it only appears on devices that support it, which excludes iPhones.
+- **Progress:** **Reset progress** erases saves and your best wave, after a second tap to confirm.
+
+## Music
+
+The soundtrack is an original tune written for the game: a Maritime kitchen-party waltz in G major (3/4, 104 BPM), with a 16-bar A part and a 16-bar B part. It is played live by Web Audio with no audio files. A fingerpicked guitar plays bass on beat 1 and strums on 2 and 3, and a penny whistle carries the melody, dropping an octave on alternate times through. A bodhrán joins in while a wave is on the road and plays busier when a Warlord appears.
+
 ## Saving
 
 The game saves itself. After every wave, and whenever you build, upgrade or sell between waves, it records your towers, BST, lives, hero, skills and field orders. Close the page at any point and **Continue** on the title screen picks up at the next wave. Quitting in the middle of a wave takes you back to the start of that wave. A choice you were in the middle of, such as field orders or the map-held screen, is offered again.

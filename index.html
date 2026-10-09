@@ -105,8 +105,26 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--brass)
 .mrank i.on { background: currentColor; }
 .mast-tag { font: 600 11px var(--font-mono); letter-spacing: 0; text-transform: none; vertical-align: middle; }
 .mast-tag.mast-0 { color: #ff9b54; } .mast-tag.mast-1 { color: #7fd7ff; }
+.settings-card { max-width: 560px; }
+.settings { display: grid; gap: 12px; width: 100%; text-align: left; }
+.settings section { display: grid; gap: 6px; }
+@media (max-height: 500px) { .set-row { padding: 5px 9px; } .set-row small { display: none; } .settings { gap: 8px; } .settings-card h2 { font-size: 26px; margin: 0; } }
+@media (min-width: 700px) and (max-height: 700px) { .settings { grid-template-columns: 1fr 1fr; align-items: start; } .settings section:nth-child(3) { grid-row: span 2; } }
+.settings h3 { margin: 0; font: 600 11px var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.set-row { display: flex; align-items: center; gap: 12px; padding: 8px 10px; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink); font: inherit; text-align: left; cursor: pointer; width: 100%; }
+.set-row > span { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.set-row b { font-weight: 600; font-size: 14px; }
+.set-row small { color: var(--muted); font-size: 12px; }
+.set-row input[type=range] { flex: 1.4; accent-color: var(--brass); min-width: 0; }
+.set-row output { width: 30px; text-align: right; font: 600 12px var(--font-mono); color: var(--brass); }
+.sw { position: relative; flex: none; width: 38px; height: 22px; border-radius: 11px; background: #3a4a40; border: 1px solid var(--line); }
+.sw::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--ink); transition: left 0.15s; }
+.sw.on { background: var(--brass); } .sw.on::after { left: 18px; background: var(--brass-ink); }
 .title-card { max-width: 440px; text-align: center; }
 .title-card .tagline { margin: 0 0 4px; }
+.link-btn { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; color: var(--muted); font: inherit; font-size: 13px; cursor: pointer; padding: 4px 8px; }
+.link-btn:hover { color: var(--brass); }
+.link-btn svg { width: 14px; height: 14px; fill: currentColor; }
 .title-card .best-line { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
 .pk-e i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 .sh-runner { clip-path: polygon(100% 50%, 0 0, 0 100%); border-radius: 0 !important; }
@@ -510,7 +528,7 @@ div.map-btn.on:hover { border-color: var(--brass); }
 <div class="menu" id="menu" role="menu" hidden>
   <button class="menu-item" id="btn-sound" type="button" role="menuitem"></button>
   <button class="menu-item" id="btn-full" type="button" role="menuitem" hidden></button>
-  <button class="menu-item" id="btn-bigtext" type="button" role="menuitem"></button>
+  <button class="menu-item" id="btn-settings" type="button" role="menuitem"></button>
   <button class="menu-item warn" id="btn-quit" type="button" role="menuitem"></button>
 </div>
 <div class="overlay" id="overlay" hidden>
@@ -538,7 +556,15 @@ const SPEED_K = 0.9, RANGE_K = 0.75;   // the coarser grid has a shorter road, s
 const VICTORY_WAVE = 30;
 const WAVES_PER_MAP = 10;   // the campaign marches through the maps in order, ten waves each
 const START_GOLD = 180, START_LIVES = 20;
-const REDUCED_MOTION = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Player settings, kept on this device.
+const SET = { music: 0.5, sfx: 0.8, autoWave: false, autoPause: true, reduceFx: false, bigShots: false, vibrate: true };
+try { Object.assign(SET, JSON.parse(localStorage.getItem('bastion-line-settings')) || {}); } catch (e) {}
+function saveSettings() { try { localStorage.setItem('bastion-line-settings', JSON.stringify(SET)); } catch (e) {} }
+const OS_REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+let REDUCED_MOTION = OS_REDUCED || SET.reduceFx;
+let SK = SET.bigShots ? 1.7 : 1;   // projectile size
+const CAN_VIBRATE = typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function';
+function buzz(pattern) { if (SET.vibrate && CAN_VIBRATE) try { navigator.vibrate(pattern); } catch (e) {} }
 
 // Maps: path waypoints in tile coordinates (enemies enter left, exit right at the gate).
 const MAPS = [
@@ -808,32 +834,35 @@ const HEROES = {
 for (const d of Object.values(HEROES)) d.tree = d.tree.map(([name, nodes]) => ({ name, nodes: nodes.map(([n, desc, fx]) => ({ name: n, desc, fx })) }));
 
 // ---------- Sound (synthesized, no assets) ----------
-const A = { ctx: null, on: true, master: null, last: {}, noiseBuf: null };
+const A = { ctx: null, on: true, master: null, sfxBus: null, musicBus: null, last: {}, noiseBuf: null };
 try { A.on = localStorage.getItem('bastion-line-mute') !== '1'; } catch (e) {}
 function initAudio() {
   if (A.ctx) { if (A.ctx.state === 'suspended') A.ctx.resume(); return; }
   const AC = window.AudioContext || window.webkitAudioContext;
   if (!AC) return;
   try {
-    A.ctx = new AC(); A.master = A.ctx.createGain(); A.master.gain.value = 0.5; A.master.connect(A.ctx.destination);
+    A.ctx = new AC(); A.master = A.ctx.createGain(); A.master.gain.value = A.on ? 0.5 : 0; A.master.connect(A.ctx.destination);
+    A.sfxBus = A.ctx.createGain(); A.sfxBus.gain.value = SET.sfx; A.sfxBus.connect(A.master);
+    A.musicBus = A.ctx.createGain(); A.musicBus.gain.value = SET.music * 1.1; A.musicBus.connect(A.master);
     const n = A.ctx.sampleRate * 0.5, buf = A.ctx.createBuffer(1, n, A.ctx.sampleRate), d = buf.getChannelData(0);
     for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
     A.noiseBuf = buf;
   } catch (e) { A.ctx = null; }
+  if (A.ctx) Music.start();
 }
 function tone(f0, f1, dur, type, vol, delay = 0) {
   const c = A.ctx, t = c.currentTime + delay, o = c.createOscillator(), g = c.createGain();
   o.type = type; o.frequency.setValueAtTime(f0, t);
   if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t + dur);
   g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.connect(g); g.connect(A.master); o.start(t); o.stop(t + dur + 0.02);
+  o.connect(g); g.connect(A.sfxBus); o.start(t); o.stop(t + dur + 0.02);
 }
 function noise(dur, vol, freq, type, delay = 0, sweepTo) {
   const c = A.ctx, t = c.currentTime + delay, s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
   s.buffer = A.noiseBuf; f.type = type; f.frequency.setValueAtTime(freq, t);
   if (sweepTo) f.frequency.exponentialRampToValueAtTime(sweepTo, t + dur);
   g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  s.connect(f); f.connect(g); g.connect(A.master); s.start(t); s.stop(t + dur + 0.02);
+  s.connect(f); f.connect(g); g.connect(A.sfxBus); s.start(t); s.stop(t + dur + 0.02);
 }
 const SFX_GAP = { arrow: 45, kill: 55, frost: 120, tesla: 60, boom: 70, cannon: 80, sniper: 100 };
 const SFX = {
@@ -859,13 +888,88 @@ const SFX = {
   nope: () => tone(160, 130, 0.12, 'square', 0.06),
 };
 function sfx(name) {
-  if (!A.on || !A.ctx || !SFX[name]) return;
+  if (!A.on || !A.ctx || !SFX[name] || SET.sfx <= 0) return;
   const now = performance.now(), gap = SFX_GAP[name] || 25;
   if (now - (A.last[name] || 0) < gap) return;
   A.last[name] = now;
   if (A.ctx.state === 'suspended') A.ctx.resume();
   try { SFX[name](); } catch (e) {}
 }
+
+// ---------- Music: an original Maritime kitchen-party waltz, synthesized live ----------
+// 3/4 at an easy tempo: fingerpicked guitar, a penny-whistle melody, and a bodhrán that joins in during waves.
+// Notes are MIDI numbers; durations are in beats.
+const Music = (() => {
+  const BPM = 104, BEAT = 60 / BPM;
+  const CH = { G: [43, 55, 59, 62], C: [48, 55, 60, 64], D: [50, 57, 62, 66], Em: [40, 55, 59, 64], Am: [45, 57, 60, 64] };
+  const bars = [
+    // A: home on the shore
+    ['G', [[62, 1], [67, 1], [71, 1]]], ['G', [[74, 2], [71, 1]]], ['C', [[72, 1], [76, 1], [72, 1]]], ['G', [[71, 2], [67, 1]]],
+    ['G', [[69, 1], [71, 1], [74, 1]]], ['Em', [[76, 1.5], [74, 0.5], [71, 1]]], ['D', [[69, 1], [66, 1], [69, 1]]], ['D', [[74, 3]]],
+    ['G', [[62, 1], [67, 1], [71, 1]]], ['G', [[74, 2], [79, 1]]], ['C', [[76, 1], [72, 1], [76, 1]]], ['G', [[74, 2], [71, 1]]],
+    ['Em', [[67, 1], [71, 1], [76, 1]]], ['D', [[74, 1], [72, 1], [69, 1]]], ['G', [[71, 1.5], [69, 0.5], [67, 1]]], ['G', [[67, 3]]],
+    // B: out past the lighthouse
+    ['C', [[76, 1], [79, 1], [76, 1]]], ['C', [[72, 2], [76, 1]]], ['G', [[74, 1], [71, 1], [67, 1]]], ['G', [[74, 3]]],
+    ['Am', [[72, 1], [69, 1], [72, 1]]], ['Am', [[76, 2], [72, 1]]], ['D', [[69, 1], [74, 1], [78, 1]]], ['D', [[81, 2], [78, 1]]],
+    ['C', [[79, 1.5], [76, 0.5], [72, 1]]], ['C', [[76, 1], [74, 1], [72, 1]]], ['G', [[71, 1], [74, 1], [79, 1]]], ['Em', [[76, 2], [74, 1]]],
+    ['Am', [[72, 1], [76, 1], [69, 1]]], ['D', [[74, 1], [66, 1], [69, 1]]], ['G', [[67, 1.5], [71, 0.5], [74, 1]]], ['G', [[67, 3]]],
+  ];
+  const hz = m => 440 * Math.pow(2, (m - 69) / 12);
+  let timer = null, next = 0, bar = 0, loops = 0;
+  function env(g, t, a, peak, dur) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); }
+  function pluck(m, t, vol, dur = 1.1) {
+    const c = A.ctx, o = c.createOscillator(), o2 = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain(), g2 = c.createGain();
+    o.type = 'triangle'; o2.type = 'sawtooth'; o.frequency.value = o2.frequency.value = hz(m); o2.detune.value = 4; g2.gain.value = 0.25;
+    f.type = 'lowpass'; f.frequency.setValueAtTime(2600, t); f.frequency.exponentialRampToValueAtTime(500, t + 0.35);
+    o.connect(f); o2.connect(g2); g2.connect(f); f.connect(g); g.connect(A.musicBus);
+    env(g, t, 0.006, vol, dur); o.start(t); o2.start(t); o.stop(t + dur + 0.05); o2.stop(t + dur + 0.05);
+  }
+  function whistle(m, t, dur, vol) {
+    const c = A.ctx, o = c.createOscillator(), lfo = c.createOscillator(), lg = c.createGain(), g = c.createGain(), f = c.createBiquadFilter();
+    o.type = 'sine'; o.frequency.value = hz(m);
+    lfo.frequency.value = 5.2; lg.gain.value = hz(m) * 0.006; lfo.connect(lg); lg.connect(o.frequency);
+    f.type = 'lowpass'; f.frequency.value = 3200;
+    o.connect(f); f.connect(g); g.connect(A.musicBus);
+    const len = Math.max(0.12, dur * BEAT * 0.95);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.04);
+    g.gain.setValueAtTime(vol * 0.85, t + len * 0.6); g.gain.exponentialRampToValueAtTime(0.0001, t + len + 0.08);
+    o.start(t); lfo.start(t); o.stop(t + len + 0.12); lfo.stop(t + len + 0.12);
+  }
+  function drum(t, vol, low) {
+    const c = A.ctx, o = c.createOscillator(), g = c.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(low ? 95 : 160, t); o.frequency.exponentialRampToValueAtTime(low ? 48 : 90, t + 0.18);
+    o.connect(g); g.connect(A.musicBus); env(g, t, 0.004, vol, 0.25); o.start(t); o.stop(t + 0.3);
+    const s = c.createBufferSource(), f = c.createBiquadFilter(), g2 = c.createGain();
+    s.buffer = A.noiseBuf; f.type = 'bandpass'; f.frequency.value = low ? 400 : 1800;
+    s.connect(f); f.connect(g2); g2.connect(A.musicBus); env(g2, t, 0.002, vol * 0.25, 0.08); s.start(t); s.stop(t + 0.1);
+  }
+  function playBar(t) {
+    const [ch, mel] = bars[bar], [root, a, b, cc] = CH[ch], alt = bar % 2 ? root + 7 : root;
+    const busy = S && S.waveActive, boss = busy && S.enemies.some(e => e.type === 'boss');
+    // guitar: bass on 1, light strums on 2 and 3, a little fingerpicked run on the "and"s
+    pluck(alt, t, 0.16, 1.4);
+    for (const beat of [1, 2]) [a, b, cc].forEach((m, i) => pluck(m, t + beat * BEAT + i * 0.012, 0.07, 0.8));
+    pluck(cc + 12, t + 1.5 * BEAT, 0.035, 0.5); pluck(b + 12, t + 2.5 * BEAT, 0.035, 0.5);
+    // melody; the second time round the A part drops an octave for variety
+    let at = 0; const oct = loops % 2 === 1 && bar < 16 ? -12 : 0;
+    for (const [m, d] of mel) { whistle(m + oct, t + at * BEAT, d, 0.075); at += d; }
+    // bodhrán during waves, busier when a Warlord is on the road
+    if (busy) { drum(t, 0.22, true); drum(t + 2 * BEAT, 0.08, false); if (boss) { drum(t + BEAT, 0.12, true); drum(t + 2.5 * BEAT, 0.06, false); } }
+    bar = (bar + 1) % bars.length; if (bar === 0) loops++;
+  }
+  function tick() {
+    if (!A.ctx || !A.on || SET.music <= 0) { next = 0; return; }
+    if (A.ctx.state !== 'running') return;
+    const now = A.ctx.currentTime;
+    if (next < now) next = now + 0.1;
+    while (next < now + 0.35) { playBar(next); next += 3 * BEAT; }
+  }
+  return {
+    start() { if (!timer) timer = setInterval(tick, 90); },
+    setVolume(v) { if (A.musicBus) A.musicBus.gain.setTargetAtTime(v * 1.1, A.ctx.currentTime, 0.1); },
+    get bar() { return bar; },
+  };
+})();
 
 const TOWER_KEYS = Object.keys(TOWERS);
 
@@ -1028,7 +1132,7 @@ function newState() {
   };
 }
 const ui = { build: null, selected: null, hoverTile: null, hoverPx: null, speed: 1, paused: true, started: false, targeting: null, perkOpen: false, perkChoices: [], map: 0, mapOpen: false, galleryOpen: false, galleryPaused: false, buildPause: false, newArmed: false, fresh: new Set(), pending: null, portraitOK: false, rotatePaused: false, intel: false, hero: 'maren', heroSel: false, storyOpen: false, skillsOpen: false, chapter: 0, pausedBefore: false };
-const isModal = () => ui.perkOpen || ui.storyOpen || ui.skillsOpen || ui.mapOpen || ui.galleryOpen;
+const isModal = () => ui.perkOpen || ui.storyOpen || ui.skillsOpen || ui.mapOpen || ui.galleryOpen || ui.settingsOpen;
 // Saves. A checkpoint is kept at the start of every map (for "Retry this map"), and the game
 // autosaves between waves, towers and all, so Continue picks up where you left off.
 // Both live in this browser and, when the page runs on claude.ai, in your account too.
@@ -1096,7 +1200,13 @@ async function connectCloud() {
   } catch (e) {}
 }
 window.addEventListener('pagehide', () => autosave());
-document.addEventListener('visibilitychange', () => { if (document.hidden) autosave(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    autosave();
+    if (SET.autoPause && ui.started && !S.over && !isModal()) { ui.paused = true; refreshHud(); }
+    if (A.ctx && A.ctx.state === 'running') A.ctx.suspend();
+  } else if (A.ctx && A.on) A.ctx.resume();
+});
 
 function bestWave() { try { return +localStorage.getItem(KEY_BEST) || 0; } catch (e) { return 0; } }
 function saveBest(w) { try { if (w > bestWave()) localStorage.setItem(KEY_BEST, String(w)); } catch (e) {} }
@@ -1202,9 +1312,9 @@ function startWave() {
     t += 1.5;
   }
   S.spawns.sort((a, b) => a.at - b.at);
-  S.waveActive = true;
+  S.waveActive = true; S.autoAt = 0;
   const hasBoss = groups.some(g => g[0] === 'boss');
-  sfx(hasBoss ? 'bosswave' : 'wave');
+  sfx(hasBoss ? 'bosswave' : 'wave'); if (hasBoss) buzz([60, 80, 60]);
   S.banner = { text: 'Wave ' + w, sub: hasBoss ? 'A Warlord approaches' : groups.map(g => ENEMIES[g[0]].name + 's').join(' · '), life: 2.6, boss: hasBoss };
 }
 
@@ -1413,6 +1523,7 @@ function updateEnemies(dt) {
       e.alive = false; e.leaked = true;
       S.lives -= ENEMIES[e.type].lives;
       flashLives(); sfx('leak');
+      buzz(40);
       if (S.lives <= 0) { S.lives = 0; gameOver(); }
     }
   }
@@ -1456,7 +1567,9 @@ function update(dt) {
     else if (S.wave % 5 === 0 && S.wave <= 25 && S.hero) showChapter(S.wave / 5);
     if (S.mapDone && !ui.storyOpen) showMapComplete();
     if (!S.won || S.endless) saveResume();
+    if (SET.autoWave && !S.mapDone && !S.over && (!S.won || S.endless)) S.autoAt = S.time + 3;
   }
+  if (S.autoAt && !S.waveActive && S.time >= S.autoAt) { S.autoAt = 0; if (SET.autoWave && !isModal() && !S.over) { startWave(); refreshHud(); } }
   updateFx(dt);
 }
 
@@ -2446,15 +2559,15 @@ function render() {
       if (s.tr) for (let i = 0; i < s.tr.length; i++) {
         const [qx, qy] = s.tr[i], f = (i + 1) / (s.tr.length + 1);
         ctx.globalAlpha = f * (s.kind === 'bolt' ? 0.75 : 0.4); ctx.fillStyle = s.col || '#fff3d6';
-        ctx.beginPath(); ctx.arc(qx, qy, (s.kind === 'bolt' ? (s.big ? 3.4 : 2.4) : 1.3) * K * f + 0.5, 0, 6.283); ctx.fill();
+        ctx.beginPath(); ctx.arc(qx, qy, (s.kind === 'bolt' ? (s.big ? 3.4 : 2.4) : 1.3) * K * SK * f + 0.5, 0, 6.283); ctx.fill();
       }
       ctx.globalAlpha = 1;
       if (s.kind === 'bolt') {
-        const rr = (s.big ? 5 : 3.6) * K, bg2 = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, rr * 2.2);
+        const rr = (s.big ? 5 : 3.6) * K * SK, bg2 = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, rr * 2.2);
         bg2.addColorStop(0, '#ffffff'); bg2.addColorStop(0.35, s.col); bg2.addColorStop(1, 'rgba(255,255,255,0)');
         ctx.fillStyle = bg2; ctx.beginPath(); ctx.arc(s.x, s.y, rr * 2.2, 0, 6.283); ctx.fill();
       } else {
-        ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(s.a || 0); ctx.scale(K, K);
+        ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(s.a || 0); ctx.scale(K * SK, K * SK);
         ctx.strokeStyle = 'rgba(20,14,8,0.6)'; ctx.lineWidth = 3.2; ctx.beginPath(); ctx.moveTo(-9, 0); ctx.lineTo(4, 0); ctx.stroke();
         ctx.strokeStyle = '#f4ecd6'; ctx.lineWidth = 1.8; ctx.stroke();
         ctx.fillStyle = '#dfe6ee'; ctx.beginPath(); ctx.moveTo(7, 0); ctx.lineTo(3, -2.6); ctx.lineTo(3, 2.6); ctx.fill();
@@ -2465,7 +2578,7 @@ function render() {
       const p = s.t / s.dur, x = s.sx + (s.tx - s.sx) * p, y = s.sy + (s.ty - s.sy) * p, hgt = Math.sin(p * Math.PI) * 46 * K;
       ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(x, y, 4 * K, 2 * K, 0, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = 'rgba(200,190,170,0.35)'; ctx.beginPath(); ctx.arc(x - 3 * K, y - hgt + 3 * K, 3.5 * K, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#2a2420'; ctx.beginPath(); ctx.arc(x, y - hgt, 5 * K, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#2a2420'; ctx.beginPath(); ctx.arc(x, y - hgt, 5 * K * SK, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = 'rgba(255,170,90,0.9)'; ctx.beginPath(); ctx.arc(x - 1.5 * K, y - hgt - 1.5 * K, 1.8 * K, 0, Math.PI * 2); ctx.fill();
     }
   }
@@ -2480,7 +2593,7 @@ function render() {
   ctx.globalAlpha = 1;
   for (const b of S.bolts) {
     ctx.globalAlpha = b.life / b.max;
-    for (const [w, col] of [[6 * K, 'rgba(177,140,240,0.45)'], [2 * K, '#f6f0ff']]) {
+    for (const [w, col] of [[6 * K * SK, 'rgba(177,140,240,0.45)'], [2 * K * SK, '#f6f0ff']]) {
       ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath();
       ctx.moveTo(b.pts[0][0], b.pts[0][1]);
       for (let i = 1; i < b.pts.length; i++) {
@@ -2496,8 +2609,8 @@ function render() {
   for (const t of S.tracers) {
     ctx.globalAlpha = t.life / t.max;
     ctx.beginPath(); ctx.moveTo(t.x1, t.y1); ctx.lineTo(t.x2, t.y2);
-    ctx.strokeStyle = 'rgba(255,220,150,0.45)'; ctx.lineWidth = 5 * K; ctx.stroke();
-    ctx.strokeStyle = '#fffaf0'; ctx.lineWidth = 1.6 * K; ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,220,150,0.45)'; ctx.lineWidth = 5 * K * SK; ctx.stroke();
+    ctx.strokeStyle = '#fffaf0'; ctx.lineWidth = 1.6 * K * SK; ctx.stroke();
   }
   for (const sl of S.slashes) {
     const p = 1 - sl.life / sl.max;
@@ -2921,7 +3034,7 @@ function refreshHud() {
   if (isModal()) els.btnWave.disabled = true;
   setHTML(els.btnSound, `${A.on ? IC.sound : IC.mute}<span>Sound: ${A.on ? 'on' : 'off'}</span>`);
   setHTML($('btn-full'), document.fullscreenElement ? `${IC.unfull}<span>Exit full screen</span>` : `${IC.full}<span>Full screen</span>`);
-  setHTML($('btn-bigtext'), `${IC.text}<span>Larger text: ${document.documentElement.classList.contains('big') ? 'on' : 'off'}</span>`);
+  setHTML($('btn-settings'), `${IC.gear}<span>Settings</span>`);
   setHTML($('btn-quit'), `${IC.quit}<span>${quitArmed ? 'Tap again to quit' : 'Quit to title'}</span>`);
   setHTML($('btn-menu'), IC.gear);
   setHTML($('btn-build'), `${IC.hammer}<span>Build</span>${ui.fresh.size ? '<span class="build-dot" aria-label="New tower available"></span>' : ''}`);
@@ -2995,7 +3108,9 @@ function titleScreen() {
     <h2>Hold the <span>Cove</span></h2>
     <p class="tagline">Hold the coast road. Keep the dome safe.</p>
     <div class="row">${cp ? `<button class="btn primary" id="ov-continue" type="button">Continue · wave ${cp.wave + 1}</button><button class="btn" id="ov-start" type="button">New campaign</button>` : `<button class="btn primary" id="ov-start" type="button">Play</button>`}</div>
-    ${best ? `<p class="best-line">Best: wave ${best} of ${VICTORY_WAVE}</p>` : ''}`, 'title-card');
+    ${best ? `<p class="best-line">Best: wave ${best} of ${VICTORY_WAVE}</p>` : ''}
+    <button class="link-btn" id="ov-settings" type="button">${IC.gear}Settings</button>`, 'title-card');
+  $('ov-settings').onclick = () => { initAudio(); openSettings(); };
   const go = $('ov-continue');
   if (go) go.onclick = () => { initAudio(); if (COARSE) enterLandscape(); continueCampaign(cp); };
   $('ov-start').onclick = () => {
@@ -3007,7 +3122,7 @@ function titleScreen() {
 }
 function toTitle() { S = newState(); loadMap(0); ui.selected = null; ui.build = null; renderHeroUI(); refreshPanel(true); titleScreen(); }
 function gameOver() {
-  S.over = true; saveBest(S.wave - 1); sfx('lose'); clearResume();
+  S.over = true; saveBest(S.wave - 1); sfx('lose'); clearResume(); buzz([120, 80, 220]);
   setTimeout(() => {
     const cp = loadCheckpoint();
     showOverlay(`
@@ -3224,6 +3339,7 @@ els.btnPause.onclick = () => { ui.paused = !ui.paused; refreshHud(); };
 function toggleSound() {
   A.on = !A.on;
   try { localStorage.setItem('bastion-line-mute', A.on ? '0' : '1'); } catch (e) {}
+  if (A.master) A.master.gain.value = A.on ? 0.5 : 0;
   if (A.on) { initAudio(); sfx('build'); }
   refreshHud();
 }
@@ -3243,11 +3359,63 @@ function setMenu(open) {
 menuBtn.onclick = () => setMenu(menuEl.hidden);
 document.addEventListener('pointerdown', ev => { if (!menuEl.hidden && !menuEl.contains(ev.target) && !menuBtn.contains(ev.target)) setMenu(false); });
 try { if (localStorage.getItem('bastion-line-big') === '1') document.documentElement.classList.add('big'); } catch (e) {}
-$('btn-bigtext').onclick = () => {
-  const on = document.documentElement.classList.toggle('big');
-  try { localStorage.setItem('bastion-line-big', on ? '1' : '0'); } catch (e) {}
-  refreshHud(); setTimeout(() => fitBoard && fitBoard(), 0);
-};
+// ---------- Settings panel ----------
+let resetArmed = false;
+function openSettings() {
+  setMenu(false);
+  // in a run, settings open only over the battlefield, never over another screen
+  if (!ui.settingsOpen && ui.started && !els.overlay.hidden) return;
+  if (!ui.settingsOpen) { ui.settingsBefore = ui.paused; ui.settingsOpen = true; ui.paused = true; }
+  const tg = (id, label, on, hint) => `<button type="button" class="set-row set-tg" id="${id}" role="switch" aria-checked="${on}"><span><b>${label}</b>${hint ? `<small>${hint}</small>` : ''}</span><i class="sw${on ? ' on' : ''}"></i></button>`;
+  const sl = (id, label, v) => `<label class="set-row"><span><b>${label}</b></span><input type="range" id="${id}" min="0" max="100" step="5" value="${Math.round(v * 100)}" aria-label="${label}"><output>${Math.round(v * 100)}</output></label>`;
+  const big = document.documentElement.classList.contains('big');
+  showOverlay(`
+    <h2>Settings</h2>
+    <div class="settings">
+      <section><h3>Sound</h3>${sl('set-music', 'Music', SET.music)}${sl('set-sfx', 'Sound effects', SET.sfx)}</section>
+      <section><h3>Gameplay</h3>
+        ${tg('set-auto', 'Send waves automatically', SET.autoWave, 'The next wave starts 3 seconds after one is cleared')}
+        ${tg('set-pause', 'Pause when you leave', SET.autoPause, 'Pauses if you switch apps or tabs')}</section>
+      <section><h3>Display and accessibility</h3>
+        ${tg('set-big', 'Larger text', big)}
+        ${tg('set-shots', 'Bigger shots', SET.bigShots, 'Makes arrows, shells and bolts easier to see')}
+        ${tg('set-fx', 'Fewer effects', SET.reduceFx || OS_REDUCED, OS_REDUCED ? 'On because your device asks for reduced motion' : 'Fewer sparks and flashes')}
+        ${CAN_VIBRATE ? tg('set-vib', 'Vibration', SET.vibrate, 'Buzz when you lose a life or a Warlord arrives') : ''}</section>
+      <section><h3>Progress</h3><button type="button" class="btn danger" id="set-reset">${resetArmed ? 'Tap again to erase everything' : 'Reset progress'}</button></section>
+    </div>
+    <div class="row"><button class="btn primary" id="set-done" type="button">Done</button></div>`, 'wide settings-card');
+  const flip = (id, fn) => { const b = $(id); if (b) b.onclick = () => { fn(); saveSettings(); openSettings(); }; };
+  flip('set-auto', () => { SET.autoWave = !SET.autoWave; });
+  flip('set-pause', () => { SET.autoPause = !SET.autoPause; });
+  flip('set-shots', () => { SET.bigShots = !SET.bigShots; SK = SET.bigShots ? 1.7 : 1; });
+  flip('set-fx', () => { SET.reduceFx = !SET.reduceFx; REDUCED_MOTION = OS_REDUCED || SET.reduceFx; });
+  flip('set-vib', () => { SET.vibrate = !SET.vibrate; if (SET.vibrate) buzz(30); });
+  flip('set-big', () => { const on = document.documentElement.classList.toggle('big'); try { localStorage.setItem('bastion-line-big', on ? '1' : '0'); } catch (e) {} setTimeout(() => fitBoard && fitBoard(), 0); });
+  for (const [id, key] of [['set-music', 'music'], ['set-sfx', 'sfx']]) {
+    const inp = $(id);
+    inp.oninput = () => {
+      SET[key] = inp.value / 100; inp.nextElementSibling.textContent = inp.value;
+      initAudio();
+      if (!A.on && inp.value > 0) toggleSound();
+      if (key === 'music') Music.setVolume(SET.music); else if (A.sfxBus) { A.sfxBus.gain.value = SET.sfx; sfx('build'); }
+    };
+    inp.onchange = saveSettings;
+  }
+  $('set-reset').onclick = () => {
+    if (!resetArmed) { resetArmed = true; openSettings(); setTimeout(() => { if (resetArmed) { resetArmed = false; if (ui.settingsOpen) openSettings(); } }, 3000); return; }
+    resetArmed = false; clearCheckpoint(); store(KEY_BEST, null); pushCloud();
+    ui.settingsOpen = false; toTitle(); toast('Progress reset', 'Your saves and best wave were erased.');
+  };
+  $('set-done').onclick = closeSettings; $('set-done').focus();
+}
+function closeSettings() {
+  if (!ui.settingsOpen) return;
+  ui.settingsOpen = false; resetArmed = false;
+  if (!ui.started) titleScreen();
+  else { hideOverlay(); ui.paused = ui.settingsBefore; }
+  refreshHud();
+}
+$('btn-settings').onclick = openSettings;
 $('btn-quit').onclick = () => {
   if (!quitArmed) { quitArmed = true; refreshHud(); setTimeout(() => { quitArmed = false; refreshHud(); }, 3000); return; }
   setMenu(false); toTitle();
@@ -3269,6 +3437,7 @@ window.addEventListener('keydown', ev => {
   const k = ev.key.toLowerCase();
   if (ev.repeat && ['u', 'i', 's', 'z', 'delete', 'backspace'].includes(k)) return;   // holding a key never repeats an order
   if (k === 'm') { toggleSound(); return; }
+  if (ui.settingsOpen) { if (k === 'escape') closeSettings(); return; }
   if (!ui.started) return;
   if (ui.galleryOpen) {
     const gi = ['1', '2', '3', '4', '5'].indexOf(k);
@@ -3375,7 +3544,7 @@ requestAnimationFrame(frame);
 connectCloud();
 
 // Test hook for automated play-throughs.
-window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get decor() { return decor; }, masterTower, masteryCost, MASTERY, tStats, loadLatest, saveResume, titleScreen, undoLast, lastUndo, sellTower, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, unlocked, UNLOCK, HEROES, COLS, ROWS, TILE, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero, nextMap, openGallery, closeGallery, pickFromGallery, continueCampaign, loadCheckpoint };
+window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get decor() { return decor; }, A, SET, Music, masterTower, masteryCost, MASTERY, tStats, loadLatest, saveResume, titleScreen, undoLast, lastUndo, sellTower, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, unlocked, UNLOCK, HEROES, COLS, ROWS, TILE, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero, nextMap, openGallery, closeGallery, pickFromGallery, continueCampaign, loadCheckpoint };
 })();
 </script>
 </body>
