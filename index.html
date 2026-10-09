@@ -891,6 +891,12 @@ function loadMap(i) {
     if (sc > lb) { lb = sc; lx = x; }
   }
   if (lx >= 0) decor.set(lx + ',' + (ROWS - 1), 'lighthouse');
+  const coves = 1 + (r() < 0.6 ? 1 : 0);
+  for (let i = 0, tries = 0; i < coves && tries < 60; tries++) {
+    const x = 1 + Math.floor(r() * (COLS - 2)), y = ROWS - 2;
+    if (!free(x, y) || byRoad(x, y) || decor.get(x + ',' + (ROWS - 1)) !== 'water' || decor.get((x - 1) + ',' + y) || decor.get((x + 1) + ',' + y)) continue;
+    decor.set(x + ',' + y, 'water'); i++;
+  }
   const pick = (ok, score) => {
     let best = null, bs = Infinity;
     for (let y = 0; y < ROWS - 1; y++) for (let x = 0; x < COLS; x++) if (free(x, y) && ok(x, y)) { const v = score(x, y) + r() * 0.4; if (v < bs) { bs = v; best = [x, y]; } }
@@ -1679,8 +1685,8 @@ function updateCritters(dt) {
 function drawCritters(c, time) {
   // drifting crests on the water
   c.strokeStyle = 'rgba(225,242,255,0.28)'; c.lineWidth = 1.2;
-  for (const [x0, y0] of scene.water || []) for (let i = 0; i < 2; i++) {
-    const wx = x0 + ((time * 7 + i * 31 + x0 * 0.37) % TILE), wy = y0 + 36 + i * 12 + Math.sin(time * 1.3 + x0 + i) * 1.5;
+  for (const [x0, top] of scene.water || []) for (let i = 0; i < 2; i++) {
+    const wx = x0 + ((time * 7 + i * 31 + x0 * 0.37) % TILE), wy = top + 14 + i * Math.max(6, (H - top - 22) / 2) + Math.sin(time * 1.3 + x0 + i) * 1.5;
     c.beginPath(); c.moveTo(wx - 5, wy); c.quadraticCurveTo(wx, wy - 2.5, wx + 5, wy); c.stroke();
   }
   if (scene.light) {
@@ -1755,11 +1761,7 @@ function drawBackground() {
     const lit = (nxv * -0.45 + nyv * -0.55 + nzv * 0.7) / nl;
     const mx = (a[0] + b[0] + cc[0]) / 3, my = (a[1] + b[1] + cc[1]) / 3, d = roadDist(mx, my), v = r();
     let fill;
-    const dk = decor.get(Math.min(COLS - 1, Math.floor(mx / TILE)) + ',' + Math.min(ROWS - 1, Math.floor(my / TILE)));
-    const sea = (dk === 'water' || dk === 'lighthouse') && my > (ROWS - 1) * TILE;
-    if (sea && my > (ROWS - 1) * TILE + 15) fill = hsl(204 + v * 6, 58, 30 + lit * 10 + v * 5);   // Atlantic
-    else if (sea) fill = hsl(18, 9, 52 + lit * 14 + v * 6);                    // pink-grey granite shore
-    else if (d < TILE * 0.43) fill = hsl(35, 46, 56 + lit * 14 + v * 4);            // sand road
+    if (d < TILE * 0.43) fill = hsl(35, 46, 56 + lit * 14 + v * 4);            // sand road
     else if (d < TILE * 0.56) fill = hsl(140, 22, 25 + lit * 12 + v * 3);      // shaded bank along the road
     else fill = hsl(108 + v * 22, 34, 32 + lit * 14 + v * 3);                    // green meadow
     g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.lineTo(cc[0], cc[1]); g.closePath();
@@ -1774,6 +1776,38 @@ function drawBackground() {
     const k = x + ',' + y; if (pathSet.has(k) || rockSet.has(k)) continue;
     roundRect(g, x * TILE + 5, y * TILE + 5, TILE - 10, TILE - 10, 9);
     g.fillStyle = 'rgba(255,255,255,0.045)'; g.fill(); g.strokeStyle = 'rgba(8,20,14,0.16)'; g.lineWidth = 1.2; g.stroke();
+  }
+  // coastline: the shore rises and falls along the coast, with coves biting into the meadow
+  const seaTop = x => {
+    const tx = Math.max(0, Math.min(COLS - 1, Math.floor(x / TILE))), bt = decor.get(tx + ',' + (ROWS - 1));
+    if (bt !== 'water' && bt !== 'lighthouse') return H + 30;
+    let y = (ROWS - 1) * TILE + 22 + Math.sin(x * 0.017 + MAP_I * 2.1) * 11 + Math.sin(x * 0.043 + MAP_I) * 6 + Math.sin(x * 0.11 + MAP_I * 3) * 2.5;
+    for (let c = 0; c < COLS; c++) {
+      if (decor.get(c + ',' + (ROWS - 2)) !== 'water') continue;
+      // a rounded bay: steep sides, a broad curved head
+      const u = (x - (c + 0.5) * TILE) / (TILE * 0.72), head = (ROWS - 2) * TILE + 24;
+      if (Math.abs(u) < 1) y = Math.min(y, head + (y - head) * (1 - Math.sqrt(Math.max(0, 1 - u * u))));
+    }
+    return y;
+  };
+  const shore = [];
+  for (let x = 0; x <= W + 1; x += 12) shore.push([Math.min(W, x + (x && x < W ? (r() - 0.5) * 6 : 0)), 0]);
+  for (const p of shore) p[1] = seaTop(p[0]) + (r() - 0.5) * 5;
+  for (let i = 0; i < shore.length - 1; i++) {
+    const [ax, ay] = shore[i], [bx, by] = shore[i + 1];
+    if (ay > H || by > H) continue;
+    // granite rim, then the Atlantic in faceted bands that darken with depth
+    const ga = ay - 7 - r() * 4, gb = by - 7 - r() * 4;
+    poly(g, [ax, ga, bx, gb, bx, by + 2, ax, ay + 2], hsl(18, 9, 54 + r() * 14));
+    poly(g, [ax, ay + 2, bx, by + 2, ax, ay + 6], hsl(16, 8, 42 + r() * 6));
+    const bands = [0, 0.22, 0.55, 1];
+    for (let k = 0; k < bands.length - 1; k++) {
+      const y = (yy, t) => yy + 4 + (H + 2 - yy - 4) * t;
+      const a1 = y(ay, bands[k]), b1 = y(by, bands[k]), a2 = y(ay, bands[k + 1]), b2 = y(by, bands[k + 1]);
+      const L = 40 - k * 5;
+      poly(g, [ax, a1, bx, b1, ax, a2], hsl(203 + r() * 6, 58, L + r() * 5));
+      poly(g, [bx, b1, bx, b2, ax, a2], hsl(205 + r() * 6, 58, L - 2 + r() * 5));
+    }
   }
   // scenery
   scene = { water: [], dome: null, light: null };
@@ -1807,14 +1841,15 @@ function drawBackground() {
     .filter(it => !bigDecor.some(b => b.type === it.type)).concat(bigDecor.map(b => ({ ...b, big: true })))
     .sort((p, q) => (p.type === 'lighthouse') - (q.type === 'lighthouse') || p.ty - q.ty);
   // lupins along the top of the shore
-  for (const it of items) if (it.type === 'water' && r() < 0.55) lupins((it.tx + 0.5) * TILE, (ROWS - 1) * TILE + 4, 3 + Math.floor(r() * 3), TILE * 0.8);
+  for (const it of items) if (it.type === 'water' && r() < 0.55) { const lx = (it.tx + 0.5) * TILE + (r() - 0.5) * 20; lupins(lx, seaTop(lx) - 9, 3 + Math.floor(r() * 3), TILE * 0.5); }
   for (const { tx, ty, type, big } of items) {
     const x0 = tx * TILE, y0 = ty * TILE, cx = x0 + (big ? TILE : TILE / 2), cy = y0 + (big ? TILE : TILE / 2);
     if (type === 'water') {
-      scene.water.push([x0, y0]);
+      const top = seaTop(cx);
+      if (ty === ROWS - 1) scene.water.push([x0, top]);
       g.strokeStyle = 'rgba(225,242,255,0.38)'; g.lineWidth = 1.4;
-      for (let i = 0; i < 2; i++) { const wx = x0 + 8 + r() * 38, wy = y0 + 30 + r() * 24; g.beginPath(); g.moveTo(wx - 6, wy); g.quadraticCurveTo(wx, wy - 3, wx + 6, wy); g.stroke(); }
-      if (r() < 0.4) boulder(x0 + 10 + r() * 40, y0 + 14, 0.45 + r() * 0.2);
+      for (let i = 0; i < 2; i++) { const wx = x0 + 8 + r() * 38, wy = Math.max(seaTop(wx) + 12, y0 + 18) + r() * 10; if (wy < H - 3) { g.beginPath(); g.moveTo(wx - 6, wy); g.quadraticCurveTo(wx, wy - 3, wx + 6, wy); g.stroke(); } }
+      if (r() < 0.45) { const bx = x0 + 10 + r() * 40; boulder(bx, seaTop(bx) + 4 + r() * 6, 0.4 + r() * 0.25); }
     } else if (type === 'trees') {
       for (let i = 0; i < 3; i++) spruce(cx + (i - 1) * 14 * K + (r() - 0.5) * 6, cy + 10 + (r() - 0.5) * 8 + (i === 1 ? -6 : 0), (0.8 + r() * 0.45) * K);
       lupins(cx, y0 + TILE - 4, 2, TILE * 0.7);
