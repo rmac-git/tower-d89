@@ -163,6 +163,14 @@ html.big .overlay p, html.big .n-desc { font-size: 15.5px; }
 .shop-item { position: relative; }
 .shop-item.new::after { content: 'NEW'; position: absolute; top: -6px; right: -5px; background: var(--good); color: #10200a; font: 700 9px/1 var(--font-mono); padding: 2px 4px; border-radius: 6px; }
 .node.locked .n-desc { display: none; }
+.skills-card.tight .chap, .skills-card.tight .sk-stats, .skills-card.tight .node.learned .n-desc { display: none; }
+.skills-card.tight h2 { font-size: 26px; margin: 0; }
+.skills-card.tight .meta { display: none; }
+.skills-card.tighter { gap: 6px; }
+.skills-card.tighter .node { padding: 4px 8px; gap: 0; }
+.skills-card.tighter .n-desc { font-size: 11.5px; line-height: 1.25; }
+.skills-card.tighter .tbranch h4 { margin: 0 0 2px; font-size: 15px; }
+.skills-card.tighter .tree { gap: 4px 8px; }
 .node.locked { padding-block: 5px; }
 .panel-x { position: absolute; top: 4px; right: 4px; width: 28px; height: 28px; border: 0; background: none; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; border-radius: 4px; }
 .panel-x:hover { color: var(--ink); }
@@ -3262,13 +3270,15 @@ function renderSkills() {
     <p class="chap" style="color:${d.color}">${d.name} · ${d.title}</p>
     <h2>Skill <span>tree</span></h2>
     <div class="skillhead"><span>Level <b>${h.lvl}</b>${h.lvl < 10 ? ` · ${Math.floor(h.xp - prev)} / ${next - prev} xp` : ''}</span><span><b>${h.sp}</b> skill point${h.sp === 1 ? '' : 's'} to spend</span></div>
-    <div class="skillhead" style="font-size:12px">${Math.round(heroDmg(h))} damage · ${(d.rate * (1 + h.fx.rate)).toFixed(1)} attacks/s · ${(d.range + h.fx.range).toFixed(1)} reach · ${Math.ceil(h.hp)}/${h.maxHp} health</div>
+    <div class="skillhead sk-stats" style="font-size:12px">${Math.round(heroDmg(h))} damage · ${(d.rate * (1 + h.fx.rate)).toFixed(1)} attacks/s · ${(d.range + h.fx.range).toFixed(1)} reach · ${Math.ceil(h.hp)}/${h.maxHp} health</div>
     <div class="tree">${d.tree.map((br, bi) => `<div class="tbranch"><h4>${br.name}</h4>${br.nodes.map((n, ti) => {
       const id = '' + bi + ti, learned = !!h.learned[id], locked = ti > 0 && !h.learned['' + bi + (ti - 1)], poor = !learned && !locked && h.sp < ti + 1;
-      return `<button type="button" class="node${learned ? ' learned' : ''}${locked ? ' locked' : ''}${poor ? ' poor' : ''}" data-id="${id}" ${learned || locked ? 'disabled' : ''}><span class="n-top"><b>${n.name}</b><span class="n-cost">${learned ? 'Learned' : (ti + 1) + (ti ? ' pts' : ' pt')}</span></span><span class="n-desc">${n.desc}</span></button>`;
+      return `<button type="button" class="node${learned ? ' learned' : ''}${locked ? ' locked' : ''}${poor ? ' poor' : ''}" data-id="${id}" ${learned || locked ? 'disabled' : ''} title="${n.name}: ${n.desc}"><span class="n-top"><b>${n.name}</b><span class="n-cost">${learned ? 'Learned' : (ti + 1) + (ti ? ' pts' : ' pt')}</span></span><span class="n-desc">${n.desc}</span></button>`;
     }).join('')}</div>`).join('')}</div>
     ${h.sp ? '' : '<p class="meta">Level up to earn more skill points.</p>'}
-    <div class="row"><button class="btn primary" id="sk-close" type="button">Back to the fight</button></div>`, 'wide xl');
+    <div class="row"><button class="btn primary" id="sk-close" type="button">Back to the fight</button></div>`, 'wide xl skills-card');
+  // Keep the whole tree on screen: tighten step by step only if it would need scrolling.
+  for (const cls of ['tight', 'tighter']) { if (els.overlay.scrollHeight <= els.overlay.clientHeight + 1) break; els.card.classList.add(cls); }
   els.card.querySelectorAll('[data-id]').forEach(b => b.onclick = () => { if (learn(b.dataset.id)) { sfx('upgrade'); renderSkills(); } else sfx('nope'); });
   $('sk-close').onclick = closeSkills;
 }
