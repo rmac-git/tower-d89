@@ -26,6 +26,16 @@ The second upgrade splits into two paths, so two players end up with different d
 
 **Keys:** `1`–`5` pick a tower · `Space` sends the next wave (sending it early pays bonus gold) · `U` / `I` pick upgrade path A / B · `S` sells · `T` changes targeting · `Q` / `W` abilities · `F` changes speed · `P` pauses · `M` mutes · `Esc` cancels.
 
+## The BST token
+
+All prices and rewards use **BST**, the game's in-game token (the hex coin with a castle on it). BST is off-chain: there is no wallet, no blockchain and no real value. It exists only in the current game session and resets each run.
+
+## Phones and tablets
+
+The game is built for landscape. In portrait on a touch device it shows a "Turn your phone sideways" screen (with a "Play in portrait anyway" button) and pauses until you rotate. On a phone in landscape the board fills the screen height, the build menu and abilities sit to its right, and nothing scrolls the page. Tap **Take command** to also request full screen and a landscape lock where the browser allows it (a Full screen button appears on touch devices).
+
+Touch building is two taps so small tiles are easy to hit: pick a tower, tap a grass tile to preview it, then tap the same tile again to build. Tapping near a built tower selects it.
+
 ## Tuning
 
 All balance data is at the top of the script in `index.html`: `TOWERS` (including each `br` path), `ENEMIES`, `MAPS`, `PERKS`, `ABIL`, `SCRIPTED` waves, and the `hpMul` / `waveBonus` / `earlyBonus` curves. `window.__bastion` exposes the game state and core functions so you can run automated play-throughs.

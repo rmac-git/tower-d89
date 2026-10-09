@@ -31,6 +31,7 @@
 [hidden] { display: none !important; }
 html, body { height: 100%; }
 body {
+  margin: 0;
   background: var(--ground);
   color: var(--ink);
   font-family: var(--font-body);
@@ -53,7 +54,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--brass)
 .stats { display: flex; gap: 8px; flex-wrap: wrap; margin-right: auto; }
 .stat { display: flex; align-items: baseline; gap: 8px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 6px 12px; }
 .stat-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
-.stat-value { font-family: var(--font-mono); font-weight: 700; font-size: 18px; font-variant-numeric: tabular-nums; }
+.stat-value { font-family: var(--font-mono); font-weight: 700; font-size: 18px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .stat-value.lives { color: var(--danger); }
 .stat-value.gold { color: var(--brass); }
 .stat.flash { animation: flash 0.5s ease-out; }
@@ -73,7 +74,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--brass)
 .board { position: relative; width: 100%; max-width: 100%; aspect-ratio: 960 / 600; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); background: var(--panel); touch-action: manipulation; }
 .board canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
 
-.overlay { position: absolute; inset: 0; display: flex; overflow-y: auto; background: rgba(10, 15, 12, 0.78); padding: 16px; }
+.overlay { position: fixed; inset: 0; z-index: 50; display: flex; overflow-y: auto; background: rgba(10, 15, 12, 0.82); padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
 .overlay-card { margin: auto; max-width: 460px; text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center; }
 .overlay h2 { font-family: var(--font-display); font-weight: 800; font-size: clamp(36px, 7vw, 64px); text-transform: uppercase; letter-spacing: 0.03em; line-height: 0.95; margin: 0; text-wrap: balance; }
 .overlay h2 span { color: var(--brass); }
@@ -183,7 +184,67 @@ dl.kv dd .next { color: var(--good); }
   .pk-up, .pk-down { font-size: 12.5px; }
   .ab-text small { display: none; }
 }
-@media (prefers-reduced-motion: reduce) { .stat.flash { animation: none; } }
+/* ---------- BST token ---------- */
+:root { --coin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ffe29a'/%3E%3Cstop offset='.55' stop-color='%23d9a84e'/%3E%3Cstop offset='1' stop-color='%238a5f1c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpolygon points='16,1.5 28.5,8.75 28.5,23.25 16,30.5 3.5,23.25 3.5,8.75' fill='url(%23g)' stroke='%235a3d10' stroke-width='1.3'/%3E%3Cpolygon points='16,5.5 25,10.75 25,21.25 16,26.5 7,21.25 7,10.75' fill='none' stroke='%235a3d10' stroke-opacity='.55' stroke-width='1.2'/%3E%3Cpath d='M10.5 21.5v-8.5h2.2v1.8h2.2V13h2.2v1.8h2.2V13h2.2v8.5z' fill='%235a3d10'/%3E%3Cpath d='M13 21.5v-2.6a3 3 0 016 0v2.6z' fill='%23ffe29a'/%3E%3C/svg%3E"); }
+.tok { display: inline-block; width: 1.05em; height: 1.05em; margin-left: 0.28em; vertical-align: -0.17em; background: var(--coin) center / contain no-repeat; }
+.stat.token { align-items: center; gap: 7px; }
+.stat.token .tok { width: 22px; height: 22px; margin: 0; }
+.stat.token.up { animation: gainflash 0.5s ease-out; }
+.stat.token.down { animation: spendflash 0.5s ease-out; }
+@keyframes gainflash { from { background: rgba(143, 199, 108, 0.45); } to { background: var(--panel); } }
+@keyframes spendflash { from { background: rgba(217, 168, 78, 0.35); } to { background: var(--panel); } }
+.chainnote { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 12.5px; color: var(--muted); border: 1px dashed var(--line); border-radius: var(--radius); padding: 6px 10px; }
+.chainnote .tok { margin: 0; flex: none; width: 18px; height: 18px; }
+.tapmsg { display: none; }
+
+/* ---------- Phones ---------- */
+.rotate { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: var(--ground); padding: 24px; text-align: center; }
+.rot-card { display: flex; flex-direction: column; align-items: center; gap: 14px; max-width: 320px; }
+.rot-card h2 { font-family: var(--font-display); font-weight: 800; font-size: 36px; text-transform: uppercase; letter-spacing: 0.03em; margin: 0; line-height: 1; }
+.rot-card p { margin: 0; color: var(--muted); }
+.rot-phone { width: 44px; height: 76px; border: 3px solid var(--brass); border-radius: 9px; position: relative; animation: rot 2.4s ease-in-out infinite; }
+.rot-phone::after { content: ''; position: absolute; left: 50%; bottom: 5px; width: 14px; height: 3px; margin-left: -7px; background: var(--brass); border-radius: 2px; }
+@keyframes rot { 0%, 25% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
+@media (pointer: coarse) {
+  .kbd { display: none !important; }
+  .desk { display: none !important; }
+  .tapmsg { display: block; }
+  .btn, .abil-btn, .seg button, .shop-item { min-height: 40px; }
+}
+@media (orientation: landscape) and (max-height: 560px) {
+  html, body { overflow: hidden; }
+  body { padding-block: 6px; }
+  .shell { height: 100%; gap: 6px; }
+  .topbar { flex-wrap: nowrap; gap: 8px; }
+  .brand { display: none; }
+  .stats { flex-wrap: nowrap; gap: 6px; }
+  .stat { padding: 3px 9px; gap: 6px; align-items: center; }
+  .stat-label { font-size: 10px; }
+  .stat-value { font-size: 15px; }
+  .stat.token .tok { width: 18px; height: 18px; }
+  .controls { flex-wrap: nowrap; gap: 6px; }
+  .btn { padding: 5px 10px; font-size: 13px; min-height: 34px; }
+  .layout { flex: 1; min-height: 0; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; grid-template-areas: "board ledger" "board abil"; gap: 6px 8px; }
+  .left { display: contents; }
+  .board { grid-area: board; aspect-ratio: auto; width: auto; align-self: start; }
+  .ledger { grid-area: ledger; align-self: stretch; overflow-y: auto; min-height: 0; }
+  .shop-name { display: none; }
+  .shop-item { padding: 5px 2px; gap: 2px; }
+  .shop-item canvas { width: 34px; height: 34px; }
+  .shop-cost { font-size: 12px; }
+  .cc { white-space: nowrap; }
+  .cc .tok { margin-left: 0.15em; }
+  .ledger section { padding: 8px; gap: 6px; }
+  .abil { grid-area: abil; gap: 6px; }
+  .abil-btn { padding: 5px 8px; }
+  .ab-text small { display: none; }
+  .overlay h2 { font-size: 34px; }
+  .overlay p { font-size: 13px; line-height: 1.35; }
+  .overlay-card { gap: 8px; }
+  .perks { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .pk-name { font-size: 18px; }
+}
+@media (prefers-reduced-motion: reduce) { .stat.flash, .stat.token.up, .stat.token.down { animation: none; } .rot-phone { animation: none; transform: rotate(-90deg); } }
 </style>
 </head>
 <body>
@@ -193,7 +254,7 @@ dl.kv dd .next { color: var(--good); }
     <h1 class="brand">Bastion <span>Line</span></h1>
     <div class="stats" aria-live="polite">
       <div class="stat" id="stat-lives"><span class="stat-label">Lives</span><span class="stat-value lives" id="v-lives">20</span></div>
-      <div class="stat"><span class="stat-label">Gold</span><span class="stat-value gold" id="v-gold">0</span></div>
+      <div class="stat token" id="stat-token" title="BST is an in-game token. It is off-chain: no wallet, no blockchain, no real value."><i class="tok" role="img" aria-label="BST token"></i><span class="stat-value gold" id="v-gold">0</span><span class="stat-label">BST</span></div>
       <div class="stat"><span class="stat-label">Wave</span><span class="stat-value" id="v-wave">0 / 30</span></div>
     </div>
     <div class="controls">
@@ -201,6 +262,7 @@ dl.kv dd .next { color: var(--good); }
       <button class="btn" id="btn-speed" aria-label="Game speed">1× speed<span class="kbd">F</span></button>
       <button class="btn" id="btn-pause">Pause<span class="kbd">P</span></button>
       <button class="btn" id="btn-sound" aria-label="Toggle sound">Sound on<span class="kbd">M</span></button>
+      <button class="btn" id="btn-full" aria-label="Toggle full screen" hidden>Full screen</button>
     </div>
   </header>
 
@@ -208,9 +270,6 @@ dl.kv dd .next { color: var(--good); }
     <div class="left">
     <div class="board" id="board">
       <canvas id="game" aria-label="Battlefield. Choose a tower, then click an empty grass tile to build."></canvas>
-      <div class="overlay" id="overlay">
-        <div class="overlay-card" id="overlay-card"></div>
-      </div>
     </div>
     <div class="abil" aria-label="Abilities">
       <button class="abil-btn" id="ab-strike" type="button"><span class="ab-fill"></span><span class="ab-text"><b>Barrage</b><small>Q · Five shells on a patch of road</small></span><span class="ab-cd"></span></button>
@@ -225,6 +284,18 @@ dl.kv dd .next { color: var(--good); }
       </section>
       <section class="info" id="info"></section>
     </aside>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="overlay-card" id="overlay-card"></div>
+</div>
+<div class="rotate" id="rotate" hidden>
+  <div class="rot-card">
+    <div class="rot-phone" aria-hidden="true"></div>
+    <h2>Turn your phone sideways</h2>
+    <p>Bastion Line is built for landscape so the whole battlefield fits on screen.</p>
+    <button class="btn" id="rot-skip" type="button">Play in portrait anyway</button>
   </div>
 </div>
 
@@ -313,7 +384,7 @@ const buildCost = type => Math.round(TOWERS[type].cost * S.mods.build);
 
 // Field orders: a gift with a price, offered before every fifth wave.
 const PERKS = [
-  { id: 'chest', name: 'War Chest', up: '+150 gold now', down: 'Enemies have 8% more health', apply: m => { S.gold += 150; m.hp *= 1.08; } },
+  { id: 'chest', name: 'War Chest', up: '+150 BST now', down: 'Enemies have 8% more health', apply: m => { S.gold += 150; m.hp *= 1.08; } },
   { id: 'steel', name: 'Hardened Steel', up: 'Towers deal 20% more damage', down: 'Enemy armor +1', apply: m => { m.dmg *= 1.2; m.armor += 1; } },
   { id: 'drill', name: 'Drill Sergeant', up: 'Towers fire 15% faster', down: 'Enemies move 8% faster', apply: m => { m.rate *= 1.15; m.speed *= 1.08; } },
   { id: 'sight', name: 'Far Sight', up: 'Tower range +0.5 tiles', down: 'Enemies move 8% faster', apply: m => { m.range += 0.5; m.speed *= 1.08; } },
@@ -323,6 +394,7 @@ const PERKS = [
   { id: 'mason', name: 'Cheap Masons', up: 'New towers cost 20% less', down: 'Enemies have 6% more health', apply: m => { m.build *= 0.8; m.hp *= 1.06; } },
   { id: 'flare', name: 'Signal Flares', up: 'Abilities recharge 30% faster', down: 'Enemies have 6% more health', apply: m => { m.cd *= 0.7; m.hp *= 1.06; } },
 ];
+const tk = n => `${n}<i class="tok" role="img" aria-label="BST"></i>`;
 const ABIL = { strike: { cd: 40, name: 'Barrage' }, snap: { cd: 55, name: 'Cold Snap' } };
 
 // ---------- Sound (synthesized, no assets) ----------
@@ -497,7 +569,7 @@ function newState() {
     mods: mods0(), modVer: 0, perks: [], ab: { strike: 15, snap: 30 }, strikes: [],
   };
 }
-const ui = { build: null, selected: null, hoverTile: null, hoverPx: null, speed: 1, paused: true, started: false, targeting: null, perkOpen: false, perkChoices: [], map: 0 };
+const ui = { build: null, selected: null, hoverTile: null, hoverPx: null, speed: 1, paused: true, started: false, targeting: null, perkOpen: false, perkChoices: [], map: 0, pending: null, portraitOK: false, rotatePaused: false };
 
 function bestWave(i = MAP_I) { try { return +localStorage.getItem('bastion-line-best-' + i) || 0; } catch (e) { return 0; } }
 function saveBest(w) { try { if (w > bestWave()) localStorage.setItem('bastion-line-best-' + MAP_I, String(w)); } catch (e) {} }
@@ -510,6 +582,11 @@ function tileFree(tx, ty) {
   const k = tx + ',' + ty;
   if (pathSet.has(k) || rockSet.has(k)) return false;
   return !S.towers.some(t => t.tx === tx && t.ty === ty);
+}
+function nearTower(px, py) {
+  let best = null, bd = 0.95 * TILE;
+  for (const t of S.towers) { const d = Math.hypot(t.x - px, t.y - py); if (d < bd) { bd = d; best = t; } }
+  return best;
 }
 function towerAt(tx, ty) { return S.towers.find(t => t.tx === tx && t.ty === ty) || null; }
 
@@ -540,7 +617,7 @@ function sellValue(t) { return Math.floor(t.spent * S.mods.sell); }
 function sellTower(t) {
   S.gold += sellValue(t);
   S.towers = S.towers.filter(o => o !== t);
-  floatText(t.x, t.y - 10, '+' + sellValue(t), '#d9a84e');
+  floatText(t.x, t.y - 10, '+' + sellValue(t), '#f3d58a', true);
   burst(t.x, t.y, '#8a7a5a', 12, 80); sfx('sell');
   if (ui.selected === t) ui.selected = null;
 }
@@ -583,7 +660,7 @@ function hurt(e, dmg, tower, pierce, quiet) {
     S.gold += e.bounty; S.totalKills++; sfx('kill');
     if (tower) tower.kills++;
     burst(e.x, e.y, ENEMIES[e.type].color, e.type === 'boss' ? 40 : 10, e.type === 'boss' ? 160 : 90);
-    floatText(e.x, e.y - 8, '+' + e.bounty, '#d9a84e');
+    floatText(e.x, e.y - 8, '+' + e.bounty, '#f3d58a', true);
   }
 }
 
@@ -740,7 +817,7 @@ function update(dt) {
     S.waveActive = false;
     const b = waveBonus(S.wave);
     S.gold += b;
-    S.banner = { text: 'Wave ' + S.wave + ' cleared', sub: '+' + b + ' gold', life: 2.2 };
+    S.banner = { text: 'Wave ' + S.wave + ' cleared', sub: '+' + b + ' BST', life: 2.2 };
     saveBest(S.wave); sfx('clear');
     if (S.wave >= VICTORY_WAVE && !S.won && !S.endless) { S.won = true; victory(); }
     else if (S.wave % 5 === 4) offerPerks();
@@ -799,7 +876,7 @@ function burst(x, y, color, n, spd) {
   }
 }
 function ring(x, y, r0, r1, life, color) { S.rings.push({ x, y, r0, r1, life, max: life, color }); }
-function floatText(x, y, text, color) { if (S.texts.length < 60) S.texts.push({ x, y, text, color, life: 0.9, max: 0.9 }); }
+function floatText(x, y, text, color, coin) { if (S.texts.length < 60) S.texts.push({ x, y, text, color, coin, life: 0.9, max: 0.9 }); }
 
 // ===================================================================
 // Rendering
@@ -995,6 +1072,17 @@ function drawRange(x, y, r, ok) {
   ctx.setLineDash([]);
 }
 
+function drawCoin(c, x, y, r) {
+  c.save(); c.translate(x, y);
+  const g = c.createLinearGradient(-r, -r, r, r);
+  g.addColorStop(0, '#ffe29a'); g.addColorStop(0.55, '#d9a84e'); g.addColorStop(1, '#8a5f1c');
+  const hex = k => { c.beginPath(); for (let i = 0; i < 6; i++) { const a = -Math.PI / 2 + i * Math.PI / 3; c.lineTo(Math.cos(a) * r * k, Math.sin(a) * r * k); } c.closePath(); };
+  hex(1); c.fillStyle = g; c.fill(); c.strokeStyle = '#5a3d10'; c.lineWidth = 1; c.stroke();
+  hex(0.68); c.strokeStyle = 'rgba(90,61,16,0.55)'; c.stroke();
+  c.fillStyle = '#5a3d10'; c.fillRect(-r * 0.36, -r * 0.18, r * 0.72, r * 0.5);
+  c.restore();
+}
+
 function render() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.drawImage(bg, 0, 0, W, H);
@@ -1072,8 +1160,10 @@ function render() {
   ctx.font = '700 13px "JetBrains Mono", monospace'; ctx.textAlign = 'center';
   for (const t of S.texts) {
     ctx.globalAlpha = Math.min(1, t.life / t.max * 1.6);
-    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillText(t.text, t.x + 1, t.y + 1);
-    ctx.fillStyle = t.color; ctx.fillText(t.text, t.x, t.y);
+    const tx = t.coin ? t.x + 7 : t.x;
+    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillText(t.text, tx + 1, t.y + 1);
+    ctx.fillStyle = t.color; ctx.fillText(t.text, tx, t.y);
+    if (t.coin) drawCoin(ctx, tx - ctx.measureText(t.text).width / 2 - 8, t.y - 4, 6);
   }
   ctx.globalAlpha = 1;
 
@@ -1084,6 +1174,13 @@ function render() {
     drawRange(x, y, (TOWERS[ui.build].lv[0].range + S.mods.range) * TILE, ok);
     ctx.globalAlpha = 0.65; drawTower(ctx, ui.build, 0, x, y, -Math.PI / 2); ctx.globalAlpha = 1;
     ctx.strokeStyle = ok ? '#d9a84e' : '#e2654c'; ctx.lineWidth = 2; ctx.strokeRect(tx * TILE + 1, ty * TILE + 1, TILE - 2, TILE - 2);
+    if (ok && ui.pending) {
+      const ly = Math.max(18, y - 30);
+      ctx.font = '600 14px Barlow, sans-serif'; ctx.textAlign = 'center';
+      const lw = ctx.measureText('Tap again to build').width + 14;
+      ctx.fillStyle = 'rgba(10,15,12,0.85)'; ctx.fillRect(Math.max(2, Math.min(W - lw - 2, x - lw / 2)), ly - 14, lw, 20);
+      ctx.fillStyle = '#f3d58a'; ctx.fillText('Tap again to build', Math.max(lw / 2 + 2, Math.min(W - lw / 2 - 2, x)), ly);
+    }
   }
 
   // pending barrage impacts and the aiming reticle
@@ -1134,19 +1231,19 @@ for (const k of TOWER_KEYS) {
   const d = TOWERS[k];
   const b = document.createElement('button');
   b.className = 'shop-item'; b.dataset.type = k; b.type = 'button';
-  b.setAttribute('aria-label', `${d.name}, ${d.cost} gold. ${d.desc}`);
+  b.setAttribute('aria-label', `${d.name}, ${d.cost} BST. ${d.desc}`);
   b.appendChild(iconCanvas(k, 40));
   const txt = document.createElement('span');
   txt.innerHTML = `<span class="shop-name">${d.name}</span><span class="shop-desc">${d.desc}</span>`;
   b.appendChild(txt);
   const cost = document.createElement('span'); cost.className = 'shop-cost';
-  cost.innerHTML = `<span class="cc">${d.cost}g</span><span class="kbd">key ${d.key}</span>`;
+  cost.innerHTML = `<span class="cc" data-v="${d.cost}">${tk(d.cost)}</span><span class="kbd">key ${d.key}</span>`;
   b.appendChild(cost);
   b.addEventListener('click', () => selectBuild(ui.build === k ? null : k));
   els.shop.appendChild(b);
 }
 
-function selectBuild(type) { ui.build = type; if (type) { ui.selected = null; ui.targeting = null; } refreshPanel(true); }
+function selectBuild(type) { ui.build = type; ui.pending = null; if (type) { ui.selected = null; ui.targeting = null; } refreshPanel(true); }
 
 let lastSig = '';
 const MODES = [['first', 'First'], ['last', 'Last'], ['strong', 'Strong'], ['close', 'Close']];
@@ -1172,8 +1269,8 @@ function refreshPanel(force) {
     const ty = b.dataset.type, c = buildCost(ty);
     b.classList.toggle('active', ty === ui.build);
     b.classList.toggle('poor', S.gold < c);
-    const cc = b.querySelector('.cc'), txt = c + 'g';
-    if (cc && cc.textContent !== txt) cc.textContent = txt;
+    const cc = b.querySelector('.cc');
+    if (cc && cc.dataset.v !== String(c)) { cc.dataset.v = c; cc.innerHTML = tk(c); }
   }
   const t = ui.selected;
   let sig;
@@ -1186,14 +1283,14 @@ function refreshPanel(force) {
 
   if (t) {
     const d = TOWERS[t.type], c = upgradeCost(t), max = c == null, br = t.lvl >= 2 ? d.br[t.branch] : null;
-    const sell = `<button class="btn danger" id="btn-sell" type="button" ${c != null && t.lvl === 1 ? 'style="width:100%"' : ''}>Sell · ${sellValue(t)}g</button>`;
+    const sell = `<button class="btn danger" id="btn-sell" type="button" ${c != null && t.lvl === 1 ? 'style="width:100%"' : ''}>Sell · ${tk(sellValue(t))}</button>`;
     let actions;
     if (max) actions = `<div class="actions"><button class="btn" type="button" disabled>Max level</button>${sell}</div>`;
     else if (t.lvl === 1) actions = `<div><p class="eyebrow" style="margin-bottom:6px"><span>Choose a path</span><span>U · I</span></p><div class="branches">${d.br.map((b, i) => {
       const s = scaled(b);
-      return `<button type="button" class="branch" data-branch="${i}" ${S.gold < c ? 'disabled' : ''}><span class="br-top"><b>${b.name}</b><span class="br-cost">${c}g</span></span><span class="br-desc">${b.desc}</span><span class="br-stats">${Math.round(s.dmg)} dmg · ${s.rate.toFixed(1)}/s · ${s.range.toFixed(1)} range</span></button>`;
+      return `<button type="button" class="branch" data-branch="${i}" ${S.gold < c ? 'disabled' : ''}><span class="br-top"><b>${b.name}</b><span class="br-cost">${tk(c)}</span></span><span class="br-desc">${b.desc}</span><span class="br-stats">${Math.round(s.dmg)} dmg · ${s.rate.toFixed(1)}/s · ${s.range.toFixed(1)} range</span></button>`;
     }).join('')}</div></div>${sell}`;
-    else actions = `<div class="actions"><button class="btn primary" id="btn-up" type="button" ${S.gold < c ? 'disabled' : ''}>Upgrade · ${c}g</button>${sell}</div>`;
+    else actions = `<div class="actions"><button class="btn primary" id="btn-up" type="button" ${S.gold < c ? 'disabled' : ''}>Upgrade · ${tk(c)}</button>${sell}</div>`;
     const next = t.lvl === 0 ? scaled(baseStats(t.type, 1)) : null;
     els.info.innerHTML = `
       <p class="eyebrow"><span>Selected tower</span><span>Esc to close</span></p>
@@ -1213,11 +1310,11 @@ function refreshPanel(force) {
   } else if (ui.build) {
     const d = TOWERS[ui.build], c = buildCost(ui.build);
     els.info.innerHTML = `
-      <p class="eyebrow"><span>Placing</span><span>${c}g</span></p>
+      <p class="eyebrow"><span>Placing</span><span>${tk(c)}</span></p>
       <div class="sel-head"><span id="sel-icon"></span><div><h3>${d.name}</h3><p class="meta">${d.desc}</p></div></div>
-      <dl class="kv">${statRows(scaled(d.lv[0]), null)}<dt>Upgrades</dt><dd>${d.up.map(u => Math.round(u * S.mods.upCost) + 'g').join(' · ')}</dd></dl>
+      <dl class="kv">${statRows(scaled(d.lv[0]), null)}<dt>Upgrades</dt><dd>${d.up.map(u => tk(Math.round(u * S.mods.upCost))).join(' · ')}</dd></dl>
       <p class="meta">The second upgrade splits into two paths: ${d.br.map(b => b.name).join(' or ')}.</p>
-      <p class="meta">${S.gold >= c ? 'Click any open grass tile to build. Right-click or Esc to stop.' : `Need ${c - S.gold} more gold.`}</p>`;
+      <p class="meta">${S.gold >= c ? 'Click any open grass tile to build. Right-click or Esc to stop.' : `Need ${tk(c - S.gold)} more.`}</p>`;
     $('sel-icon').appendChild(iconCanvas(ui.build, 48));
   } else {
     const nextW = S.wave + 1, groups = waveGroups(nextW);
@@ -1231,7 +1328,7 @@ function refreshPanel(force) {
         const e = ENEMIES[type];
         return `<li><span class="dot" style="background:${e.color}"></span><span>${e.name}${e.trait ? ` <span class="trait">${e.trait}</span>` : ''}</span><span class="count">×${n}</span></li>`;
       }).join('')}</ul>
-      <p class="meta">Clear bonus ${waveBonus(nextW)}g${S.waveActive ? ` · Send it early for +${earlyBonus(nextW)}g` : ''}</p>
+      <p class="meta">Clear bonus ${tk(waveBonus(nextW))}${S.waveActive ? ` · Send it early for +${tk(earlyBonus(nextW))}` : ''}</p>
       ${orders.length ? `<p class="meta">Field orders: ${orders.join(', ')}</p>` : ''}
       <ul class="tips">
         <li><b>Kites</b> fly straight to the gate over the dotted line. Mortars can’t hit them.</li>
@@ -1241,15 +1338,18 @@ function refreshPanel(force) {
   }
 }
 
-let shownLives = START_LIVES;
+let shownLives = START_LIVES, lastGold = START_GOLD;
 function flashLives() { const s = $('stat-lives'); s.classList.remove('flash'); void s.offsetWidth; s.classList.add('flash'); }
 function refreshHud() {
   els.lives.textContent = S.lives;
   els.gold.textContent = fmt(S.gold);
+  const gd = S.gold - lastGold;
+  if (gd >= 30 || gd <= -5) { const el = $('stat-token'); el.classList.remove('up', 'down'); void el.offsetWidth; el.classList.add(gd > 0 ? 'up' : 'down'); }
+  lastGold = S.gold;
   els.wave.textContent = S.endless || S.wave > VICTORY_WAVE ? `${S.wave}` : `${S.wave} / ${VICTORY_WAVE}`;
   const kbd = '<span class="kbd">Space</span>';
   if (!S.waveActive) els.btnWave.innerHTML = `Send wave ${S.wave + 1}${kbd}`;
-  else els.btnWave.innerHTML = `Send next early +${earlyBonus(S.wave + 1)}g${kbd}`;
+  else els.btnWave.innerHTML = `Send next early +${tk(earlyBonus(S.wave + 1))}${kbd}`;
   els.btnWave.disabled = S.over || !ui.started;
   els.btnSpeed.innerHTML = `${ui.speed}× speed<span class="kbd">F</span>`;
   els.btnPause.innerHTML = `${ui.paused && ui.started ? 'Resume' : 'Pause'}<span class="kbd">P</span>`;
@@ -1276,14 +1376,16 @@ function titleScreen() {
   showOverlay(`
     <h2>Bastion <span>Line</span></h2>
     <p>Thirty waves are marching on the gate. Build towers, choose upgrade paths, and don’t let ${START_LIVES} of them through.</p>
+    <p class="chainnote"><i class="tok" aria-hidden="true"></i><span>BST is this game’s in-game token. It is off-chain: no wallet, no blockchain, no real value.</span></p>
     <div class="maps" role="group" aria-label="Choose a map">${MAPS.map((m, i) => `<button type="button" class="map-btn${i === ui.map ? ' on' : ''}" data-map="${i}"><b>${m.name}</b><small>${m.blurb}</small><span class="best">${bestWave(i) ? 'Best: wave ' + bestWave(i) : 'Unplayed'}</span></button>`).join('')}</div>
+    <p class="tapmsg">Tap a tower, then tap grass to preview it. Tap the same spot again to build. Tap a built tower to upgrade or sell it.</p>
     <p class="desk">Press <b>1–5</b> to pick a tower and click grass to build. Click a tower to upgrade it. <b>Space</b> sends the next wave early for a bonus. <b>Q</b> calls a barrage and <b>W</b> slows every enemy.</p>
     <div class="row"><button class="btn primary" id="ov-start" type="button">Take command</button></div>`);
   els.card.querySelectorAll('.map-btn').forEach(b => b.onclick = () => {
     ui.map = +b.dataset.map; loadMap(ui.map);
     els.card.querySelectorAll('.map-btn').forEach(x => x.classList.toggle('on', x === b));
   });
-  $('ov-start').onclick = () => { initAudio(); restart(); };
+  $('ov-start').onclick = () => { initAudio(); if (COARSE) enterLandscape(); restart(); };
   $('ov-start').focus();
   refreshHud();
 }
@@ -1340,18 +1442,23 @@ function evPx(ev) {
   return [(ev.clientX - r.left) / r.width * W, (ev.clientY - r.top) / r.height * H];
 }
 canvas.addEventListener('pointermove', ev => { const [x, y] = evPx(ev); ui.hoverPx = [x, y]; ui.hoverTile = [Math.floor(x / TILE), Math.floor(y / TILE)]; });
-canvas.addEventListener('pointerleave', () => { ui.hoverTile = null; ui.hoverPx = null; });
+canvas.addEventListener('pointerleave', ev => { if (ev.pointerType === 'touch') return; ui.hoverTile = null; ui.hoverPx = null; });
 canvas.addEventListener('contextmenu', ev => { ev.preventDefault(); ui.build = null; ui.selected = null; ui.targeting = null; refreshPanel(true); refreshHud(); });
 canvas.addEventListener('pointerdown', ev => {
   if (ev.button !== 0 || S.over || !ui.started || ui.perkOpen) return;
   const [px, py] = evPx(ev), tx = Math.floor(px / TILE), ty = Math.floor(py / TILE);
   ui.hoverPx = [px, py]; ui.hoverTile = [tx, ty];
   if (ui.targeting) { useAbility(ui.targeting, px, py); ui.targeting = null; refreshHud(); return; }
-  const existing = towerAt(tx, ty);
-  if (existing) { ui.selected = existing; ui.build = null; }
+  const touch = ev.pointerType === 'touch';
+  const existing = towerAt(tx, ty) || (touch && !ui.build ? nearTower(px, py) : null);
+  if (existing) { ui.selected = existing; ui.build = null; ui.pending = null; }
   else if (ui.build) {
-    const t = placeTower(ui.build, tx, ty);
-    if (t && S.gold < buildCost(ui.build)) { ui.build = null; ui.selected = t; }
+    if (touch && !(ui.pending && ui.pending[0] === tx && ui.pending[1] === ty)) ui.pending = [tx, ty];
+    else {
+      ui.pending = null;
+      const t = placeTower(ui.build, tx, ty);
+      if (t && S.gold < buildCost(ui.build)) { ui.build = null; ui.selected = t; }
+    }
   } else ui.selected = null;
   refreshPanel(true); refreshHud();
 });
@@ -1378,7 +1485,7 @@ window.addEventListener('keydown', ev => {
   if (ui.perkOpen) { const n = +k; if (n >= 1 && n <= 3) pickPerk(n - 1); return; }
   const idx = ['1', '2', '3', '4', '5'].indexOf(k);
   if (idx >= 0) { selectBuild(ui.build === TOWER_KEYS[idx] ? null : TOWER_KEYS[idx]); return; }
-  if (k === 'escape') { ui.build = null; ui.selected = null; ui.targeting = null; refreshPanel(true); refreshHud(); }
+  if (k === 'escape') { ui.build = null; ui.selected = null; ui.targeting = null; ui.pending = null; refreshPanel(true); refreshHud(); }
   else if (k === ' ') { ev.preventDefault(); if (!S.over) els.btnWave.click(); }
   else if (k === 'p') els.btnPause.click();
   else if (k === 'f') els.btnSpeed.click();
@@ -1409,8 +1516,41 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
+// ---------- Phones: landscape layout, board fit, rotate prompt, full screen ----------
+const COARSE = matchMedia('(pointer: coarse)').matches;
+const mqCompact = matchMedia('(orientation: landscape) and (max-height: 560px)');
+const mqPortrait = matchMedia('(orientation: portrait) and (pointer: coarse)');
+const layoutEl = document.querySelector('.layout'), boardEl = $('board'), rotateEl = $('rotate'), fsBtn = $('btn-full');
+function fitBoard() {
+  if (!mqCompact.matches) { boardEl.style.width = ''; boardEl.style.height = ''; return; }
+  const r = layoutEl.getBoundingClientRect();
+  const k = Math.min(r.height / 600, (r.width - 250) / 960);
+  if (k > 0) { boardEl.style.width = Math.floor(960 * k) + 'px'; boardEl.style.height = Math.floor(600 * k) + 'px'; }
+}
+function updateOrientation() {
+  const show = mqPortrait.matches && !ui.portraitOK;
+  if (show === !rotateEl.hidden) return;
+  rotateEl.hidden = !show;
+  if (show && ui.started && !ui.paused) { ui.rotatePaused = true; ui.paused = true; }
+  else if (!show && ui.rotatePaused) { ui.rotatePaused = false; ui.paused = false; }
+  refreshHud();
+}
+const canFS = !!(document.documentElement.requestFullscreen && document.fullscreenEnabled);
+function enterLandscape() {
+  try {
+    if (!canFS || document.fullscreenElement) return;
+    document.documentElement.requestFullscreen().then(() => { try { screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }).catch(() => {});
+  } catch (e) {}
+}
+fsBtn.hidden = !(canFS && COARSE);
+fsBtn.onclick = () => { try { if (document.fullscreenElement) document.exitFullscreen(); else enterLandscape(); } catch (e) {} };
+$('rot-skip').onclick = () => { ui.portraitOK = true; updateOrientation(); };
+window.addEventListener('resize', () => { fitBoard(); updateOrientation(); });
+window.addEventListener('orientationchange', () => setTimeout(() => { fitBoard(); updateOrientation(); }, 200));
+if (window.ResizeObserver) new ResizeObserver(fitBoard).observe(layoutEl);
+
 S = newState(); loadMap(ui.map);
-refreshPanel(true); refreshHud(); titleScreen();
+refreshPanel(true); refreshHud(); titleScreen(); fitBoard(); updateOrientation();
 requestAnimationFrame(frame);
 
 // Test hook for automated play-throughs.
