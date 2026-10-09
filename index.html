@@ -46,22 +46,12 @@ button { font: inherit; color: inherit; }
 button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 
 
-/* ---------- Game frame ---------- */
-.game { height: 100%; display: grid; gap: 6px 10px; padding: 8px 16px; --rail: 132px;
-  grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto minmax(0, 1fr) auto;
-  grid-template-areas: "stats ctrl" "cell cell" "build abil"; }
-.game.side { grid-template-columns: var(--rail) minmax(0, 1fr) var(--rail); grid-template-rows: minmax(0, 1fr); grid-template-areas: "railL cell railR"; padding-block: 6px; }
-.rail { display: contents; }
-.game.side .rail { display: flex; flex-direction: column; gap: 6px; min-width: 0; min-height: 0; }
-.game.side .rail-l { grid-area: railL; }
-.game.side .rail-r { grid-area: railR; }
-.game.side .dock-build { flex: 1; }
-.game.side .dock-abil { flex: 1; min-height: 0; overflow-y: auto; }
-.hud { display: flex; align-items: center; gap: 6px; min-width: 0; flex-wrap: wrap; }
-.hud-stats { grid-area: stats; }
-.hud-ctrl { grid-area: ctrl; justify-content: flex-end; }
-.dock-build { grid-area: build; }
-.dock-abil { grid-area: abil; justify-content: flex-end; }
+/* ---------- Game frame: the board, plus one rail on the right (below it in portrait) ---------- */
+.game { height: 100%; display: grid; gap: 8px 10px; padding: 8px 16px; --rail: 210px;
+  grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "rail" "cell"; }
+.game.side { grid-template-columns: minmax(0, 1fr) var(--rail); grid-template-rows: minmax(0, 1fr); grid-template-areas: "cell rail"; }
+.rail { grid-area: rail; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; min-height: 0; }
+.game.side .rail { flex-direction: column; flex-wrap: nowrap; align-items: stretch; overflow-y: auto; overscroll-behavior: contain; }
 .cell { grid-area: cell; position: relative; min-width: 0; min-height: 0; }
 .board { position: absolute; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); background: var(--panel); touch-action: manipulation; }
 .board canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
@@ -223,6 +213,47 @@ div.map-btn.on:hover { border-color: var(--brass); }
 .chip-top b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chip-top span { font-family: var(--font-mono); font-weight: 700; color: var(--brass); white-space: nowrap; }
 
+/* resources, build button and controls in the rail */
+.res { display: flex; flex-direction: column; gap: 5px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 10px; }
+.res-bst { display: flex; align-items: center; gap: 8px; border-radius: 4px; }
+.res-bst .tok { width: 24px; height: 24px; margin: 0; flex: none; }
+.res-bst .stat-value { font-size: 24px; line-height: 1; }
+.res-unit { font-size: 11px; letter-spacing: 0.12em; color: var(--muted); margin-left: auto; }
+.res-row { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.res-item { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; border-radius: 4px; padding: 0 2px; }
+.res-item b { font-family: var(--font-mono); font-size: 14px; color: var(--ink); letter-spacing: 0; text-transform: none; }
+.res-item svg { width: 13px; height: 13px; fill: var(--danger); }
+#v-lives { color: var(--danger); }
+.res-item.flash { animation: flash 0.5s ease-out; }
+.res-bst.up { animation: gainflash 0.5s ease-out; }
+.res-bst.down { animation: spendflash 0.5s ease-out; }
+.btn.build { position: relative; display: flex; align-items: center; justify-content: center; gap: 8px; height: 40px; background: #2c3b31; border-color: var(--brass); font-size: 15px; }
+.btn.build svg { width: 17px; height: 17px; fill: var(--brass); }
+.build-dot { position: absolute; top: -4px; right: -4px; width: 11px; height: 11px; border-radius: 50%; background: var(--good); border: 2px solid var(--ground); }
+.rail #btn-wave { height: 38px; }
+.ctrl-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.ctrl-row .ibtn { width: auto; }
+.game:not(.side) .res { flex-direction: row; align-items: center; gap: 14px; }
+.game:not(.side) .ctrl-row { display: flex; }
+.game:not(.side) .ctrl-row .ibtn { width: 34px; }
+/* build gallery */
+.gal-sub { font-size: 14px; }
+.gallery { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; width: 100%; }
+.gal-card { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 10px 12px; text-align: center; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; cursor: pointer; min-width: 0; }
+.gal-card:hover:not(:disabled):not(.locked) { border-color: var(--brass); transform: translateY(-2px); }
+.gal-card:disabled { cursor: not-allowed; }
+.gal-card.locked { opacity: 0.45; cursor: default; }
+.gal-card.new::after { content: 'NEW'; position: absolute; top: 8px; left: 8px; background: var(--good); color: #10200a; font: 700 9px/1 var(--font-mono); padding: 3px 5px; border-radius: 6px; }
+.gal-art { display: grid; place-items: center; width: 72px; height: 72px; border-radius: 50%; background: radial-gradient(circle at 50% 60%, #34503f, #1d2a22 70%); }
+.gal-card b { font-family: var(--font-display); font-weight: 700; font-size: 19px; letter-spacing: 0.03em; text-transform: uppercase; line-height: 1.05; }
+.gal-cost { font-family: var(--font-mono); font-weight: 700; color: var(--brass); font-size: 15px; }
+.gal-card.poor .gal-cost { color: var(--danger); font-size: 12px; }
+.gal-desc { font-size: 12.5px; color: var(--muted); line-height: 1.3; }
+.gal-stats { display: grid; grid-template-columns: auto auto; gap: 1px 10px; margin: 2px 0 0; font-size: 12px; width: 100%; max-width: 140px; }
+.gal-stats dt { color: var(--muted); text-align: left; }
+.gal-stats dd { margin: 0; text-align: right; font-family: var(--font-mono); }
+.gal-paths { font-size: 11.5px; color: var(--ink); }
+.gal-key { position: absolute; top: 8px; right: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
 /* rails beside the board */
 .game.side .hud { flex-direction: column; align-items: stretch; flex-wrap: nowrap; }
 .game.side .hud-stats .stat { justify-content: space-between; }
@@ -384,42 +415,38 @@ div.map-btn.on:hover { border-color: var(--brass); }
   .n-desc { font-size: 11.5px; }
 }
 @media (orientation: landscape) and (max-height: 560px) and (max-width: 700px) { .game { --rail: 92px; } }
+@media (orientation: landscape) and (max-height: 560px) {
+  .game { --rail: 128px; gap: 6px 8px; padding: 6px max(10px, env(safe-area-inset-right)) 6px max(10px, env(safe-area-inset-left)); }
+  .res { padding: 6px 8px; gap: 3px; }
+  .res-bst .stat-value { font-size: 19px; }
+  .res-bst .tok { width: 19px; height: 19px; }
+  .res-unit { display: none; }
+  .res-row { font-size: 9.5px; }
+  .res-item b { font-size: 12.5px; }
+  .btn.build { height: 34px; font-size: 14px; }
+  .rail #btn-wave { height: 32px; font-size: 13px; }
+  .game.side .abil { display: grid; grid-template-columns: 1fr 1fr; }
+  .game.side .abil-btn { justify-content: center; padding: 0 4px; gap: 4px; height: 32px; }
+  .game.side .ab-text { display: none; }
+  .game.side .ab-cd { margin-left: 0; font-size: 10.5px; }
+  .gallery { gap: 6px; }
+  .gal-card { padding: 6px 6px 8px; gap: 2px; }
+  .gal-art { width: 52px; height: 52px; }
+  .gal-card b { font-size: 15px; }
+  .gal-desc, .gal-paths { display: none; }
+  .gal-stats { font-size: 11px; }
+}
+@media (max-width: 640px) and (orientation: portrait) { .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (prefers-reduced-motion: reduce) { .res-item.flash, .res-bst.up, .res-bst.down { animation: none; } .gal-card:hover:not(:disabled):not(.locked) { transform: none; } }
 @media (prefers-reduced-motion: reduce) { .board.hit { animation: none; outline: 2px solid var(--danger); } .toast { animation: none; } .stat.flash, .stat.token.up, .stat.token.down { animation: none; } .rot-phone { animation: none; transform: rotate(-90deg); } }
 </style>
 </head>
 <body>
 
 <div class="game" id="game-root">
-  <div class="rail rail-l">
-  <div class="hud hud-stats" aria-live="polite">
-    <div class="stat" id="stat-lives" title="Lives"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14s-5.5-3.4-5.5-7.2A3 3 0 0 1 8 4.6a3 3 0 0 1 5.5 2.2C13.5 10.6 8 14 8 14z"/></svg><span class="stat-value lives" id="v-lives">20</span></div>
-    <div class="stat token" id="stat-token" title="BST is an in-game token. It is off-chain: no wallet, no blockchain, no real value."><i class="tok" role="img" aria-label="BST token"></i><span class="stat-value gold" id="v-gold">0</span></div>
-    <div class="stat" title="Wave"><span class="stat-label" id="v-wave-l">Map 1</span><span class="stat-value" id="v-wave">0 / 10</span></div>
-  </div>
-  <div class="hud dock-build"><div class="shop" id="shop"></div></div>
-  </div>
-  <div class="rail rail-r">
-  <div class="hud hud-ctrl">
-    <button class="btn primary" id="btn-wave" type="button">Send wave 1</button>
-    <div class="peek" id="wave-peek" hidden></div>
-    <button class="ibtn" id="btn-speed" type="button" title="Game speed (F)" aria-label="Game speed">1×</button>
-    <button class="ibtn" id="btn-pause" type="button" title="Pause (P)" aria-label="Pause"></button>
-    <button class="ibtn" id="btn-intel" type="button" title="Next wave intel (N)" aria-label="Next wave intel"></button>
-    <button class="ibtn" id="btn-menu" type="button" title="Settings" aria-label="Settings" aria-haspopup="true" aria-expanded="false"></button>
-  </div>
-  <div class="hud dock-abil">
-    <div class="hero-chip" id="hero-card" hidden></div>
-    <div class="abil" aria-label="Abilities">
-      <button class="abil-btn" id="ab-hero" type="button" hidden><span class="ab-fill"></span><span class="ab-ic" id="ab-hero-ic"></span><span class="ab-text"></span><span class="ab-cd"></span></button>
-      <button class="abil-btn" id="ab-ult" type="button" hidden><span class="ab-fill"></span><span class="ab-ic" style="color:var(--brass)"></span><span class="ab-text"></span><span class="ab-cd"></span></button>
-      <button class="abil-btn" id="ab-strike" type="button" title="Barrage (Q): five shells on a patch of road you choose"><span class="ab-fill"></span><span class="ab-ic" style="color:#f0a35a"></span><span class="ab-text"><b>Barrage</b></span><span class="ab-cd"></span></button>
-      <button class="abil-btn" id="ab-snap" type="button" title="Cold Snap (W): slow every enemy for 5 seconds"><span class="ab-fill"></span><span class="ab-ic" style="color:var(--ice)"></span><span class="ab-text"><b>Cold Snap</b></span><span class="ab-cd"></span></button>
-    </div>
-  </div>
-  </div>
   <div class="cell" id="cell">
     <div class="board" id="board">
-      <canvas id="game" aria-label="Battlefield. Choose a tower, then click an empty grass tile to build."></canvas>
+      <canvas id="game" aria-label="Battlefield. Press Build to choose a tower, then click an empty grass tile to place it."></canvas>
       <div class="panel" id="panel" hidden>
         <button class="panel-x" id="panel-x" type="button" aria-label="Close">×</button>
         <section class="info" id="info"></section>
@@ -427,6 +454,32 @@ div.map-btn.on:hover { border-color: var(--brass); }
       <div class="toasts" id="toasts" aria-live="polite"></div>
     </div>
   </div>
+  <aside class="rail" id="rail" aria-label="Controls">
+    <div class="res" aria-live="polite">
+      <div class="res-bst" id="stat-token" title="BST is an in-game token. It is off-chain: no wallet, no blockchain, no real value."><i class="tok" role="img" aria-label="BST token"></i><span class="stat-value gold" id="v-gold">0</span><span class="res-unit">BST</span></div>
+      <div class="res-row">
+        <span class="res-item" id="stat-lives" title="Lives"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14s-5.5-3.4-5.5-7.2A3 3 0 0 1 8 4.6a3 3 0 0 1 5.5 2.2C13.5 10.6 8 14 8 14z"/></svg><b id="v-lives">20</b></span>
+        <span class="res-item" title="Map and wave"><span id="v-wave-l">Map 1</span> <b id="v-wave">0/10</b></span>
+      </div>
+    </div>
+    <button class="btn build" id="btn-build" type="button" title="Choose a tower to build (B). Pauses the game."></button>
+    <button class="btn primary" id="btn-wave" type="button">Send wave 1</button>
+    <div class="peek" id="wave-peek" hidden></div>
+    <div class="ctrl-row">
+      <button class="ibtn" id="btn-speed" type="button" title="Game speed (F)" aria-label="Game speed">1×</button>
+      <button class="ibtn" id="btn-pause" type="button" title="Pause (P)" aria-label="Pause"></button>
+      <button class="ibtn" id="btn-intel" type="button" title="Next wave intel (N)" aria-label="Next wave intel"></button>
+      <button class="ibtn" id="btn-menu" type="button" title="Settings" aria-label="Settings" aria-haspopup="true" aria-expanded="false"></button>
+    </div>
+    <div class="hero-chip" id="hero-card" hidden></div>
+    <div class="abil" aria-label="Abilities">
+      <button class="abil-btn" id="ab-hero" type="button" hidden><span class="ab-fill"></span><span class="ab-ic" id="ab-hero-ic"></span><span class="ab-text"></span><span class="ab-cd"></span></button>
+      <button class="abil-btn" id="ab-ult" type="button" hidden><span class="ab-fill"></span><span class="ab-ic" style="color:var(--brass)"></span><span class="ab-text"></span><span class="ab-cd"></span></button>
+      <button class="abil-btn" id="ab-strike" type="button" title="Barrage (Q): five shells on a patch of road you choose"><span class="ab-fill"></span><span class="ab-ic" style="color:#f0a35a"></span><span class="ab-text"><b>Barrage</b></span><span class="ab-cd"></span></button>
+      <button class="abil-btn" id="ab-snap" type="button" title="Cold Snap (W): slow every enemy for 5 seconds"><span class="ab-fill"></span><span class="ab-ic" style="color:var(--ice)"></span><span class="ab-text"><b>Cold Snap</b></span><span class="ab-cd"></span></button>
+    </div>
+    <div class="shop" id="shop" hidden></div>
+  </aside>
 </div>
 
 <div class="menu" id="menu" role="menu" hidden>
@@ -560,6 +613,7 @@ const IC = {
   flake: '<svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 1v14M2 4.5l12 7M2 11.5l12-7M6.3 2.4L8 4l1.7-1.6M6.3 13.6L8 12l1.7 1.6"/></svg>',
   bolt: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9.5 1L3 9.2h4.2L6.2 15l6.6-8.4H8.6z"/></svg>',
   burst: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0l1.8 5.2L15 4l-3.6 4 3.6 4-5.2-1.2L8 16l-1.8-5.2L1 12l3.6-4L1 4l5.2 1.2z"/></svg>',
+  hammer: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9.2 1.5l4.8 3.2-1.5 2.2-1.6-1L5.2 14.5 3 13l5.7-8.5-1.6-1z"/><path d="M10.4 1l4.2 2.8-.6.9L9.8 1.9z"/></svg>',
   star: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5l1.9 4.1 4.4.5-3.3 3 .9 4.4L8 11.3l-3.9 2.2.9-4.4-3.3-3 4.4-.5z"/></svg>',
 };
 const setHTML = (el, html) => { if (el._h !== html) { el._h = html; el.innerHTML = html; } };
@@ -846,8 +900,8 @@ function newState() {
     mods: mods0(), modVer: 0, perks: [], ab: { strike: 15, snap: 30 }, strikes: [], rains: [], buffs: [], hero: null,
   };
 }
-const ui = { build: null, selected: null, hoverTile: null, hoverPx: null, speed: 1, paused: true, started: false, targeting: null, perkOpen: false, perkChoices: [], map: 0, mapOpen: false, newArmed: false, fresh: new Set(), pending: null, portraitOK: false, rotatePaused: false, intel: false, hero: 'maren', heroSel: false, storyOpen: false, skillsOpen: false, chapter: 0, pausedBefore: false };
-const isModal = () => ui.perkOpen || ui.storyOpen || ui.skillsOpen || ui.mapOpen;
+const ui = { build: null, selected: null, hoverTile: null, hoverPx: null, speed: 1, paused: true, started: false, targeting: null, perkOpen: false, perkChoices: [], map: 0, mapOpen: false, galleryOpen: false, galleryPaused: false, buildPause: false, newArmed: false, fresh: new Set(), pending: null, portraitOK: false, rotatePaused: false, intel: false, hero: 'maren', heroSel: false, storyOpen: false, skillsOpen: false, chapter: 0, pausedBefore: false };
+const isModal = () => ui.perkOpen || ui.storyOpen || ui.skillsOpen || ui.mapOpen || ui.galleryOpen;
 // A checkpoint is saved at the start of every map so a run can be continued or retried from there.
 function saveCheckpoint() {
   try {
@@ -2000,9 +2054,13 @@ function render() {
     ctx.fillStyle = '#ece6d2'; ctx.fillText('Click to call the barrage · Esc to cancel', W / 2, 25);
   }
 
-  if (S.wave === 0 && ui.started && !ui.targeting && !ui.heroSel && !ui.pending) {
+  let tip = '';
+  if (ui.started && !ui.targeting && !ui.heroSel && !ui.pending && !isModal()) {
     const act = COARSE ? 'Tap' : 'Click';
-    const tip = !S.towers.length ? (ui.build ? (COARSE ? 'Drop it on open grass next to the road' : 'Click an open grass tile next to the road') : COARSE ? 'Drag the Archer onto the grass beside the road' : 'Click the Archer in the build menu to start') : 'Build another tower, or press Send wave 1 when ready';
+    if (ui.build && ui.buildPause) tip = `Paused · ${act} open grass to place the ${TOWERS[ui.build].name}`;
+    else if (S.wave === 0) tip = !S.towers.length ? (ui.build ? `${act} open grass next to the road` : 'Press Build to choose your first tower') : 'Build another tower, or press Send wave 1 when ready';
+  }
+  if (tip) {
     ctx.font = '600 14px Barlow, sans-serif'; ctx.textAlign = 'center';
     const tw = ctx.measureText(tip).width + 20;
     ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(W / 2 - tw / 2, 8, tw, 24);
@@ -2040,7 +2098,7 @@ const els = { lives: $('v-lives'), gold: $('v-gold'), wave: $('v-wave'), btnWave
 
 function iconCanvas(type, size) {
   const c = document.createElement('canvas');
-  c.width = size * DPR; c.height = size * DPR;
+  c.width = size * DPR; c.height = size * DPR; c.style.width = c.style.height = size + 'px';
   const g = c.getContext('2d'); g.scale(DPR * size / 44, DPR * size / 44);
   drawTower(g, type, 0, 22, 25, -Math.PI / 4, 0.92);
   return c;
@@ -2112,6 +2170,52 @@ function endDrag(ev) {
 }
 window.addEventListener('pointerup', endDrag);
 window.addEventListener('pointercancel', endDrag);
+
+// ---------- Build gallery: a paused, full view of every tower ----------
+function openGallery() {
+  if (!ui.started || S.over || (isModal() && !ui.galleryOpen)) return;
+  if (!ui.galleryOpen) {
+    ui.galleryOpen = true; ui.galleryPaused = ui.buildPause ? ui.galleryPaused : ui.paused; ui.paused = true;
+    ui.targeting = null; ui.selected = null; ui.heroSel = false; ui.build = null; ui.buildPause = false; ui.pending = null;
+  }
+  const rows = k => {
+    const d = TOWERS[k], st = scaled(d.lv[0]);
+    const r = [['Damage', Math.round(st.dmg)], ['Shots/s', st.rate.toFixed(2)], ['Range', st.range.toFixed(1)]];
+    if (st.splash) r.push(['Splash', st.splash.toFixed(1)]);
+    if (st.slow) r.push(['Slow', Math.round(st.slow * 100) + '%']);
+    if (st.chain) r.push(['Chain', st.chain]);
+    r.push(['Hits air', d.air ? 'yes' : 'no']);
+    return r.map(([a, v]) => `<dt>${a}</dt><dd>${v}</dd>`).join('');
+  };
+  showOverlay(`
+    <h2>Build a <span>tower</span></h2>
+    <p class="gal-sub">The battle is paused. You have <b>${tk(fmt(S.gold))}</b>.</p>
+    <div class="gallery">${TOWER_KEYS.map(k => {
+      const d = TOWERS[k], c = buildCost(k);
+      if (!unlocked(k)) return `<div class="gal-card locked" aria-disabled="true"><span class="gal-art" data-art="${k}"></span><b>${d.name}</b><span class="gal-desc">Unlocks after wave ${UNLOCK[k]}</span></div>`;
+      const poor = S.gold < c;
+      return `<button type="button" class="gal-card${poor ? ' poor' : ''}${ui.fresh.has(k) ? ' new' : ''}" data-k="${k}" ${poor ? 'disabled' : ''}><span class="gal-key">${COARSE ? '' : d.key}</span><span class="gal-art" data-art="${k}"></span><b>${d.name}</b><span class="gal-cost">${poor ? `Need ${c - S.gold} more` : tk(c)}</span><span class="gal-desc">${d.desc}</span><dl class="gal-stats">${rows(k)}</dl><span class="gal-paths">Level 3: ${d.br.map(x => x.name).join(' or ')}</span></button>`;
+    }).join('')}</div>
+    <div class="row"><button class="btn" id="gal-close" type="button">Back to the fight</button></div>`, 'wide xl');
+  els.card.querySelectorAll('[data-art]').forEach(el => el.appendChild(iconCanvas(el.dataset.art, COARSE ? 50 : 64)));
+  els.card.querySelectorAll('.gal-card[data-k]').forEach(b => b.onclick = () => pickFromGallery(b.dataset.k));
+  $('gal-close').onclick = () => closeGallery();
+  const first = els.card.querySelector('.gal-card[data-k]:not(:disabled)'); (first || $('gal-close')).focus();
+  refreshHud();
+}
+function closeGallery() {
+  if (!ui.galleryOpen) return;
+  ui.galleryOpen = false; ui.paused = ui.galleryPaused; hideOverlay(); refreshPanel(true); refreshHud();
+}
+// The game stays paused while the chosen tower is placed, then picks up where it was.
+function pickFromGallery(k) {
+  if (!unlocked(k) || S.gold < buildCost(k)) { sfx('nope'); return; }
+  ui.galleryOpen = false; hideOverlay();
+  selectBuild(k); ui.buildPause = true; ui.paused = true;
+  refreshPanel(true); refreshHud();
+}
+function endBuildPause() { if (ui.buildPause) { ui.buildPause = false; ui.paused = ui.galleryPaused; } }
+function cancelBuild() { ui.build = null; ui.pending = null; endBuildPause(); }
 
 function selectBuild(type) { if (type && !unlocked(type)) return; if (type) ui.fresh.delete(type); ui.build = type; ui.pending = null; if (type) { ui.selected = null; ui.targeting = null; ui.heroSel = false; } refreshPanel(true); }
 
@@ -2273,6 +2377,8 @@ function refreshHud() {
   setHTML($('btn-bigtext'), `${IC.text}<span>Larger text: ${document.documentElement.classList.contains('big') ? 'on' : 'off'}</span>`);
   setHTML($('btn-quit'), `${IC.quit}<span>${quitArmed ? 'Tap again to quit' : 'Quit to title'}</span>`);
   setHTML($('btn-menu'), IC.gear);
+  setHTML($('btn-build'), `${IC.hammer}<span>Build</span>${ui.fresh.size ? '<span class="build-dot" aria-label="New tower available"></span>' : ''}`);
+  $('btn-build').disabled = !ui.started || S.over;
   setHTML(els.btnIntel, IC.intel); els.btnIntel.classList.toggle('on', ui.intel); els.btnIntel.disabled = !ui.started;
   for (const k of ['strike', 'snap']) {
     const b = els.ab[k], left = abilLeft(k), total = ABIL[k].cd * S.mods.cd;
@@ -2378,7 +2484,7 @@ function victory() {
 function resetUi() {
   lastGold = S.gold; ui.fresh = new Set(); $('toasts').replaceChildren();
   ui.selected = null; ui.build = null; ui.targeting = null; ui.pending = null; ui.heroSel = false;
-  ui.perkOpen = false; ui.storyOpen = false; ui.skillsOpen = false; ui.mapOpen = false; ui.paused = false; ui.started = true;
+  ui.perkOpen = false; ui.storyOpen = false; ui.skillsOpen = false; ui.mapOpen = false; ui.galleryOpen = false; ui.buildPause = false; ui.paused = false; ui.started = true;
 }
 function restart(intro = true) {
   S = newState(); loadMap(0); S.hero = makeHero(ui.hero);
@@ -2524,7 +2630,7 @@ canvas.addEventListener('contextmenu', ev => {
   ev.preventDefault();
   const h = S.hero;
   if (ui.heroSel && h && !h.dead && !isModal()) { const [px, py] = evPx(ev); moveHero(px, py); return; }
-  ui.build = null; ui.selected = null; ui.targeting = null; ui.heroSel = false; refreshPanel(true); refreshHud();
+  cancelBuild(); ui.selected = null; ui.targeting = null; ui.heroSel = false; refreshPanel(true); refreshHud();
 });
 canvas.addEventListener('pointerdown', ev => {
   if (ev.button !== 0 || S.over || !ui.started || isModal()) return;
@@ -2544,7 +2650,8 @@ canvas.addEventListener('pointerdown', ev => {
     else {
       ui.pending = null;
       const t = placeTower(ui.build, tx, ty);
-      if (t && S.gold < buildCost(ui.build)) { ui.build = null; ui.selected = t; }
+      if (t && ui.buildPause) { ui.build = null; endBuildPause(); }
+      else if (t && S.gold < buildCost(ui.build)) { ui.build = null; ui.selected = t; }
     }
   } else if (ui.heroSel && h && !h.dead) moveHero(px, py);
   else ui.selected = null;
@@ -2588,9 +2695,10 @@ $('btn-quit').onclick = () => {
 els.ab.strike.onclick = toggleStrike;
 els.ab.snap.onclick = () => { useAbility('snap'); refreshHud(); };
 els.ab.hero.onclick = () => { useHero('e'); refreshHud(); };
+$('btn-build').onclick = () => (ui.galleryOpen ? closeGallery() : openGallery());
 function toggleIntel() { if (!ui.started) return; ui.intel = !ui.intel; if (ui.intel) { ui.selected = null; ui.build = null; ui.heroSel = false; } refreshPanel(true); refreshHud(); }
 els.btnIntel.onclick = toggleIntel;
-$('panel-x').onclick = () => { ui.selected = null; ui.build = null; ui.heroSel = false; ui.intel = false; ui.pending = null; refreshPanel(true); refreshHud(); };
+$('panel-x').onclick = () => { ui.selected = null; cancelBuild(); ui.heroSel = false; ui.intel = false; ui.pending = null; refreshPanel(true); refreshHud(); };
 els.ab.ult.onclick = () => { useHero('r'); refreshHud(); };
 
 window.addEventListener('keydown', ev => {
@@ -2599,6 +2707,13 @@ window.addEventListener('keydown', ev => {
   const k = ev.key.toLowerCase();
   if (k === 'm') { toggleSound(); return; }
   if (!ui.started) return;
+  if (ui.galleryOpen) {
+    const gi = ['1', '2', '3', '4', '5'].indexOf(k);
+    if (gi >= 0) pickFromGallery(TOWER_KEYS[gi]);
+    else if (k === 'escape' || k === 'b') closeGallery();
+    return;
+  }
+  if (k === 'b' && !isModal()) { openGallery(); return; }
   if (ui.skillsOpen) { if (k === 'escape' || k === 'k') closeSkills(); return; }
   if (ui.storyOpen) {
     const n = +k;
@@ -2611,7 +2726,7 @@ window.addEventListener('keydown', ev => {
   const idx = ['1', '2', '3', '4', '5'].indexOf(k);
   if (idx >= 0) { selectBuild(ui.build === TOWER_KEYS[idx] ? null : TOWER_KEYS[idx]); return; }
   if (k === 'escape' && !menuEl.hidden) { setMenu(false); return; }
-  if (k === 'escape') { ui.build = null; ui.selected = null; ui.targeting = null; ui.pending = null; ui.heroSel = false; ui.intel = false; refreshPanel(true); refreshHud(); }
+  if (k === 'escape') { cancelBuild(); ui.selected = null; ui.targeting = null; ui.pending = null; ui.heroSel = false; ui.intel = false; refreshPanel(true); refreshHud(); }
   else if (k === 'n') toggleIntel();
   else if (k === ' ') { ev.preventDefault(); if (!S.over) els.btnWave.click(); }
   else if (k === 'p') els.btnPause.click();
@@ -2691,7 +2806,7 @@ renderHeroUI(); refreshPanel(true); refreshHud(); titleScreen(); fitBoard(); upd
 requestAnimationFrame(frame);
 
 // Test hook for automated play-throughs.
-window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, unlocked, UNLOCK, HEROES, COLS, ROWS, TILE, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero, nextMap, continueCampaign, loadCheckpoint };
+window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, unlocked, UNLOCK, HEROES, COLS, ROWS, TILE, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero, nextMap, openGallery, closeGallery, pickFromGallery, continueCampaign, loadCheckpoint };
 })();
 </script>
 </body>
