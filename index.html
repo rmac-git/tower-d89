@@ -110,7 +110,10 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--brass)
 .settings { display: grid; gap: 12px; width: 100%; text-align: left; }
 .settings section { display: grid; gap: 6px; }
 @media (max-height: 500px) { .set-row { padding: 5px 9px; } .set-row small { display: none; } .settings { gap: 8px; } .settings-card h2 { font-size: 26px; margin: 0; } }
-@media (min-width: 700px) and (max-height: 700px) { .settings { grid-template-columns: 1fr 1fr; align-items: start; } .settings section:nth-child(3) { grid-row: span 2; } }
+.set-col { display: grid; gap: 12px; align-content: start; min-width: 0; }
+@media (orientation: landscape) and (min-width: 600px) { .settings-card { max-width: 760px; } .settings { grid-template-columns: 1fr 1fr; align-items: start; } }
+@media (max-height: 420px) { .set-row { padding: 4px 9px; min-height: 0; } .set-row b { font-size: 13.5px; } .settings, .set-col { gap: 6px; } .settings section { gap: 4px; } .settings-card h2 { font-size: 22px; } .sw { width: 34px; height: 20px; } .sw::after { width: 14px; height: 14px; } .sw.on::after { left: 16px; } }
+@media (max-height: 760px) { .set-row small { display: none; } .set-row { padding: 6px 10px; } }
 .settings h3 { margin: 0; font: 600 11px var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 .set-row { display: flex; align-items: center; gap: 12px; padding: 8px 10px; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink); font: inherit; text-align: left; cursor: pointer; width: 100%; }
 .set-row > span { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
@@ -749,7 +752,7 @@ const PERKS = [
   { id: 'levy', name: 'Royal Levy', up: '+5 lives', down: 'Kills pay 15% less', apply: m => { S.lives = Math.min(99, S.lives + 5); m.bounty *= 0.85; } },
   { id: 'bounty', name: 'Bounty Hunters', up: 'Kills pay 30% more', down: 'Enemies have 10% more health', apply: m => { m.bounty *= 1.3; m.hp *= 1.1; } },
   { id: 'mason', name: 'Cheap Masons', up: 'New towers cost 20% less', down: 'Enemies have 6% more health', apply: m => { m.build *= 0.8; m.hp *= 1.06; } },
-  { id: 'flare', name: 'Signal Flares', up: 'Abilities recharge 30% faster', down: 'Enemies have 6% more health', apply: m => { m.cd *= 0.7; m.hp *= 1.06; } },
+  { id: 'flare', name: 'Signal Flares', up: 'Hero skills recharge 30% faster', down: 'Enemies have 6% more health', apply: m => { m.cd *= 0.7; m.hp *= 1.06; } },
 ];
 const IC = {
   pause: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="2.5" width="3.5" height="11" rx="1"/><rect x="9.5" y="2.5" width="3.5" height="11" rx="1"/></svg>',
@@ -805,8 +808,8 @@ const HEROES = {
     ult: { name: 'Hold the Line', cd: 90, text: 'Plant the old banner: for 8s Maren cannot fall and hits 60% harder, and towers near her fire 30% faster.',
       up: 'The banner stuns everything near Maren every 2.5 seconds.' },
     evo: [
-      { name: 'Earthbreaker', quote: 'Break the ground he trained you on.', text: 'Shockwave grows wider, hits 40% harder and stuns longer.' },
-      { name: 'Aegis Slam', quote: 'Hold the line he taught you to hold.', text: 'Shockwave also slows what it hits and shields Maren for 40% of her health.' },
+      { name: 'Earthbreaker', quote: 'Break the ground he trained you on.', text: 'Leap Slam grows wider, hits 40% harder and stuns longer.' },
+      { name: 'Aegis Slam', quote: 'Hold the line he taught you to hold.', text: 'Leap Slam also slows what it hits and shields Maren for 40% of her health.' },
     ],
     story: [
       { t: 'The Gate Is Yours', p: ['Eleven years you held the cove. Then the High Marshal, Corvane, rode north with half the garrison and came home wearing the Warlord’s crown.', 'Tonight the gate is yours alone, Captain. Your orders are the same as ever: *nothing gets through.*'] },
@@ -3444,7 +3447,7 @@ function victory() {
 function resetUi() {
   lastGold = S.gold; ui.fresh = new Set(); $('toasts').replaceChildren();
   ui.selected = null; ui.build = null; ui.targeting = null; ui.pending = null; ui.heroSel = false;
-  ui.perkOpen = false; ui.storyOpen = false; ui.skillsOpen = false; ui.mapOpen = false; ui.galleryOpen = false; ui.buildPause = false; ui.paused = false; ui.started = true;
+  ui.perkOpen = false; ui.storyOpen = false; ui.skillsOpen = false; ui.mapOpen = false; ui.galleryOpen = false; ui.settingsOpen = false; ui.buildPause = false; ui.paused = false; ui.started = true;
 }
 function restart(intro = true) {
   S = newState(); loadMap(0); S.hero = makeHero(ui.hero);
@@ -3511,7 +3514,7 @@ function heroSelect() {
   showOverlay(`
     <h2>Choose your <span>champion</span></h2>
     <p>Your hero fights beside the towers, levels up, and earns new skills as the story unfolds.</p>
-    <div class="heroes">${Object.entries(HEROES).map(([k, d]) => `<button type="button" class="hero-btn${k === ui.hero ? ' on' : ''}" data-k="${k}"><span data-icon="${k}"></span><b>${d.name}</b><small class="hb-title" style="color:${d.color}">${d.title}</small><small class="hb-role">${d.role}</small><small class="hb-skills">E · ${d.active.name}<br>R · ${d.ult.name} (hero level ${ULT_LVL})</small><small class="hb-tree">Both skills grow stronger as ${d.name.split(' ')[0]} levels up</small></button>`).join('')}</div>
+    <div class="heroes">${Object.entries(HEROES).map(([k, d]) => `<button type="button" class="hero-btn${k === ui.hero ? ' on' : ''}" data-k="${k}"><span data-icon="${k}"></span><b>${d.name}</b><small class="hb-title" style="color:${d.color}">${d.title}</small><small class="hb-role">${d.role}</small><small class="hb-skills">E · ${d.active.name}<br>R · ${d.ult.name} (Lv ${ULT_LVL})</small><small class="hb-tree">Both skills grow stronger as ${d.name.split(' ')[0]} levels up</small></button>`).join('')}</div>
     <div class="row"><button class="btn primary" id="ov-begin" type="button">Begin</button><button class="btn" id="ov-back" type="button">Back</button></div>`, 'wide xl');
   els.card.querySelectorAll('[data-icon]').forEach(el => el.appendChild(iconHero(el.dataset.icon, 56)));
   els.card.querySelectorAll('.hero-btn').forEach(b => b.onclick = () => { ui.hero = b.dataset.k; els.card.querySelectorAll('.hero-btn').forEach(x => x.classList.toggle('on', x === b)); });
@@ -3676,16 +3679,16 @@ function openSettings() {
   showOverlay(`
     <h2>Settings</h2>
     <div class="settings">
-      <section><h3>Sound</h3>${sl('set-music', 'Music', SET.music)}${sl('set-sfx', 'Sound effects', SET.sfx)}</section>
+      <div class="set-col"><section><h3>Sound</h3>${sl('set-music', 'Music', SET.music)}${sl('set-sfx', 'Sound effects', SET.sfx)}</section>
       <section><h3>Gameplay</h3>
         ${tg('set-auto', 'Send waves automatically', SET.autoWave, 'The next wave starts 3 seconds after one is cleared')}
-        ${tg('set-pause', 'Pause when you leave', SET.autoPause, 'Pauses if you switch apps or tabs')}</section>
-      <section><h3>Display and accessibility</h3>
+        ${tg('set-pause', 'Pause when you leave', SET.autoPause, 'Pauses if you switch apps or tabs')}</section></div>
+      <div class="set-col"><section><h3>Display and accessibility</h3>
         ${tg('set-big', 'Larger text', big)}
         ${tg('set-shots', 'Bigger shots', SET.bigShots, 'Makes arrows, shells and bolts easier to see')}
         ${tg('set-fx', 'Fewer effects', SET.reduceFx || OS_REDUCED, OS_REDUCED ? 'On because your device asks for reduced motion' : 'Fewer sparks and flashes')}
         ${CAN_VIBRATE ? tg('set-vib', 'Vibration', SET.vibrate, 'Buzz when you lose a life or a Warlord arrives') : ''}</section>
-      <section><h3>Progress</h3><button type="button" class="btn danger" id="set-reset">${resetArmed ? 'Tap again to erase everything' : 'Reset progress'}</button></section>
+      <section><h3>Progress</h3><button type="button" class="btn danger" id="set-reset">${resetArmed ? 'Tap again to erase everything' : 'Reset progress'}</button></section></div>
     </div>
     <div class="row"><button class="btn primary" id="set-done" type="button">Done</button></div>`, 'wide settings-card');
   const flip = (id, fn) => { const b = $(id); if (b) b.onclick = () => { fn(); saveSettings(); openSettings(); }; };
@@ -3866,7 +3869,7 @@ requestAnimationFrame(frame);
 connectCloud();
 
 // Test hook for automated play-throughs.
-window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get decor() { return decor; }, CAST, sigRank, ultRank, skillRadius, vetRank, VET, get sites() { return siteSet; }, A, SET, Music, previewStats, statRows, masterTower, masteryCost, MASTERY, tStats, loadLatest, saveResume, titleScreen, undoLast, lastUndo, sellTower, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, unlocked, UNLOCK, HEROES, COLS, ROWS, TILE, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero, nextMap, openGallery, closeGallery, pickFromGallery, continueCampaign, loadCheckpoint };
+window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get decor() { return decor; }, gameOver, victory, showMapComplete, openSettings, CAST, sigRank, ultRank, skillRadius, vetRank, VET, get sites() { return siteSet; }, A, SET, Music, previewStats, statRows, masterTower, masteryCost, MASTERY, tStats, loadLatest, saveResume, titleScreen, undoLast, lastUndo, sellTower, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, unlocked, UNLOCK, HEROES, COLS, ROWS, TILE, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero, nextMap, openGallery, closeGallery, pickFromGallery, continueCampaign, loadCheckpoint };
 })();
 </script>
 </body>
