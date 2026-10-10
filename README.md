@@ -32,7 +32,7 @@ The second upgrade splits into two paths, so two players end up with different d
 | Mortar | **Shrapnel**: +20/40/60% blast radius, +10/20/30% damage | **Concussion**: stuns the blast for 0.3/0.45/0.6s (once every 2s per enemy, shorter on Warlords) |
 | Frost Spire | **Deep Freeze**: stronger, longer slow and more range | **Shatter**: chilled enemies take +15/30/45% damage from everything |
 | Tesla Coil | **Overload**: +2/4/6 chain jumps, +10/20/30% damage | **Static**: every enemy hit is slowed 25/35/45% |
-| Longshot | **Headhunter**: +10/20/30% damage, plus +60/120/180% more to Ironclads and Warlords | **Ricochet**: bounces to 1/2/3 more enemies at 40% damage |
+| Longshot | **Headhunter**: +10/20/30% damage, plus +60/120/180% more to Snow Crabs and bosses | **Ricochet**: bounces to 1/2/3 more enemies at 40% damage |
 
 **Abilities:** your hero's two skills are the only special abilities (see Heroes). The old Barrage and Cold Snap buttons were retired so there are fewer buttons and each one matters more.
 
