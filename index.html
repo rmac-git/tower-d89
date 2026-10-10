@@ -139,6 +139,12 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--brass)
 .sh-swarm { transform: scale(0.7); }
 .sh-flyer { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); border-radius: 0 !important; }
 .sh-healer { clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%); border-radius: 0 !important; }
+.sh-grunt { border-radius: 50% !important; }
+.sh-shell { clip-path: polygon(0 100%, 0 45%, 20% 10%, 55% 0, 85% 15%, 100% 50%, 100% 100%); border-radius: 0 !important; }
+.sh-split, .sh-jellet { clip-path: ellipse(50% 50% at 50% 100%); border-radius: 0 !important; }
+.sh-burrow { border-radius: 40% 60% 60% 40% / 50% !important; transform: scaleY(0.7); }
+.sh-captain { clip-path: polygon(100% 50%, 70% 0, 0 20%, 0 80%, 70% 100%); border-radius: 0 !important; }
+.sh-blink { border-radius: 40% 60% 45% 55% !important; opacity: 0.85; }
 .sh-boss { clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); border-radius: 0 !important; }
 .pk-e.boss { color: var(--danger); }
 .game.side .peek { grid-column: 1 / -1; height: auto; padding: 4px 6px; flex-wrap: wrap; justify-content: center; gap: 3px 7px; }
@@ -614,7 +620,7 @@ const SPEED_K = 0.9, RANGE_K = 0.75;   // the coarser grid has a shorter road, s
 const VICTORY_WAVE = 30;
 const WAVES_PER_MAP = 10;   // the campaign marches through the maps in order, ten waves each
 const START_GOLD = 180, START_LIVES = 20;
-const GAME_VERSION = 'v36 · tower skills';   // shown in Settings, so you can tell whether a fresh copy loaded
+const GAME_VERSION = 'v37 · tide of new enemies';   // shown in Settings, so you can tell whether a fresh copy loaded
 // Player settings, kept on this device.
 const SET = { music: 0.5, sfx: 0.8, autoWave: false, autoPause: true, reduceFx: false, bigShots: false, vibrate: true };
 try { Object.assign(SET, JSON.parse(localStorage.getItem('bastion-line-settings')) || {}); } catch (e) {}
@@ -826,7 +832,7 @@ const unlocked = k => !(k in UNLOCK) || (S.cleared || 0) >= UNLOCK[k];
 const XP_NEXT = [95, 240, 450, 720, 1090, 1550, 2130, 2850, 3700];   // total xp to reach levels 2..10
 const FX_KEYS = ['dmg', 'hp', 'regen', 'rate', 'range', 'speed', 'cleave', 'exec', 'pierce', 'burn', 'skill', 'cdr', 'xp', 'gold', 'auraRate', 'auraDmg', 'auraR', 'respawn', 'thorns', 'radius'];
 const fx0 = () => Object.fromEntries(FX_KEYS.map(k => [k, 0]));
-const ATK = { grunt: 6, runner: 3, tank: 16, swarm: 2.5, boss: 55, flyer: 0, healer: 0 };   // contact damage per second
+const ATK = { grunt: 6, runner: 3, tank: 16, swarm: 2.5, boss: 55, flyer: 0, healer: 0, shell: 7, split: 5, jellet: 2, burrow: 6, captain: 14, blink: 4 };   // contact damage per second
 const md = t => t.replace(/\*(.+?)\*/g, '<em>$1</em>');
 const HEROES = {
   maren: {
@@ -1109,15 +1115,46 @@ const Music = (() => {
 
 const TOWER_KEYS = Object.keys(TOWERS);
 
+// The tide brings invaders. Each enemy has one clear trick and a clear answer, and each keeps its own
+// shape and colour (Okabe-Ito palette) so it reads without relying on colour.
 const ENEMIES = {
-  grunt:  { name: 'Footman',  hp: 32,   speed: 1.5,  armor: 0, bounty: 4,   size: 9,  color: '#f0e442', lives: 1,  trait: '' },
-  runner: { name: 'Courier',  hp: 20,   speed: 2.8,  armor: 0, bounty: 3,   size: 7,  color: '#56b4e9', lives: 1,  trait: 'Fast' },
-  tank:   { name: 'Ironclad', hp: 125,  speed: 0.85, armor: 5, bounty: 10,  size: 13, color: '#d9dde3', lives: 2,  trait: 'Armored' },
-  swarm:  { name: 'Mite',     hp: 11,   speed: 2.1,  armor: 0, bounty: 1,   size: 5,  color: '#cc79a7', lives: 1,  trait: 'Swarm' },
-  flyer:  { name: 'Kite',     hp: 42,   speed: 1.7,  armor: 0, bounty: 6,   size: 10, color: '#ffffff', lives: 1,  trait: 'Flies straight', air: true },
-  healer: { name: 'Mender',   hp: 70,   speed: 1.25, armor: 1, bounty: 9,   size: 10, color: '#0072b2', lives: 1,  trait: 'Heals allies', heal: true },
-  boss:   { name: 'Warlord',  hp: 820,  speed: 0.6,  armor: 8, bounty: 120, size: 20, color: '#e69f00', lives: 10, trait: 'Boss · Armored' },
+  grunt:   { name: 'Green Crab',    hp: 32,  speed: 1.5,  armor: 0, bounty: 4,   size: 9,  color: '#009e73', lives: 1,  trait: '',
+             tip: 'Invasive, and plenty of them. Anything kills a crab.' },
+  runner:  { name: 'Sand Hopper',   hp: 20,  speed: 2.8,  armor: 0, bounty: 3,   size: 7,  color: '#56b4e9', lives: 1,  trait: 'Fast',
+             tip: 'Fast but fragile. Archers and Tesla catch them.' },
+  tank:    { name: 'Snow Crab',     hp: 125, speed: 0.85, armor: 5, bounty: 10,  size: 13, color: '#d9dde3', lives: 2,  trait: 'Armored',
+             tip: 'Armored: small hits barely scratch it. Tesla, Ballista and Longshot pierce armor.' },
+  swarm:   { name: 'Periwinkle',    hp: 11,  speed: 2.1,  armor: 0, bounty: 1,   size: 5,  color: '#cc79a7', lives: 1,  trait: 'Swarm',
+             tip: 'They come in big packs. Splash damage shines.' },
+  flyer:   { name: 'Herring Gull',  hp: 52,  speed: 2.2,  armor: 0, bounty: 6,   size: 10, color: '#ffffff', lives: 1,  trait: 'Flies over the road', air: true,
+             tip: 'Flies above the road, so Mortars can’t hit it. Every other tower can.' },
+  healer:  { name: 'Kelp Mender',   hp: 70,  speed: 1.25, armor: 1, bounty: 9,   size: 10, color: '#0072b2', lives: 1,  trait: 'Heals allies', heal: true,
+             tip: 'Heals everything near it. Take it out first.' },
+  shell:   { name: 'Hermit Crab',   hp: 60,  speed: 1.15, armor: 0, bounty: 8,   size: 11, color: '#d55e00', lives: 1,  trait: 'Shell soaks damage',
+             tip: 'Its shell soaks damage. Crack it with big hits, then the crab bolts.' },
+  split:   { name: 'Moon Jelly',    hp: 55,  speed: 1.1,  armor: 0, bounty: 6,   size: 11, color: '#f0e442', lives: 1,  trait: 'Splits in three',
+             tip: 'Pops into three jellets. Splash and chain damage clean them up.' },
+  jellet:  { name: 'Jellet',        hp: 14,  speed: 1.9,  armor: 0, bounty: 1,   size: 5,  color: '#f0e442', lives: 1,  trait: '', baby: true },
+  burrow:  { name: 'Sand Worm',     hp: 70,  speed: 1.3,  armor: 1, bounty: 8,   size: 10, color: '#c9a36a', lives: 1,  trait: 'Burrows',
+             tip: 'Dives under the sand where nothing can hit it. Slowed or frozen, it can’t dive.' },
+  captain: { name: 'Lobster Captain', hp: 160, speed: 1.0, armor: 3, bounty: 14, size: 12, color: '#e69f00', lives: 2,  trait: 'Rallies others',
+             tip: 'Gives nearby enemies +3 armor and 15% speed. Focus it down: try Strong targeting.' },
+  blink:   { name: 'Fog Wisp',      hp: 45,  speed: 1.4,  armor: 0, bounty: 7,   size: 9,  color: '#bcd3e0', lives: 1,  trait: 'Blinks forward',
+             tip: 'Blinks forward through your defenses. Slows weaken the blink and freezes stop it.' },
+  boss:    { get name() { return BOSSES[bossKind()].name; }, hp: 820, speed: 0.6, armor: 8, bounty: 120, size: 20, color: '#e69f00', lives: 10,
+             get trait() { return 'Boss · ' + BOSSES[bossKind()].trait; }, get tip() { return BOSSES[bossKind()].tip; } },
 };
+// One boss per road, each with its own tricks.
+const BOSSES = {
+  lobster: { name: 'The Old Lobster', trait: 'Claw Guard', hpMul: 0.9, intro: 'The Old Lobster crawls out of the cove',
+             tip: 'Raises its claws every few seconds and shrugs off 80% of damage. Below half health it sheds its shell and charges.' },
+  kraken:  { name: 'The Kraken', trait: 'Submerges', hpMul: 0.9, intro: 'Something huge is moving under the water',
+             tip: 'Dives where nothing can hit it, then surfaces with a brood of crabs.' },
+  warlord: { name: 'The Drowned Warlord', trait: 'Fog of War', hpMul: 1, intro: 'The Drowned Warlord comes for the crown',
+             tip: 'At two-thirds and one-third health it jams nearby towers with fog and calls wisps. Then it enrages.' },
+};
+const bossKind = () => ['lobster', 'kraken', 'warlord'][S ? Math.min(2, S.mapI) : 0];
+const ENEMY_UNLOCK = { shell: 7, split: 9, burrow: 11, captain: 13, blink: 15 };
 
 // Wave groups: [type, count, spacing seconds]
 const SCRIPTED = [
@@ -1127,9 +1164,9 @@ const SCRIPTED = [
   [['swarm', 30, 0.33]],
   [['grunt', 12, 0.8], ['flyer', 8, 1.0]],
   [['tank', 5, 2.0], ['grunt', 12, 0.7]],
-  [['runner', 16, 0.5], ['swarm', 16, 0.3]],
+  [['runner', 12, 0.5], ['shell', 6, 1.2]],
   [['grunt', 10, 0.7], ['healer', 4, 1.6], ['tank', 6, 1.6]],
-  [['flyer', 14, 0.7], ['swarm', 22, 0.28]],
+  [['split', 8, 1.1], ['swarm', 18, 0.28]],
   [['grunt', 12, 0.7], ['boss', 1, 1]],
 ];
 
@@ -1141,20 +1178,20 @@ function waveGroups(w) {
   const n = Math.round(10 + w * 0.9);
   if (w % 10 === 0) {
     const bosses = 1 + Math.floor((w - 10) / 10);
-    return [['tank', Math.round(w / 3), 1.1], ['healer', Math.round(w / 6), 1.4], ['boss', bosses, 6]];
+    return [['tank', Math.round(w / 3), 1.1], [w >= ENEMY_UNLOCK.captain ? 'captain' : 'healer', Math.max(2, Math.round(w / 7)), 1.4], ['boss', bosses, 6]];
   }
-  if (w % 5 === 0) return [['flyer', n, 0.55], ['swarm', Math.round(n * 1.2), 0.25]];
-  const pool = ['grunt', 'runner', 'tank', 'swarm', 'healer', 'flyer'];
+  if (w % 5 === 0) return [['flyer', Math.round(n * 0.8), 0.55], [w >= ENEMY_UNLOCK.blink ? 'blink' : 'split', Math.round(n * 0.5), 0.7]];
+  const pool = ['grunt', 'runner', 'tank', 'swarm', 'healer', 'flyer', ...Object.keys(ENEMY_UNLOCK).filter(k => w >= ENEMY_UNLOCK[k])];
   const picks = new Set();
   const k = 2 + (r() < 0.5 ? 1 : 0);
   while (picks.size < k) picks.add(pool[Math.floor(r() * pool.length)]);
   return [...picks].map(t => {
-    const mult = { grunt: 1, runner: 1, tank: 0.45, swarm: 2, healer: 0.3, flyer: 0.8 }[t];
-    const gap = { grunt: 0.6, runner: 0.45, tank: 1.3, swarm: 0.22, healer: 1.2, flyer: 0.6 }[t];
+    const mult = { grunt: 1, runner: 1, tank: 0.45, swarm: 2, healer: 0.3, flyer: 0.8, shell: 0.5, split: 0.45, burrow: 0.55, captain: 0.2, blink: 0.6 }[t];
+    const gap = { grunt: 0.6, runner: 0.45, tank: 1.3, swarm: 0.22, healer: 1.2, flyer: 0.6, shell: 1.0, split: 1.1, burrow: 0.9, captain: 2.0, blink: 0.8 }[t];
     return [t, Math.max(2, Math.round(n * mult)), gap];
   });
 }
-const hpMul = w => 1 + 0.12 * (w - 1) + 0.036 * (w - 1) ** 2;
+const hpMul = w => 1 + 0.12 * (w - 1) + 0.04 * (w - 1) ** 2;
 const bountyMul = w => 1 + 0.025 * (w - 1);
 const armorAdd = w => Math.floor((w - 1) / 8);
 const waveBonus = w => 20 + w * 3;
@@ -1266,7 +1303,7 @@ function loadMap(i) {
   airLen = Math.hypot(airB[0] - airA[0], airB[1] - airA[1]);
   drawBackground();
 }
-const prog = e => e.d / (e.air ? airLen : pathLen);
+const prog = e => e.d / pathLen;
 
 function posAt(d) {
   let s = segs[segs.length - 1];
@@ -1474,23 +1511,42 @@ function startWave() {
   S.waveActive = true; S.autoAt = 0;
   const hasBoss = groups.some(g => g[0] === 'boss');
   sfx(hasBoss ? 'bosswave' : 'wave'); if (hasBoss) buzz([60, 80, 60]);
-  S.banner = { text: 'Wave ' + w, sub: hasBoss ? 'A Warlord approaches' : groups.map(g => ENEMIES[g[0]].name + 's').join(' · '), life: 2.6, boss: hasBoss };
+  S.banner = { text: 'Wave ' + w, sub: hasBoss ? `${BOSSES[bossKind()].name} approaches` : groups.map(g => ENEMIES[g[0]].name + 's').join(' · '), life: 2.6, boss: hasBoss };
 }
 
-function spawnEnemy(type, w) {
-  const d = ENEMIES[type];
-  const hp = Math.round(d.hp * hpMul(w) * S.mods.hp);
-  S.enemies.push({
+function spawnEnemy(type, w, at) {
+  const d = ENEMIES[type], kind = type === 'boss' ? bossKind() : null;
+  const hp = Math.round(d.hp * hpMul(w) * S.mods.hp * (kind ? BOSSES[kind].hpMul : 1));
+  const e = {
     id: S.nextId++, type, hp, maxHp: hp, speed: d.speed * S.mods.speed * SPEED_K, armor: d.armor + (d.armor > 0 ? armorAdd(w) + S.mods.armor : 0),
-    bounty: Math.round(d.bounty * bountyMul(w) * S.mods.bounty), xp: Math.round(d.bounty * bountyMul(w)), air: !!d.air, d: -Math.random() * 6, x: -TILE, y: (2.5) * TILE,
-    slowT: 0, slowF: 0, healT: 1, hitT: 0, wob: Math.random() * 6.28, alive: true,
-  });
+    bounty: Math.round(d.bounty * bountyMul(w) * S.mods.bounty), xp: Math.round(d.bounty * bountyMul(w)), air: !!d.air, d: at != null ? at : -Math.random() * 6, x: -TILE, y: (2.5) * TILE,
+    slowT: 0, slowF: 0, healT: 1, hitT: 0, wob: Math.random() * 6.28, alive: true, w, bt: 1.5 + Math.random() * 2,
+  };
+  if (type === 'shell') { e.shell = e.maxHp * 0.8; e.shellMax = e.shell; }
+  if (kind) { e.kind = kind; e.cd = 4; e.phase = 0; }
+  if (at != null) { const [x, y] = posAt(Math.max(0, at)); e.x = x; e.y = y; }
+  S.enemies.push(e);
+  // a short card the first time each enemy shows up in a run, like Kingdom Rush's enemy notes
+  const key = kind || type;
+  if (!d.baby && !(S.seen || (S.seen = {}))[key] && S.wave > 0) {
+    S.seen[key] = true;
+    if (kind) S.banner = { text: BOSSES[kind].name, sub: BOSSES[kind].intro, life: 3, boss: true };
+    if (type !== 'grunt') toast(`${kind ? 'Boss' : 'New enemy'}: ${d.name}`, d.tip);
+  }
+  return e;
 }
 
 function hurt(e, dmg, tower, pierce, quiet) {
-  if (!e.alive) return;
+  if (!e.alive || e.under) return;
   if (e.brittleT > 0) dmg *= 1 + e.brittle;
-  const real = pierce ? dmg : Math.max(dmg * 0.25, dmg - e.armor);
+  if (e.guard) dmg *= 0.2;
+  const arm = e.armor + (e.auraT > 0 ? 3 : 0);
+  let real = pierce ? dmg : Math.max(dmg * 0.25, dmg - arm);
+  if (e.shell > 0) {
+    const a = Math.min(e.shell, real); e.shell -= a; real -= a; if (!quiet) e.hitT = 0.08;
+    if (e.shell <= 0) { e.speed *= 1.8; burst(e.x, e.y, '#c8c2b8', 14, 110); floatText(e.x, e.y - 16, 'Cracked!', '#ffd7a0'); sfx('boom'); }
+    if (real <= 0) return;
+  }
   e.hp -= real; if (!quiet) e.hitT = 0.08;
   if (tower && tower !== S.hero && tower.type) (e.hitBy || (e.hitBy = new Set())).add(tower);
   if (tower) tower.dealt += Math.min(real, e.hp + real);
@@ -1502,6 +1558,8 @@ function hurt(e, dmg, tower, pierce, quiet) {
     if (e.hitBy) for (const o of e.hitBy) if (o !== tower) { o.assists = (o.assists || 0) + 1; promote(o); }
     if (tower && tower === S.hero && tower.fx.gold) S.gold += Math.round(e.bounty * tower.fx.gold);
     heroXp(e);
+    if (e.type === 'split') for (let i = 0; i < 3; i++) { const j = spawnEnemy('jellet', e.w || S.wave, Math.max(0, e.d + (i - 1) * 0.35 * TILE)); j.bt = 0; }
+    if (e.type === 'boss') { S.banner = { text: `${BOSSES[e.kind].name} falls`, sub: 'The tide turns', life: 2.4 }; shake(8); }
     burst(e.x, e.y, ENEMIES[e.type].color, e.type === 'boss' ? 40 : 10, e.type === 'boss' ? 160 : 90);
     floatText(e.x, e.y - 8, '+' + e.bounty, '#f3d58a', true);
   }
@@ -1511,7 +1569,7 @@ function inRange(t, e, r) { const dx = e.x - t.x, dy = e.y - t.y; return dx * dx
 function pickTarget(t, rangePx, canAir) {
   let best = null, bestScore = -Infinity;
   for (const e of S.enemies) {
-    if (!e.alive || e.d < 0 || (e.air && !canAir) || !inRange(t, e, rangePx)) continue;
+    if (!e.alive || e.d < 0 || e.under || (e.air && !canAir) || !inRange(t, e, rangePx)) continue;
     let s;
     switch (t.mode) {
       case 'first': s = prog(e); break;
@@ -1536,6 +1594,7 @@ function towerTop(t) {
   }
 }
 function fireTower(t, dt) {
+  if (t.jamT > 0) { t.jamT -= dt; return; }
   const def = TOWERS[t.type], st0 = tStats(t), bs = boost(t), st = bs ? { ...st0, dmg: st0.dmg * bs.dmg, rate: st0.rate * bs.rate } : st0;
   t.cd -= dt; t.flash = Math.max(0, t.flash - dt);
   const range = st.range * TILE;
@@ -1660,19 +1719,61 @@ function updateShots(dt) {
   S.shots = S.shots.filter(s => !s.dead);
 }
 
+function bossTick(e, dt) {
+  const f = e.hp / e.maxHp;
+  if (e.kind === 'lobster') {
+    if (e.guardT > 0) { e.guardT -= dt; e.guard = e.guardT > 0; }
+    else if ((e.cd -= dt) <= 0) { e.guardT = 2.5; e.guard = true; e.cd = 7; ring(e.x, e.y, 10, 40, 0.4, '#ffd166'); sfx('nope'); }
+    if (f < 0.5 && !e.molted) {
+      e.molted = true; e.armor = 0; e.speed *= 1.6; e.guard = false; e.guardT = 0; e.cd = 1e9;
+      burst(e.x, e.y, '#d55e00', 30, 170); shake(6);
+      S.banner = { text: 'The Old Lobster sheds its shell', sub: 'No armor now, but it’s charging', life: 2.2, boss: true };
+    }
+  } else if (e.kind === 'kraken') {
+    if (e.under) {
+      if ((e.subT -= dt) <= 0) {
+        e.under = false; ring(e.x, e.y, 8, 70, 0.6, '#56b4e9'); shake(5); sfx('boom');
+        for (let i = 0; i < 4; i++) spawnEnemy('grunt', e.w || S.wave, Math.max(0, e.d - (0.3 + i * 0.35) * TILE));
+      }
+    } else if ((e.cd -= dt) <= 0) { e.under = true; e.subT = 2.2; e.cd = 9; ring(e.x, e.y, 30, 6, 0.5, '#56b4e9'); }
+  } else if (e.kind === 'warlord') {
+    const want = f < 0.33 ? 2 : f < 0.66 ? 1 : 0;
+    if (want > e.phase) {
+      e.phase = want; shake(7); sfx('bosswave');
+      for (const t of S.towers) if (Math.hypot(t.x - e.x, t.y - e.y) < 2.8 * TILE) t.jamT = 3.5;
+      ring(e.x, e.y, 10, 2.8 * TILE, 0.8, '#bcd3e0');
+      for (let i = 0; i < 4; i++) spawnEnemy('blink', e.w || S.wave, Math.max(0, e.d - (0.4 + i * 0.4) * TILE));
+      if (want === 2) e.speed *= 1.5;
+      S.banner = { text: want === 2 ? 'The Warlord is enraged' : 'Fog rolls off the Warlord', sub: 'Nearby towers are jammed for a few seconds', life: 2.2, boss: true };
+    }
+  }
+}
 function updateEnemies(dt) {
+  // a Lobster Captain rallies everything around it
+  for (const c of S.enemies) if (c.alive && c.type === 'captain' && !c.under) for (const o of S.enemies) if (o !== c && o.alive && Math.hypot(o.x - c.x, o.y - c.y) < 1.8 * TILE) o.auraT = 0.25;
   for (const e of S.enemies) {
     if (!e.alive) continue;
+    if (e.auraT > 0) e.auraT -= dt;
+    if (e.type === 'boss') bossTick(e, dt);
+    if (e.type === 'burrow' && e.d > 0) {
+      e.bt -= dt;
+      if (e.under && e.bt <= 0) { e.under = false; e.bt = 3.5; burst(e.x, e.y, '#c9a36a', 10, 70); }
+      else if (!e.under && e.bt <= 0) { if (e.freezeT > 0 || e.slowT > 0) e.bt = 0.5; else { e.under = true; e.bt = 1.4; burst(e.x, e.y, '#c9a36a', 10, 70); } }
+    }
+    if (e.type === 'blink' && e.d > 0 && (e.bt -= dt) <= 0) {
+      if (e.freezeT > 0) e.bt = 0.6;
+      else { ring(e.x, e.y, 4, 16, 0.3, '#bcd3e0'); e.d += 1.6 * TILE * (e.slowT > 0 ? 0.4 : 1); e.bt = 3.2; e.flashT = 0.25; }
+    }
+    if (e.flashT > 0) e.flashT -= dt;
     if (e.burnT > 0) { e.burnT -= dt; hurt(e, e.burnD * dt, e.burnSrc, true, true); if (!e.alive) continue; }
     if (e.slowT > 0) { e.slowT -= dt; if (e.slowT <= 0) e.slowF = 0; }
     if (e.freezeT > 0) e.freezeT -= dt;
     if (e.brittleT > 0) e.brittleT -= dt;
     e.hitT = Math.max(0, e.hitT - dt);
-    const eff = e.speed * (e.slowT > 0 ? 1 - e.slowF : 1) * (e.freezeT > 0 ? 0.03 : 1);
+    const eff = e.speed * (e.slowT > 0 ? 1 - e.slowF : 1) * (e.freezeT > 0 ? 0.03 : 1) * (e.auraT > 0 ? 1.15 : 1) * (e.under && e.type === 'burrow' ? 1.5 : 1);
     e.d += eff * TILE * dt;
     e.wob += dt * (4 + e.speed * 2);
-    if (e.air) { [e.x, e.y] = airPos(e.d); }
-    else { const [x, y] = posAt(Math.max(0, e.d)); e.x = e.d < 0 ? x + e.d : x; e.y = y; }
+    { const [x, y] = posAt(Math.max(0, e.d)); e.x = e.d < 0 ? x + e.d : x; e.y = y; }
     if (ENEMIES[e.type].heal) {
       e.healT -= dt;
       if (e.healT <= 0) {
@@ -1681,7 +1782,7 @@ function updateEnemies(dt) {
         ring(e.x, e.y, 4, 1.7 * TILE, 0.45, '#86d46e');
       }
     }
-    if (e.d >= (e.air ? airLen : pathLen)) {
+    if (e.d >= pathLen) {
       e.alive = false; e.leaked = true;
       S.lives -= ENEMIES[e.type].lives;
       flashLives(); sfx('leak');
@@ -1709,7 +1810,7 @@ function update(dt) {
   for (const sn of S.sentries) {
     sn.drop = Math.max(0, sn.drop - dt); sn.cd -= dt;
     let tgt = null, bd = sn.range;
-    for (const e of S.enemies) { if (!e.alive || e.d < 0) continue; const dd = Math.hypot(e.x - sn.x, e.y - sn.y); if (dd < bd) { bd = dd; tgt = e; } }
+    for (const e of S.enemies) { if (!e.alive || e.d < 0 || e.under) continue; const dd = Math.hypot(e.x - sn.x, e.y - sn.y); if (dd < bd) { bd = dd; tgt = e; } }
     if (tgt) sn.angle = Math.atan2(tgt.y - sn.y, tgt.x - sn.x);
     if (tgt && sn.cd <= 0 && !sn.drop) {
       sn.cd = 1 / sn.rate;
@@ -1832,7 +1933,7 @@ function heroXp(e) {
 function nearestFor(h, r, canAir) {
   let best = null, bd = r;
   for (const e of S.enemies) {
-    if (!e.alive || e.d < 0 || (e.air && !canAir)) continue;
+    if (!e.alive || e.d < 0 || e.under || (e.air && !canAir)) continue;
     const d = Math.hypot(e.x - h.x, e.y - h.y);
     if (d <= bd) { bd = d; best = e; }
   }
@@ -2459,9 +2560,6 @@ function drawBackground() {
       lupins(x0 + 6, y0 + 2 * TILE - 4, 3, 8); lupins(x0 + 2 * TILE - 6, y0 + 2 * TILE - 4, 2, 6);
     }
   }
-  // faint dotted route flyers take
-  g.setLineDash([3, 9]); g.strokeStyle = 'rgba(225,245,255,0.35)'; g.lineWidth = 2; g.lineCap = 'round';
-  g.beginPath(); g.moveTo(airA[0], airA[1]); g.lineTo(airB[0], airB[1]); g.stroke(); g.setLineDash([]);
   // spawn: a dark cave mouth with an ember glow
   const sy = (WAYPOINTS[0][1] + 0.5) * TILE;
   const glow = g.createRadialGradient(0, sy, 2, 0, sy, TILE * 0.9);
@@ -2595,38 +2693,98 @@ function drawEnemy(c, e) {
   c.strokeStyle = 'rgba(14,12,10,0.92)'; c.lineWidth = 1.7; c.lineJoin = 'round';
   const shape = pts => { c.beginPath(); for (let i = 0; i < pts.length; i += 2) c.lineTo(pts[i], pts[i + 1]); c.closePath(); c.fill(); c.shadowColor = 'transparent'; c.stroke(); };
   const disc = rr => { c.beginPath(); c.arc(0, 0, rr, 0, Math.PI * 2); c.fill(); c.shadowColor = 'transparent'; c.stroke(); };
+  const w = e.wob, leg = Math.sin(w * 2);
+  const ink = 'rgba(14,12,10,0.92)';
+  const claw = (x, y, sz, ang) => { c.save(); c.translate(x, y); c.rotate(ang); c.fillStyle = fill; c.beginPath(); c.moveTo(0, 0); c.lineTo(sz, -sz * 0.55); c.lineTo(sz * 0.55, 0); c.lineTo(sz, sz * 0.55); c.closePath(); c.fill(); c.strokeStyle = ink; c.lineWidth = 1.3; c.stroke(); c.restore(); };
+  const legs = (n, rx, len) => { c.strokeStyle = ink; c.lineWidth = 1.4; for (let i = 0; i < n; i++) for (const sd of [-1, 1]) { const x0 = (i - (n - 1) / 2) * rx, k = Math.sin(w * 3 + i) * 1.5; c.beginPath(); c.moveTo(x0, sd * 3); c.lineTo(x0 + k, sd * (3 + len)); c.stroke(); } };
+  if (e.under && e.type === 'burrow') {           // a moving mound of sand
+    c.shadowColor = 'transparent'; c.fillStyle = '#b08a52'; c.beginPath(); c.ellipse(0, 3, r * 1.1, r * 0.55, 0, Math.PI, 0); c.fill(); c.strokeStyle = ink; c.lineWidth = 1.2; c.stroke();
+    c.restore(); return;
+  }
+  if (e.under && e.type === 'boss') {             // the Kraken below the surface: just ripples
+    c.shadowColor = 'transparent'; c.strokeStyle = 'rgba(180,225,255,0.8)'; c.lineWidth = 2;
+    for (let i = 0; i < 3; i++) { const rr = (r + 6) * (0.5 + ((w * 0.4 + i / 3) % 1)); c.globalAlpha = 1 - ((w * 0.4 + i / 3) % 1); c.beginPath(); c.ellipse(0, 4, rr * 1.2, rr * 0.5, 0, 0, 6.283); c.stroke(); }
+    c.globalAlpha = 1; c.restore(); return;
+  }
   switch (e.type) {
-    case 'grunt':   // yellow circle
+    case 'grunt':     // green crab: round shell, claws, scuttling legs
+      legs(3, 5, 4 + leg);
+      claw(r * 0.7, -r * 0.55, 6, -0.6); claw(-r * 0.7, -r * 0.55, 6, Math.PI + 0.6);
       disc(r);
-      c.fillStyle = 'rgba(0,0,0,0.28)'; c.beginPath(); c.arc(0, 0, r * 0.45, 0, Math.PI * 2); c.fill();
+      c.fillStyle = '#111'; c.beginPath(); c.arc(-3, -r * 0.55, 1.4, 0, 6.283); c.arc(3, -r * 0.55, 1.4, 0, 6.283); c.fill();
       break;
-    case 'runner':  // sky-blue dart
+    case 'runner':    // sand hopper: a dart that hops
+      c.translate(0, -Math.abs(Math.sin(w * 1.6)) * 4);
       shape([r + 4, 0, -r, -r, -r * 0.35, 0, -r, r]);
       break;
-    case 'tank':    // pale square with an inner plate
-      shape([-r, -r, r, -r, r, r, -r, r]);
-      c.strokeStyle = 'rgba(14,12,10,0.55)'; c.strokeRect(-r * 0.5, -r * 0.5, r, r);
+    case 'tank':      // snow crab: square armored shell with long legs
+      legs(3, 7, 7);
+      shape([-r, -r * 0.85, r, -r * 0.85, r, r * 0.85, -r, r * 0.85]);
+      c.strokeStyle = 'rgba(14,12,10,0.55)'; c.strokeRect(-r * 0.5, -r * 0.45, r, r * 0.9);
       break;
-    case 'swarm':   // small pink dots
+    case 'swarm':     // periwinkle: a little spiral shell
       disc(r);
+      c.strokeStyle = 'rgba(14,12,10,0.6)'; c.lineWidth = 1; c.beginPath(); c.arc(0, 0, r * 0.5, 0, 4.5); c.stroke();
       break;
-    case 'flyer': { // white diamond that flaps
-      const flap = Math.sin(e.wob * 2.5) * 3;
-      shape([r + 2, 0, 0, -r - flap, -r + 1, 0, 0, r + flap]);
+    case 'flyer': {   // herring gull: white wings that flap, grey wingtips
+      const flap = Math.sin(w * 2.5) * 5;
+      shape([r + 3, 0, 2, -2, -r * 0.4, -r - flap, -r * 0.9, -2, -r, 0, -r * 0.9, 2, -r * 0.4, r + flap, 2, 2]);
+      c.fillStyle = '#4a4f55'; c.beginPath(); c.arc(-r * 0.4, -r - flap + 2, 2, 0, 6.283); c.arc(-r * 0.4, r + flap - 2, 2, 0, 6.283); c.fill();
+      c.fillStyle = '#ffb02e'; c.beginPath(); c.moveTo(r + 3, -1); c.lineTo(r + 7, 0); c.lineTo(r + 3, 1); c.fill();
       break;
     }
-    case 'healer': { // blue hexagon with a white plus
+    case 'healer': {  // kelp mender: blue hexagon with a white plus and waving fronds
+      c.strokeStyle = '#2e7d4f'; c.lineWidth = 2; for (const sx of [-4, 4]) { c.beginPath(); c.moveTo(sx, -r + 2); c.quadraticCurveTo(sx + Math.sin(w * 2) * 4, -r - 6, sx, -r - 10); c.stroke(); }
+      c.strokeStyle = ink; c.lineWidth = 1.7;
       const p = []; for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; p.push(Math.cos(a) * r, Math.sin(a) * r); }
       shape(p);
       c.fillStyle = e.hitT > 0 ? d.color : '#ffffff'; c.fillRect(-2, -6, 4, 12); c.fillRect(-6, -2, 12, 4);
       break;
     }
-    case 'boss': {  // big orange star with a dark crown
-      const p = []; for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2 - Math.PI / 2 + e.wob * 0.08, rr = i % 2 ? r * 0.62 : r; p.push(Math.cos(a) * rr, Math.sin(a) * rr); }
-      c.lineWidth = 2.2; shape(p);
-      c.fillStyle = '#2a1f10'; c.beginPath(); c.moveTo(-7, 2); c.lineTo(-7, -6); c.lineTo(-3.5, -2); c.lineTo(0, -8); c.lineTo(3.5, -2); c.lineTo(7, -6); c.lineTo(7, 2); c.closePath(); c.fill();
+    case 'shell': {   // hermit crab: vermilion body under a grey spiral shell, until the shell cracks
+      legs(2, 6, 4 + leg);
+      claw(r * 0.8, -1, 6, 0);
+      disc(r * 0.8);
+      if (e.shell > 0) {
+        const sf = e.shell / e.shellMax;
+        c.fillStyle = e.hitT > 0 ? '#ffffff' : '#a9a49c'; c.beginPath(); c.arc(-2, -2, r * 0.95, Math.PI * 0.85, Math.PI * 2.15); c.closePath(); c.fill(); c.strokeStyle = ink; c.lineWidth = 1.6; c.stroke();
+        c.strokeStyle = 'rgba(14,12,10,0.6)'; c.lineWidth = 1; c.beginPath(); c.arc(-2, -3, r * 0.5, 0, 5); c.stroke();
+        if (sf < 0.5) { c.strokeStyle = '#2a2a2a'; c.beginPath(); c.moveTo(-6, -8); c.lineTo(-2, -2); c.lineTo(-5, 2); c.stroke(); }
+      }
       break;
     }
+    case 'split':     // moon jelly: a yellow bell with trailing tentacles
+    case 'jellet': {
+      c.strokeStyle = 'rgba(240,228,66,0.8)'; c.lineWidth = 1.2;
+      for (let i = -1; i <= 1; i++) { c.beginPath(); c.moveTo(i * r * 0.5, 1); c.quadraticCurveTo(i * r * 0.5 + Math.sin(w * 2 + i) * 3, r, i * r * 0.5, r * 1.6); c.stroke(); }
+      c.strokeStyle = ink; c.lineWidth = 1.7;
+      c.beginPath(); c.arc(0, 1, r, Math.PI, 0); c.closePath(); c.fill(); c.shadowColor = 'transparent'; c.stroke();
+      if (e.type === 'split') { c.strokeStyle = 'rgba(14,12,10,0.45)'; c.lineWidth = 1; for (let i = 0; i < 4; i++) { c.beginPath(); c.arc(-r * 0.45 + i * r * 0.3, -2, 1.6, 0, 6.283); c.stroke(); } }
+      break;
+    }
+    case 'burrow': {  // sand worm: three segments that wriggle
+      for (let i = 2; i >= 0; i--) { c.beginPath(); c.arc(-i * r * 0.8, Math.sin(w * 3 - i) * 2, r * (1 - i * 0.18), 0, 6.283); c.fill(); c.shadowColor = 'transparent'; c.stroke(); }
+      c.fillStyle = '#111'; c.beginPath(); c.arc(r * 0.35, -2, 1.4, 0, 6.283); c.fill();
+      break;
+    }
+    case 'captain': { // lobster captain: orange body, big claws, a feathered hat, and a rally ring
+      c.shadowColor = 'transparent'; c.strokeStyle = 'rgba(230,159,0,0.5)'; c.lineWidth = 1.5; c.setLineDash([4, 4]);
+      c.beginPath(); c.arc(0, 0, 1.8 * TILE / K, 0, 6.283); c.stroke(); c.setLineDash([]);
+      c.strokeStyle = ink; c.lineWidth = 1.7; c.shadowColor = 'rgba(12,16,14,0.6)';
+      claw(r * 0.6, -r * 0.7, 8, -0.4); claw(r * 0.6, r * 0.7, 8, 0.4);
+      shape([r, 0, r * 0.4, -r * 0.7, -r, -r * 0.5, -r * 1.3, 0, -r, r * 0.5, r * 0.4, r * 0.7]);
+      c.fillStyle = '#20262a'; c.beginPath(); c.moveTo(-4, -r * 0.6); c.lineTo(4, -r * 0.6); c.lineTo(0, -r * 1.2); c.closePath(); c.fill();
+      c.fillStyle = '#ffffff'; c.beginPath(); c.ellipse(-2, -r * 1.25, 1.6, 4, -0.5, 0, 6.283); c.fill();
+      break;
+    }
+    case 'blink': {   // fog wisp: a pale swirl, translucent, that flashes when it blinks
+      c.globalAlpha = 0.75 + (e.flashT > 0 ? 0.25 : 0);
+      c.beginPath(); for (let i = 0; i <= 12; i++) { const a = i / 12 * 6.283, rr = r * (0.8 + 0.25 * Math.sin(a * 3 + w * 2)); c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } c.closePath(); c.fill(); c.shadowColor = 'transparent'; c.stroke();
+      c.strokeStyle = 'rgba(14,12,10,0.5)'; c.lineWidth = 1; c.beginPath(); c.arc(0, 0, r * 0.45, w, w + 4); c.stroke();
+      c.globalAlpha = 1;
+      break;
+    }
+    case 'boss': drawBoss(c, e, r * 1.2, fill, shape, ink); break;
   }
   c.shadowColor = 'transparent';
   if (e.slowT > 0) { c.strokeStyle = 'rgba(143,211,232,0.85)'; c.lineWidth = 2; c.beginPath(); c.arc(0, 0, r + 3, 0, Math.PI * 2); c.stroke(); }
@@ -2642,8 +2800,61 @@ function drawEnemy(c, e) {
     c.fillStyle = f > 0.5 ? '#4cc3ff' : f > 0.25 ? '#ffd166' : '#ff8c42';
     c.fillRect(bx, by, bw * f, 3);
   }
+  if (e.shell > 0 && e.shell < e.shellMax) { const bw = Math.max(16, R * 2.2), bx = e.x - bw / 2, by = e.y + bob - R - 13; c.fillStyle = 'rgba(0,0,0,0.6)'; c.fillRect(bx - 1, by - 1, bw + 2, 4); c.fillStyle = '#c8c2b8'; c.fillRect(bx, by, bw * e.shell / e.shellMax, 2); }
 }
 
+function drawBoss(c, e, r, fill, shape, ink) {
+  const w = e.wob;
+  c.lineWidth = 2.2;
+  if (e.kind === 'lobster') {
+    const up = e.guard ? 1 : 0;
+    c.strokeStyle = ink; c.lineWidth = 1.6; for (let i = 0; i < 3; i++) for (const sd of [-1, 1]) { c.beginPath(); c.moveTo(-i * 6, sd * r * 0.5); c.lineTo(-i * 6 + Math.sin(w * 3 + i) * 2, sd * r * 0.95); c.stroke(); }
+    for (const sd of [-1, 1]) {   // antennae
+      c.beginPath(); c.moveTo(r * 0.8, sd * 3); c.quadraticCurveTo(r * 1.6, sd * (10 + Math.sin(w) * 3), r * 1.9, sd * 20); c.stroke();
+    }
+    for (const sd of [-1, 1]) {   // giant claws, raised when guarding
+      c.save(); c.translate(r * 0.7, sd * r * 0.55); c.rotate(sd * (up ? -1.2 : -0.3));
+      c.fillStyle = fill; c.beginPath(); c.ellipse(r * 0.55, 0, r * 0.55, r * 0.32, 0, 0, 6.283); c.fill(); c.strokeStyle = ink; c.lineWidth = 2; c.stroke();
+      c.beginPath(); c.moveTo(r * 0.75, 0); c.lineTo(r * 1.15, -r * 0.08); c.stroke();
+      c.restore();
+    }
+    c.fillStyle = e.molted ? '#ff8c42' : fill;
+    shape([r, 0, r * 0.5, -r * 0.6, -r * 0.4, -r * 0.55, -r * 1.2, -r * 0.3, -r * 1.5, 0, -r * 1.2, r * 0.3, -r * 0.4, r * 0.55, r * 0.5, r * 0.6]);
+    c.strokeStyle = 'rgba(14,12,10,0.5)'; c.lineWidth = 1.2; for (const x of [-r * 0.4, -r * 0.8, -r * 1.15]) { c.beginPath(); c.moveTo(x, -r * 0.45); c.lineTo(x, r * 0.45); c.stroke(); }
+    c.fillStyle = '#111'; c.beginPath(); c.arc(r * 0.6, -5, 2.2, 0, 6.283); c.arc(r * 0.6, 5, 2.2, 0, 6.283); c.fill();
+    if (e.guard) { c.strokeStyle = 'rgba(255,209,102,0.95)'; c.lineWidth = 3; c.beginPath(); c.arc(0, 0, r * 1.5, 0, 6.283); c.stroke(); }
+  } else if (e.kind === 'kraken') {
+    c.strokeStyle = ink; c.lineWidth = 1.6;
+    for (let i = 0; i < 6; i++) {   // tentacles
+      const a = Math.PI * 0.15 + i / 5 * Math.PI * 0.7 + Math.PI / 2, wv = Math.sin(w * 2 + i) * 0.4;
+      c.fillStyle = '#7b5fb0'; c.beginPath(); c.moveTo(Math.cos(a - 0.15) * r * 0.6, Math.sin(a - 0.15) * r * 0.6);
+      c.quadraticCurveTo(Math.cos(a + wv) * r * 1.4, Math.sin(a + wv) * r * 1.4, Math.cos(a + wv * 2) * r * 1.9, Math.sin(a + wv * 2) * r * 1.9);
+      c.lineTo(Math.cos(a + 0.15) * r * 0.6, Math.sin(a + 0.15) * r * 0.6); c.closePath(); c.fill(); c.stroke();
+    }
+    c.fillStyle = e.hitT > 0 ? '#ffffff' : '#9b7fd4'; c.beginPath(); c.ellipse(0, -r * 0.2, r, r * 0.95, 0, 0, 6.283); c.fill(); c.shadowColor = 'transparent'; c.lineWidth = 2.2; c.stroke();
+    c.fillStyle = '#ffd166'; c.beginPath(); c.arc(-r * 0.35, -r * 0.1, r * 0.22, 0, 6.283); c.arc(r * 0.35, -r * 0.1, r * 0.22, 0, 6.283); c.fill(); c.stroke();
+    c.fillStyle = '#111'; c.fillRect(-r * 0.37, -r * 0.28, 2.4, r * 0.36); c.fillRect(r * 0.33, -r * 0.28, 2.4, r * 0.36);
+  } else {
+    if (e.phase > 0) { const g = c.createRadialGradient(0, 0, r * 0.5, 0, 0, r * 2.2); g.addColorStop(0, 'rgba(200,220,230,0.5)'); g.addColorStop(1, 'rgba(200,220,230,0)'); c.fillStyle = g; c.beginPath(); c.arc(0, 0, r * 2.2, 0, 6.283); c.fill(); }
+    c.fillStyle = fill; c.strokeStyle = ink;
+    const p = []; for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2 - Math.PI / 2 + w * 0.08, rr = i % 2 ? r * 0.62 : r; p.push(Math.cos(a) * rr, Math.sin(a) * rr); }
+    shape(p);
+    c.fillStyle = '#2a1f10'; c.beginPath(); c.moveTo(-8, 2); c.lineTo(-8, -7); c.lineTo(-4, -2.5); c.lineTo(0, -9); c.lineTo(4, -2.5); c.lineTo(8, -7); c.lineTo(8, 2); c.closePath(); c.fill();
+    c.fillStyle = e.phase >= 2 ? '#ff8c42' : '#bcd3e0'; c.beginPath(); c.arc(-3, 5, 1.8, 0, 6.283); c.arc(3, 5, 1.8, 0, 6.283); c.fill();
+  }
+}
+// Kingdom Rush-style boss bar across the top of the board while a boss is on the road
+function drawBossBar() {
+  const b = S.enemies.find(e => e.alive && e.type === 'boss'); if (!b) return;
+  const B = BOSSES[b.kind], bw = 300, x = W / 2 - bw / 2, y = 40, f = Math.max(0, b.hp / b.maxHp);
+  const state = b.under ? 'Submerged · can’t be hit' : b.guard ? 'Claws raised · 80% damage blocked' : b.molted ? 'Shell shed · charging' : b.phase >= 2 ? 'Enraged' : B.trait;
+  ctx.fillStyle = 'rgba(10,12,10,0.78)'; roundRect(ctx, x - 10, y - 18, bw + 20, 38, 8); ctx.fill();
+  ctx.font = '700 13px Barlow, sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = '#ffd166'; ctx.fillText(B.name, x, y - 4);
+  ctx.textAlign = 'right'; ctx.font = '600 11px Barlow, sans-serif'; ctx.fillStyle = b.under || b.guard ? '#8fd3e8' : '#d8d2c0'; ctx.fillText(state, x + bw, y - 4);
+  ctx.fillStyle = '#2a2420'; ctx.fillRect(x, y + 2, bw, 9);
+  ctx.fillStyle = f > 0.5 ? '#4cc3ff' : f > 0.25 ? '#ffd166' : '#ff8c42'; ctx.fillRect(x, y + 2, bw * f, 9);
+  if (b.kind === 'warlord' || b.kind === 'lobster') { ctx.fillStyle = '#0a0c0a'; for (const m of b.kind === 'warlord' ? [0.33, 0.66] : [0.5]) ctx.fillRect(x + bw * m - 1, y + 1, 2, 11); }
+}
 function roundRect(c, x, y, w, h, r) {
   c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
 }
@@ -2838,6 +3049,7 @@ function render() {
       drawTower(ctx, t.type, pl, t.x, t.y, t.angle, TK, 0, pl >= 2 ? pb : -1);
       ctx.globalAlpha = 1;
     } else drawTower(ctx, t.type, t.lvl, t.x, t.y, t.angle, TK, t.flash, t.lvl >= 2 ? t.branch : -1);
+    if (t.jamT > 0) { ctx.save(); ctx.globalAlpha = Math.min(1, t.jamT) * 0.8; ctx.fillStyle = '#c8d6de'; for (const [ox, oy, rr] of [[-10, -18, 11], [6, -22, 13], [14, -12, 9], [-2, -8, 10]]) { ctx.beginPath(); ctx.arc(t.x + ox, t.y + oy, rr, 0, 6.283); ctx.fill(); } ctx.restore(); }
     const vr = t.vet || 0;
     for (let i = 0; i < vr; i++) {
       const sx = t.x - 12.5 * TK, sy = t.y + 3 * TK - i * 11, R1 = 5.6, R2 = 2.4;
@@ -3060,6 +3272,7 @@ function render() {
     ctx.fillStyle = '#ece6d2'; ctx.fillText('Click to call the barrage · Esc to cancel', W / 2, 25);
   }
 
+  drawBossBar();
   let tip = '';
   if (ui.started && !ui.targeting && !ui.heroSel && !ui.pending && !isModal()) {
     const act = COARSE ? 'Tap' : 'Click';
@@ -3429,7 +3642,7 @@ function refreshPanel(force) {
       <p class="meta">Clear bonus ${tk(waveBonus(nextW))}${S.waveActive ? ` · Send it early for +${tk(earlyBonus(nextW))}` : ''}</p>
       ${orders.length ? `<p class="meta">Field orders: ${orders.join(', ')}</p>` : ''}
       <ul class="tips">
-        <li><b>Kites</b> fly straight to the gate over the dotted line. Mortars can’t hit them.</li>
+        <li><b>Gulls</b> fly over the road. Mortars can’t hit them.</li>
         <li>Armor blunts small hits. <b>Tesla</b>, Ballista and Assassin ignore it.</li>
         <li>Save your hero’s ultimate (<b>R</b>) for Warlords.</li>
       </ul>`;
@@ -4006,7 +4219,7 @@ requestAnimationFrame(frame);
 connectCloud();
 
 // Test hook for automated play-throughs.
-window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get decor() { return decor; }, drawHero, gameOver, victory, showMapComplete, openSettings, CAST, sigRank, ultRank, skillRadius, vetRank, VET, get sites() { return siteSet; }, A, SET, Music, previewStats, statRows, masterTower, masteryCost, MASTERY, tStats, loadLatest, saveResume, titleScreen, undoLast, lastUndo, sellTower, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, unlocked, UNLOCK, HEROES, COLS, ROWS, TILE, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero, nextMap, openGallery, closeGallery, pickFromGallery, continueCampaign, loadCheckpoint };
+window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get decor() { return decor; }, __spawn: spawnEnemy, __hurt: hurt, drawHero, gameOver, victory, showMapComplete, openSettings, CAST, sigRank, ultRank, skillRadius, vetRank, VET, get sites() { return siteSet; }, A, SET, Music, previewStats, statRows, masterTower, masteryCost, MASTERY, tStats, loadLatest, saveResume, titleScreen, undoLast, lastUndo, sellTower, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, unlocked, UNLOCK, HEROES, COLS, ROWS, TILE, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero, nextMap, openGallery, closeGallery, pickFromGallery, continueCampaign, loadCheckpoint };
 })();
 </script>
 </body>

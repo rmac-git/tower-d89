@@ -133,15 +133,23 @@ Double-clicks are absorbed. A second click or tap within 0.4 seconds of picking 
 
 The palette is safe for protanopia and deuteranopia. Good and bad are shown as sky blue and orange, never green and red. Invalid build spots get an orange outline and an X. Every enemy has its own shape as well as a colour from the Okabe-Ito palette:
 
-| Enemy | Shape | Colour |
-| --- | --- | --- |
-| Footman | Circle | Yellow |
-| Courier | Dart | Sky blue |
-| Ironclad | Square | Pale grey |
-| Mite | Small dot | Pink |
-| Kite | Flapping diamond | White |
-| Mender | Hexagon with a plus | Blue |
-| Warlord | Star with a crown | Orange |
+| Enemy | Shape | Colour | Trick | Answer |
+| --- | --- | --- | --- | --- |
+| Green Crab | Round shell with claws | Green | None | Anything |
+| Sand Hopper | Hopping dart | Sky blue | Fast | Archers, Tesla |
+| Snow Crab | Square shell, long legs | Pale grey | Armored | Tesla, Ballista, Longshot |
+| Periwinkle | Small spiral shell | Pink | Big packs | Splash |
+| Herring Gull | Flapping wings | White | Flies over the road; Mortars can't hit it | Everything else |
+| Kelp Mender | Hexagon with a plus and kelp | Blue | Heals allies | Kill it first |
+| Hermit Crab (wave 7+) | Body under a grey spiral shell | Vermilion | Shell soaks damage, then it bolts | Big hits |
+| Moon Jelly (wave 9+) | Bell with tentacles | Yellow | Splits into three jellets | Splash, chains |
+| Sand Worm (wave 11+) | Three wriggling segments | Sand | Burrows, unhittable | Slow or freeze it so it can't dive |
+| Lobster Captain (wave 13+) | Lobster with a hat and a rally ring | Orange | +3 armor and 15% speed to nearby enemies | Strong targeting |
+| Fog Wisp (wave 15+) | Pale swirl | Mist grey | Blinks 1.6 tiles ahead | Slows shorten it, freezes stop it |
+
+**Bosses:** each road ends in its own boss, announced with a banner and a health bar across the top of the board that shows what it's doing. **The Old Lobster** (Switchback) raises its claws every few seconds and blocks 80% of damage. Below half health it sheds its shell, losing all armor and charging. **The Kraken** (The Serpent) dives where nothing can hit it, then surfaces with a brood of four crabs. **The Drowned Warlord** (Short Fuse) jams nearby towers with fog and calls Fog Wisps at two-thirds and one-third health, then enrages.
+
+The first time each new enemy or boss appears in a run, a card explains its trick and how to beat it.
 
 All enemies have dark outlines, and the same shapes appear in the next-wave peek and the scouting report. Health bars go from blue to yellow to orange.
 
