@@ -1859,7 +1859,7 @@ function updateHero(dt) {
   const go = (tx, ty) => {
     const dx = tx - h.x, dy = ty - h.y, dist = Math.hypot(dx, dy);
     if (dist < 3) return true;
-    const m = Math.min(step, dist); h.x += dx / dist * m; h.y += dy / dist * m;
+    const m = Math.min(step, dist); h.x += dx / dist * m; h.y += dy / dist * m; h.movedAt = S.time;
     return false;
   };
   if (h.dest) { if (go(h.dest[0], h.dest[1])) h.dest = null; }
@@ -2600,63 +2600,125 @@ function drawCoin(c, x, y, r) {
   c.restore();
 }
 
+// Heroes: animated low-poly figures. They face their target, bob and step when walking, breathe when idle,
+// and each carries a signature prop: Maren's banner, Ilse's floating spellbook, Tick's scout drone.
+// o: { scale, angle, flash, aura, moving, power (ultimate active), lvl }
 function drawHero(c, k, x, y, o = {}) {
   const d = HEROES[k], s = o.scale || 1, col = o.flash ? '#ffffff' : d.color, t = performance.now() / 1000;
+  const mv = !!o.moving, step = mv ? Math.sin(t * 11) : 0, bob = mv ? -Math.abs(Math.sin(t * 11)) * 1.8 : Math.sin(t * 2.2) * 0.5;
+  const face = Math.cos(o.angle || 0) < -0.15 ? -1 : 1, sway = Math.sin(t * 3.1) * 1.4 + (mv ? -face * 2.2 : 0), pw = !!o.power;
   c.save(); c.translate(x, y); c.scale(s, s);
+  // ground: a slowly turning ring in the hero's colour
   if (o.aura) {
-    c.strokeStyle = d.color; c.globalAlpha = 0.35 + Math.sin(t * 3) * 0.12; c.lineWidth = 2;
-    c.beginPath(); c.ellipse(0, 10, 16, 6, 0, 0, 6.283); c.stroke(); c.globalAlpha = 1;
+    c.save(); c.strokeStyle = d.color; c.globalAlpha = 0.45 + Math.sin(t * 3) * 0.12; c.lineWidth = 1.6; c.setLineDash([5, 4]); c.lineDashOffset = -t * 12;
+    c.beginPath(); c.ellipse(0, 10, 17, 6.5, 0, 0, 6.283); c.stroke(); c.restore();
   }
-  c.fillStyle = 'rgba(8,20,14,0.4)'; c.beginPath(); c.ellipse(3, 11, 12, 4.5, 0, 0, 6.283); c.fill();
+  if (pw) {   // ultimate active: a pulsing glow behind the hero
+    const g = c.createRadialGradient(0, -6, 2, 0, -6, 26); g.addColorStop(0, d.color); g.addColorStop(1, 'rgba(0,0,0,0)');
+    c.globalAlpha = 0.45 + Math.sin(t * 8) * 0.15; c.fillStyle = g; c.beginPath(); c.arc(0, -6, 26, 0, 6.283); c.fill(); c.globalAlpha = 1;
+  }
+  c.fillStyle = 'rgba(8,20,14,0.42)'; c.beginPath(); c.ellipse(3, 11.5, 12, 4.5, 0, 0, 6.283); c.fill();
+  // boots step when walking
+  c.fillStyle = '#2a2018';
+  c.beginPath(); c.ellipse(-3.6 + step * 2.2, 10.5, 2.8, 1.8, 0, 0, 6.283); c.fill();
+  c.beginPath(); c.ellipse(3.6 - step * 2.2, 10.5, 2.8, 1.8, 0, 0, 6.283); c.fill();
+  c.translate(0, bob);
   if (k === 'maren') {
-    poly(c, [-8, -6, 8, -6, 11, 11, -11, 11], hsl(40, 50, 30), INK);                       // cape
-    poly(c, [-8, -8, 0, -8, 0, 9, -9, 9], hsl(210, 12, 74), INK); poly(c, [0, -8, 8, -8, 9, 9, 0, 9], hsl(210, 12, 54), INK);   // armour
-    poly(c, [-3.5, -6, 3.5, -6, 4.5, 9, -4.5, 9], col, INK);                               // tabard
-    poly(c, [-5, -9, 0, -19, 0, -9], hsl(210, 12, 78), INK); poly(c, [0, -19, 5, -9, 0, -9], hsl(210, 12, 56), INK);   // helm
-    c.strokeStyle = '#1b2025'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(-3, -12); c.lineTo(3, -12); c.stroke();
-    poly(c, [0, -19, 4, -25, 2, -17], hsl(0, 65, 52), INK);                                // plume
-    poly(c, [-14, -5, -9, -5, -9, 4, -11.5, 10, -14, 4], hsl(210, 14, 64), INK);          // kite shield
-    poly(c, [-9, -5, -5, -5, -5, 4, -9, 4, -11.5, 10], hsl(210, 14, 46), INK);
-    c.fillStyle = col; c.fillRect(-10.6, -3, 1.6, 9); c.fillRect(-13, 0, 6.5, 1.6);
-    c.save(); c.translate(6, -1); c.rotate(o.angle || 0);
-    poly(c, [3, -1.4, 19, -0.2, 3, 0], '#e8eef4', INK); poly(c, [3, 0, 19, -0.2, 3, 1.4], '#9aa6b2', INK);
-    c.fillStyle = col; c.fillRect(1.5, -3.5, 2, 7);
-    if (o.flash) { c.strokeStyle = 'rgba(255,255,255,0.8)'; c.lineWidth = 2; c.beginPath(); c.arc(0, 0, 18, -0.6, 0.6); c.stroke(); }
+    c.save(); c.scale(face, 1);
+    // banner on her back: bigger and brighter during Hold the Line
+    const fl = pw ? 1.5 : 1, wv = Math.sin(t * 5) * 2.4;
+    c.strokeStyle = '#5a4630'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-5, 6); c.lineTo(-8, -30 * fl); c.stroke();
+    poly(c, [-8, -30 * fl, -8 - 13 * fl, -27 * fl + wv, -8 - 10 * fl, -22 * fl + wv * 0.6, -8, -21 * fl], col, INK);
+    c.fillStyle = '#fff3d6'; c.beginPath(); c.arc(-8 - 6 * fl, -25 * fl + wv * 0.5, 1.6 * fl, 0, 6.283); c.fill();
+    poly(c, [-7, -7, 7, -7, 10 + sway, 10, -10 + sway, 10], hsl(355, 45, 30), INK);                // cape
+    poly(c, [-7.5, -8, 0, -8, 0, 8, -8, 8], hsl(210, 12, 74), INK); poly(c, [0, -8, 7.5, -8, 8, 8, 0, 8], hsl(210, 12, 52), INK);   // armour
+    poly(c, [-3.5, -6, 3.5, -6, 4.2, 8, -4.2, 8], col, INK);                                         // tabard
+    poly(c, [0, -3, 1, 0, 0, 3, -1, 0], '#fff3d6');                                                  // tabard star
+    c.fillStyle = hsl(210, 14, 80); c.strokeStyle = INK; c.lineWidth = 1;
+    for (const px of [-8, 8]) { c.beginPath(); c.ellipse(px, -6.5, 3.6, 2.6, 0, Math.PI, 0); c.fill(); c.stroke(); }   // pauldrons
+    poly(c, [-5, -9, -5, -15, 0, -20, 0, -9], hsl(210, 12, 80), INK); poly(c, [0, -20, 5, -15, 5, -9, 0, -9], hsl(210, 12, 58), INK);   // helm
+    c.fillStyle = '#14181c'; c.fillRect(-3.4, -13.4, 6.8, 1.5); c.fillRect(-0.7, -13.4, 1.4, 4);    // T-visor
+    poly(c, [0, -20, 7 + sway, -27 + Math.sin(t * 6), 4, -18.5], hsl(0, 65, 52), INK);             // plume
+    // kite shield with a lighthouse
+    poly(c, [-14.5, -5, -7.5, -5, -7.5, 4, -11, 11, -14.5, 4], hsl(210, 14, 66), INK); poly(c, [-11, -5, -7.5, -5, -7.5, 4, -11, 11], hsl(210, 14, 50), INK);
+    c.fillStyle = col; c.fillRect(-11.9, -3, 1.8, 7); c.fillStyle = '#c0453a'; c.fillRect(-11.9, -0.8, 1.8, 1.4); c.fillRect(-11.9, 2.4, 1.8, 1.4);
+    poly(c, [-12.6, -3, -11, -5, -9.4, -3], '#ffd166');
+    c.restore();
+    c.save(); c.translate(7 * face, 0); c.rotate(o.angle || 0);
+    poly(c, [3, -1.5, 20, -0.2, 3, 0], '#eef3f8', INK); poly(c, [3, 0, 20, -0.2, 3, 1.5], '#9aa6b2', INK);
+    c.fillStyle = col; c.fillRect(1.4, -3.6, 2, 7.2); c.fillStyle = '#5a4630'; c.fillRect(-2, -0.9, 3.6, 1.8);
+    if (o.flash) { c.strokeStyle = 'rgba(255,255,255,0.85)'; c.lineWidth = 2.4; c.beginPath(); c.arc(0, 0, 19, -0.8, 0.8); c.stroke(); }
     c.restore();
   } else if (k === 'ilse') {
-    poly(c, [0, -11, 0, 11, -11, 11], hsl(272, 42, 50), INK); poly(c, [0, -11, 11, 11, 0, 11], hsl(272, 42, 34), INK);   // robe
-    poly(c, [-6, 2, 6, 2, 6.5, 4.5, -6.5, 4.5], hsl(40, 70, 55), INK);                    // sash
+    c.save(); c.scale(face, 1);
+    poly(c, [-1, -7, -13 + sway * 1.4, -4 + Math.sin(t * 4), -11 + sway, -1, 1, -5], hsl(40, 75, 55), INK);   // scarf
+    poly(c, [0, -10, 0, 10, -11 + sway, 10], hsl(272, 42, 50), INK); poly(c, [0, -10, 11 + sway, 10, 0, 10], hsl(272, 42, 34), INK);   // robe
+    c.fillStyle = '#ffd166'; for (const [sx, sy] of [[-4, 4], [3, 7], [-6, 8], [5, 2]]) { c.beginPath(); c.arc(sx + sway * 0.4, sy, 0.7, 0, 6.283); c.fill(); }   // stars on the robe
+    poly(c, [-5.8, 1.5, 5.8, 1.5, 6.4, 4, -6.4, 4], hsl(40, 70, 55), INK);                         // sash
+    poly(c, [-4.6, -10, -5.4, -4, -2, -6], '#3a2440');                                              // hair
     c.fillStyle = '#e2bf9a'; c.beginPath(); c.arc(0, -8.5, 3.6, 0, 6.283); c.fill(); c.strokeStyle = INK; c.lineWidth = 1; c.stroke();
-    poly(c, [-9, -9, 0, -10.5, 0, -6.5, -8, -6.5], hsl(268, 40, 30), INK); poly(c, [0, -10.5, 9, -9, 8, -6.5, 0, -6.5], hsl(268, 40, 22), INK);  // brim
-    poly(c, [-5.5, -10, 0, -10, 2, -25], hsl(270, 40, 40), INK); poly(c, [0, -10, 5.5, -10, 2, -25], hsl(270, 40, 26), INK);  // hat
+    c.fillStyle = '#1b1420'; c.fillRect(0.8, -9.4, 1.2, 1.2);                                       // eye
+    poly(c, [-10, -9.5, 0, -11, 0, -7, -9, -7], hsl(268, 40, 30), INK); poly(c, [0, -11, 10, -9.5, 9, -7, 0, -7], hsl(268, 40, 22), INK);   // brim
+    poly(c, [-5.5, -10.5, 0, -10.5, 1.5, -21], hsl(270, 40, 40), INK); poly(c, [0, -10.5, 5.5, -10.5, 1.5, -21], hsl(270, 40, 26), INK);  // cone
+    poly(c, [1.5, -21, -5 + sway, -27 + Math.sin(t * 2.5), -0.5, -19.5], hsl(270, 40, 34), INK);    // bent tip
+    c.fillStyle = '#ffd166'; c.fillRect(-5, -12.2, 10, 1.4);                                        // hat band
+    c.restore();
+    // floating spellbook, pages glowing
+    const bx = -14 * face, by = -11 + Math.sin(t * 2.6) * 2;
+    c.save(); c.translate(bx, by); c.rotate(Math.sin(t * 1.3) * 0.15);
+    const bg2 = c.createRadialGradient(0, 0, 1, 0, 0, 9); bg2.addColorStop(0, 'rgba(255,200,120,0.55)'); bg2.addColorStop(1, 'rgba(255,200,120,0)');
+    c.fillStyle = bg2; c.beginPath(); c.arc(0, 0, 9, 0, 6.283); c.fill();
+    poly(c, [-6, -1, 0, 0.5, 0, 4, -6, 2.5], hsl(20, 45, 30), INK); poly(c, [0, 0.5, 6, -1, 6, 2.5, 0, 4], hsl(20, 45, 24), INK);
+    poly(c, [-5.5, -1.8, 0, -0.2, 0, 3, -5.5, 1.6], '#fff3d6', INK); poly(c, [0, -0.2, 5.5, -1.8, 5.5, 1.6, 0, 3], '#efe0c0', INK);
+    c.restore();
     c.save(); c.rotate(o.angle || 0);
-    c.strokeStyle = '#7a5a34'; c.lineWidth = 2; c.beginPath(); c.moveTo(1, 2); c.lineTo(16, 0); c.stroke();
+    c.strokeStyle = '#7a5a34'; c.lineWidth = 2.2; c.beginPath(); c.moveTo(0, 3); c.lineTo(16, 0); c.stroke();
     const og = c.createRadialGradient(17, 0, 0.5, 17, 0, 8);
     og.addColorStop(0, '#fff3d0'); og.addColorStop(0.35, '#ff8a3c'); og.addColorStop(1, 'rgba(255,138,60,0)');
-    c.fillStyle = og; c.beginPath(); c.arc(17, 0, 8 + (o.flash ? 3 : Math.sin(t * 5)), 0, 6.283); c.fill();
+    c.fillStyle = og; c.beginPath(); c.arc(17, 0, (pw ? 11 : 8) + (o.flash ? 3 : Math.sin(t * 5)), 0, 6.283); c.fill();
     c.restore();
-    for (let i = 0; i < 3; i++) {
-      const a = t * 2 + i * 2.094, ex = Math.cos(a) * 13, ey = Math.sin(a) * 5 - 4;
+    for (let i = 0, n = pw ? 6 : 3; i < n; i++) {
+      const a = t * 2 + i * 6.283 / n, ex = Math.cos(a) * 13, ey = Math.sin(a) * 5 - 4;
       poly(c, [ex, ey - 2.2, ex + 1.5, ey, ex, ey + 2.2, ex - 1.5, ey], '#ffb347');
     }
   } else {
-    c.save(); c.translate(-7, -6); c.rotate(t * 2);                                        // backpack gear
+    c.save(); c.scale(face, 1);
+    // backpack: spinning gear, antenna with a blinking light, a chimney that puffs steam
+    poly(c, [-11, -9, -3, -9, -3, 4, -11, 4], hsl(30, 30, 34), INK);
+    c.strokeStyle = '#3a3a3a'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(-9, -9); c.lineTo(-10, -22); c.stroke();
+    c.fillStyle = Math.sin(t * 6) > 0 ? '#ff8c42' : '#5a3a20'; c.beginPath(); c.arc(-10, -22.5, 1.6, 0, 6.283); c.fill();
+    c.fillStyle = '#4a4a4a'; c.fillRect(-6, -14, 2.6, 5);
+    for (let i = 0; i < 3; i++) { const ph = (t * 0.8 + i / 3) % 1; c.fillStyle = `rgba(230,230,230,${0.5 * (1 - ph)})`; c.beginPath(); c.arc(-4.7 - ph * 4, -15 - ph * 12, 1.5 + ph * 2.5, 0, 6.283); c.fill(); }
+    c.save(); c.translate(-7, -3); c.rotate(t * 2.4);
     c.fillStyle = '#c99a48'; c.beginPath();
-    for (let i = 0; i < 16; i++) { const a = i / 16 * 6.283, rr = i % 2 ? 5.5 : 4; c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); }
+    for (let i = 0; i < 16; i++) { const a = i / 16 * 6.283, rr = i % 2 ? 4.6 : 3.4; c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); }
     c.closePath(); c.fill(); c.strokeStyle = INK; c.lineWidth = 1; c.stroke();
-    c.fillStyle = '#3a2a1a'; c.beginPath(); c.arc(0, 0, 1.6, 0, 6.283); c.fill();
+    c.fillStyle = '#3a2a1a'; c.beginPath(); c.arc(0, 0, 1.3, 0, 6.283); c.fill();
     c.restore();
-    poly(c, [-9, -5, 0, -5, 0, 11, -10, 11], hsl(24, 58, 52), INK); poly(c, [0, -5, 9, -5, 10, 11, 0, 11], hsl(24, 58, 38), INK);   // coat
-    c.fillStyle = '#2a2018'; c.fillRect(-9.5, 3, 19, 2.4); c.fillStyle = '#d9a84e'; c.fillRect(-1.5, 2.8, 3, 2.8);
-    c.fillStyle = '#e2bf9a'; c.beginPath(); c.arc(0, -10, 5, 0, 6.283); c.fill(); c.strokeStyle = INK; c.stroke();
-    poly(c, [-5.5, -12, 0, -17, 5.5, -12, 0, -13], col, INK);                              // cap
-    c.fillStyle = '#20262a'; c.fillRect(-5.5, -11.6, 11, 2.6);
-    c.fillStyle = '#8fe0f0'; c.beginPath(); c.arc(-2.6, -10.3, 1.9, 0, 6.283); c.arc(2.6, -10.3, 1.9, 0, 6.283); c.fill();
+    poly(c, [-8, -6, 0, -6, 0, 10, -9 + sway * 0.5, 10], hsl(24, 58, 52), INK); poly(c, [0, -6, 8, -6, 9 + sway * 0.5, 10, 0, 10], hsl(24, 58, 38), INK);   // coat
+    c.fillStyle = '#2a2018'; c.fillRect(-8.5, 2.5, 17, 2.4); c.fillStyle = '#d9a84e'; c.fillRect(-1.5, 2.3, 3, 2.8);   // belt
+    c.fillStyle = '#9aa6b2'; c.fillRect(4, 3, 1.4, 6); c.beginPath(); c.arc(4.7, 9.4, 1.6, 0, 6.283); c.fill();         // wrench
+    c.fillStyle = '#e2bf9a'; c.beginPath(); c.arc(0, -10.5, 5, 0, 6.283); c.fill(); c.strokeStyle = INK; c.stroke();
+    poly(c, [-3, -15.5, -1, -18, 1, -15.5], '#8a5a30');                                              // tuft of hair
+    poly(c, [-5.5, -13, 0, -17, 5.5, -13, 0, -14], col, INK); c.fillStyle = '#20262a'; c.fillRect(-5.5, -12.4, 13, 2.4);   // cap and brim
+    c.fillStyle = '#20262a'; c.fillRect(-5.5, -11.6, 11, 2.8);
+    c.fillStyle = '#8fe0f0'; c.beginPath(); c.arc(-2.6, -10.3, 2, 0, 6.283); c.arc(2.6, -10.3, 2, 0, 6.283); c.fill();
+    c.fillStyle = '#ffffff'; c.fillRect(-3.4, -11.4, 1, 1); c.fillRect(1.8, -11.4, 1, 1);            // lens glints
+    c.restore();
     c.save(); c.rotate(o.angle || 0);
-    poly(c, [4, -2.4, 21, -1.6, 21, 0, 4, 0], hsl(40, 60, 58), INK); poly(c, [4, 0, 21, 0, 21, 1.6, 4, 2.4], hsl(214, 10, 40), INK);
-    c.fillStyle = col; c.fillRect(10, -3.6, 4, 7.2);
-    if (o.flash) { c.fillStyle = 'rgba(160,255,230,0.9)'; c.beginPath(); c.arc(23, 0, 3.5, 0, 6.283); c.fill(); }
+    poly(c, [4, -2.4, 22, -1.6, 22, 0, 4, 0], hsl(40, 60, 58), INK); poly(c, [4, 0, 22, 0, 22, 1.6, 4, 2.4], hsl(214, 10, 40), INK);
+    c.fillStyle = '#20262a'; c.fillRect(9, -4.6, 6, 2);                                              // scope
+    c.fillStyle = col; c.fillRect(10, -2.6, 4, 6);
+    if (o.flash) { c.fillStyle = 'rgba(160,255,230,0.9)'; c.beginPath(); c.arc(24, 0, 3.5, 0, 6.283); c.fill(); }
     c.restore();
+    // scout drone circling overhead
+    const da = t * 1.6, dx = Math.cos(da) * 15, dy = -24 + Math.sin(t * 3) * 1.6 + Math.sin(da) * 3;
+    c.fillStyle = 'rgba(8,20,14,0.25)'; c.beginPath(); c.ellipse(dx, 12, 4, 1.5, 0, 0, 6.283); c.fill();
+    c.fillStyle = '#3a4a46'; c.fillRect(dx - 5, dy - 0.6, 10, 1.2);
+    c.fillStyle = 'rgba(200,240,230,0.55)'; for (const rx of [-5, 5]) { c.beginPath(); c.ellipse(dx + rx, dy - 1.2, 3.2, 0.9, 0, 0, 6.283); c.fill(); }
+    c.fillStyle = '#7fd9c0'; c.strokeStyle = INK; c.lineWidth = 0.8; c.beginPath(); c.arc(dx, dy + 0.8, 2.2, 0, 6.283); c.fill(); c.stroke();
+    c.fillStyle = pw || Math.sin(t * 9) > 0.6 ? '#ff8c42' : '#20262a'; c.beginPath(); c.arc(dx, dy + 1.4, 0.8, 0, 6.283); c.fill();
+    if (pw && Math.random() < 0.3) { c.strokeStyle = '#fff6c0'; c.lineWidth = 1; c.beginPath(); const a2 = Math.random() * 6.283; c.moveTo(Math.cos(a2) * 8, -6 + Math.sin(a2) * 8); c.lineTo(Math.cos(a2) * 14, -6 + Math.sin(a2) * 14); c.stroke(); }
   }
   c.restore();
 }
@@ -2666,7 +2728,7 @@ function iconHero(k, size) {
   const g = c.getContext('2d'); g.scale(DPR * size / 44, DPR * size / 44);
   g.fillStyle = '#23312a'; g.beginPath(); g.arc(22, 22, 21, 0, 6.283); g.fill();
   g.strokeStyle = HEROES[k].color; g.lineWidth = 1.5; g.stroke();
-  drawHero(g, k, 22, 27, { scale: 1.12, angle: -0.6 });
+  drawHero(g, k, 22, 31, { scale: 0.92, angle: -0.6 });
   return c;
 }
 
@@ -2751,9 +2813,10 @@ function render() {
       const [dx, dy] = hh.dest; ctx.strokeStyle = hd.color; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(dx - 5, dy - 5); ctx.lineTo(dx + 5, dy + 5); ctx.moveTo(dx + 5, dy - 5); ctx.lineTo(dx - 5, dy + 5); ctx.stroke();
     }
-    drawHero(ctx, hh.k, hh.x, hh.y, { angle: hh.angle, flash: hh.flash > 0, scale: K, aura: true });
+    const power = hh.k === 'maren' ? S.time < (hh.rage || 0) : hh.k === 'ilse' ? S.rains.length > 0 : S.buffs.some(b => b.r > 1e8 && b.until > S.time);
+    drawHero(ctx, hh.k, hh.x, hh.y, { angle: hh.angle, flash: hh.flash > 0, scale: K * 1.25, aura: true, moving: S.time - (hh.movedAt || -9) < 0.12, power });
     if (S.time < hh.invuln || hh.shield > 0) { ctx.strokeStyle = 'rgba(255,240,200,0.85)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(hh.x, hh.y, 15 * K, 0, Math.PI * 2); ctx.stroke(); }
-    const bw = 28 * K, bx = hh.x - bw / 2, by = hh.y - 25 * K;
+    const bw = 28 * K, bx = hh.x - bw / 2, by = hh.y - 43 * K;
     ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.fillRect(bx - 1, by - 1, bw + 2, 6);
     ctx.fillStyle = '#4cc3ff'; ctx.fillRect(bx, by, bw * Math.max(0, hh.hp / hh.maxHp), 4);
     ctx.font = '700 10px "JetBrains Mono", monospace'; ctx.textAlign = 'left'; ctx.fillStyle = hd.color; ctx.fillText(hh.lvl, bx + bw + 3, by + 5);
@@ -3869,7 +3932,7 @@ requestAnimationFrame(frame);
 connectCloud();
 
 // Test hook for automated play-throughs.
-window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get decor() { return decor; }, gameOver, victory, showMapComplete, openSettings, CAST, sigRank, ultRank, skillRadius, vetRank, VET, get sites() { return siteSet; }, A, SET, Music, previewStats, statRows, masterTower, masteryCost, MASTERY, tStats, loadLatest, saveResume, titleScreen, undoLast, lastUndo, sellTower, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, unlocked, UNLOCK, HEROES, COLS, ROWS, TILE, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero, nextMap, openGallery, closeGallery, pickFromGallery, continueCampaign, loadCheckpoint };
+window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get decor() { return decor; }, drawHero, gameOver, victory, showMapComplete, openSettings, CAST, sigRank, ultRank, skillRadius, vetRank, VET, get sites() { return siteSet; }, A, SET, Music, previewStats, statRows, masterTower, masteryCost, MASTERY, tStats, loadLatest, saveResume, titleScreen, undoLast, lastUndo, sellTower, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, unlocked, UNLOCK, HEROES, COLS, ROWS, TILE, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero, nextMap, openGallery, closeGallery, pickFromGallery, continueCampaign, loadCheckpoint };
 })();
 </script>
 </body>
