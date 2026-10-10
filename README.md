@@ -32,7 +32,7 @@ The second upgrade splits into two paths, so two players end up with different d
 | Tesla Coil | **Overload**: +2/4/6 chain jumps, +10/20/30% damage | **Static**: every enemy hit is slowed 25/35/45% |
 | Longshot | **Headhunter**: +10/20/30% damage, plus +60/120/180% more to Ironclads and Warlords | **Ricochet**: bounces to 1/2/3 more enemies at 40% damage |
 
-**Abilities:** *Barrage* (`Q`, 40s cooldown) drops five armor-piercing shells on a patch of road you choose. *Cold Snap* (`W`, 55s) slows every enemy for five seconds.
+**Abilities:** your hero's two skills are the only special abilities (see Heroes). The old Barrage and Cold Snap buttons were retired so there are fewer buttons and each one matters more.
 
 **Field orders:** from wave 10 on, before every fifth wave you pick one of three perks. Each gives a bonus and a cost, such as +20% damage for +1 enemy armor.
 
@@ -40,7 +40,7 @@ The second upgrade splits into two paths, so two players end up with different d
 
 **Maps:** Switchback (long and winding), The Serpent (four long climbs), Short Fuse (a short road, hard), played in that order. Your best wave is saved.
 
-**Keys:** `B` opens the build gallery · `H` commands the hero · `E` / `R` hero skill and ultimate · `K` skill tree · `1`–`5` pick a tower · `Space` sends the next wave (sending it early pays bonus gold) · `U` / `I` pick upgrade path A / B · `S` sells · `T` changes targeting · `Q` / `W` abilities · `N` next-wave intel · `Z` or `Ctrl`/`Cmd`+`Z` undoes your last build, upgrade or sale · `Esc` closes menus · `F` changes speed · `P` pauses · `M` mutes · `Esc` cancels.
+**Keys:** `B` opens the build gallery · `H` commands the hero · `E` (or `Q`) aims the hero's signature skill, then click the map · `R` (or `W`) ultimate · `K` hero skills card · `1`–`5` pick a tower · `Space` sends the next wave (sending it early pays bonus gold) · `U` / `I` pick upgrade path A / B · `S` sells · `T` changes targeting · `Q` / `W` abilities · `N` next-wave intel · `Z` or `Ctrl`/`Cmd`+`Z` undoes your last build, upgrade or sale · `Esc` closes menus · `F` changes speed · `P` pauses · `M` mutes · `Esc` cancels.
 
 ## Learning curve
 
@@ -51,31 +51,34 @@ The game starts simple and adds one system at a time. Each unlock arrives with a
 | Start | Archer, Mortar, your hero |
 | 1 | Hero signature skill |
 | 2 | Frost Spire |
-| 3 | Barrage |
 | 4 | Tesla Coil |
 | 5 | Longshot |
 | 6 | Level 3 upgrade paths |
-| 7 | Cold Snap |
 | 8 | Tower targeting |
 | 8 | Tower mastery |
 | 9 | Field orders (then every fifth wave) |
 | 20 | Hero ultimate |
 
-The skill tree button (★) appears with the hero's first skill point. The first wave shows tips on the board.
+The hero's ultimate unlocks at hero level 5 (usually near the end of the first map). The first wave shows tips on the board.
 
 ## Heroes
 
 After picking a map you choose a hero who fights on the field beside your towers. Click or tap the hero (or press `H`) to command them, then click anywhere to send them there. Heroes gain experience from nearby kills, level up to 10, and fall and respawn if overrun.
 
-| Hero | Style | Skill (E) | Ultimate (R, after wave 20) | Skill paths |
-|---|---|---|---|---|
-| Maren Voss, Warden of the Gate | Melee, charges nearby packs | Shockwave: damage and stun around her | Last Stand: can't fall, hits harder, nearby towers speed up | Bulwark · Vanguard · Banner |
-| Ilse Kaur, the Ember Scribe | Ranged mage, ignores armor | Meteor on the densest pack | Sunfall: twelve meteors | Cinder · Aether · Lantern |
-| Tick Brannock, the Gate Tinker | Ranged engineer | Overclock nearby towers | Total Overclock: every tower, double speed | Rifle · Workshop · Scavenger |
+Following Bloons TD 6's pattern (a light ability early, a big one later, both improving automatically) and avoiding the skill-tree busywork reviewers criticised in Kingdom Rush 5, each hero has exactly **two special skills**:
 
-**Skill tree (`K`):** three paths of three tiers per hero. Tiers cost 1, 2 and 3 points, and each needs the one above it. Points come from levels and from story chapters 2 and 4, so you can't learn everything in one run.
+- **Signature skill (`E`):** available from wave 1. It's aimed: press it, then click or tap anywhere on the map. It ranks up on its own at hero levels 3 and 7, and each rank adds something you can see.
+- **Ultimate (`R`):** unlocks at hero level 5 and ranks up at level 9.
 
-**Story:** each hero has a prologue and five chapters (after waves 5, 10, 15, 20 and 25) following the fall of the High Marshal, Corvane. Chapter 2 asks you to choose how the hero's skill evolves (for example, Meteor becomes Cataclysm or Meteor Shower). Chapter 4 unlocks the ultimate. The victory epilogue changes with your choice.
+| Hero | Signature (E) | Rank 2 (lv 3) | Rank 3 (lv 7) | Ultimate (R, lv 5) | Ultimate rank 2 (lv 9) |
+|---|---|---|---|---|---|
+| Maren Voss, Warden of the Gate | **Leap Slam**: leaps to the spot and slams it (damage and stun) | Knocks enemies back down the road | An aftershock slams again | **Hold the Line**: 8s unkillable fury, nearby towers +30% fire rate | The banner stuns everything near her every 2.5s |
+| Ilse Kaur, the Ember Scribe | **Meteor**: a burning meteor on the spot | Leaves burning ground for 4s | Two smaller meteors chase it in | **Sunfall**: twelve meteors | Twenty meteors, each leaving burning ground |
+| Tick Brannock, the Gate Tinker | **Sentry Drop**: an auto-turret that fires for 12s | Sentry overclocks nearby towers (+50% fire rate) | Two sentries | **Total Overclock**: every tower 2× fire rate, +50% damage for 8s | Lasts 12s and recharges Sentry Drop |
+
+Big moments shake the screen a little (off with **Fewer effects**). Heroes also grow passively with every level: Maren toughens, regenerates and later cleaves; Ilse hits harder and later sets enemies alight; Tick reaches further and boosts towers near him. The ★ button (or `K`) opens a card showing both skills, what each rank adds, and at which level.
+
+**Story:** each hero has a prologue and five chapters (after waves 5, 10, 15, 20 and 25) following the fall of the High Marshal, Corvane. Chapter 2 asks you to choose how the hero's signature skill evolves (for example, Meteor becomes Cataclysm or Meteor Shower, and Sentry Drop becomes Overdrive or Arc Reactor). The victory epilogue changes with your choice.
 
 ## The BST token
 
@@ -89,7 +92,7 @@ The game is built for landscape and the battlefield always takes as much of the 
 
 **Layout:** the battlefield takes most of the screen. Your BST balance sits at the top of the control rail in large type, with lives and map progress beneath it. On wide screens such as phones in landscape the rail runs down the right side; otherwise it is a single strip across the top.
 
-**Feedback:** blocked actions explain themselves on the board ("Can't build on the road", "Need 40 more BST", "Barrage ready in 8s"). A green arrow floats over any tower you can afford to upgrade. The box next to Send wave previews the next wave's enemies (hover or long-press for names). Losing a life flashes the board.
+**Feedback:** blocked actions explain themselves on the board ("Can't build on the road", "Need 40 more BST", "Meteor ready in 8s"). A green arrow floats over any tower you can afford to upgrade. The box next to Send wave previews the next wave's enemies (hover or long-press for names). Losing a life flashes the board.
 
 **Settings (⚙):** sound, full screen, larger text, and quit to title (tap twice to confirm).
 
