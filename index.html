@@ -1166,6 +1166,7 @@ function loadMap(i) {
   const free = (x, y) => x >= 0 && y >= 0 && x < COLS && y < ROWS && !pathSet.has(x + ',' + y) && !decor.has(x + ',' + y);
   const byRoad = (x, y) => [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => pathSet.has((x + dx) + ',' + (y + dy)));
   for (let x = 0; x < COLS; x++) if (free(x, ROWS - 1)) decor.set(x + ',' + (ROWS - 1), 'water');
+  for (let x = 0; x < COLS; x++) if (free(x, 0)) decor.set(x + ',0', 'mountain');   // the far edge is a mountain range
   const sY = WAYPOINTS[0][1], gY = WAYPOINTS[WAYPOINTS.length - 1][1];
   let lx = -1, lb = -1;
   for (let x = 1; x < COLS - 1; x++) {
@@ -2069,7 +2070,7 @@ function buildBlock(type, tx, ty) {
   if (tx < 0 || ty < 0 || tx >= COLS || ty >= ROWS) return 'Off the map';
   const k = tx + ',' + ty;
   if (pathSet.has(k)) return 'Can’t build on the road';
-  if (rockSet.has(k)) return ({ water: 'That’s the ocean', lighthouse: 'The lighthouse stays', dome: 'The glamping dome is booked', chickens: 'Leave the chickens be', goats: 'Leave the goats in peace', rabbits: 'Don’t bother the rabbits', trees: 'Spruce in the way', rock: 'Granite in the way' })[decor.get(k)] || 'Something is in the way';
+  if (rockSet.has(k)) return ({ water: 'That’s the ocean', lighthouse: 'The lighthouse stays', mountain: 'Those are the mountains', dome: 'The glamping dome is booked', chickens: 'Leave the chickens be', goats: 'Leave the goats in peace', rabbits: 'Don’t bother the rabbits', trees: 'Spruce in the way', rock: 'Granite in the way' })[decor.get(k)] || 'Something is in the way';
   if (!siteSet.has(k)) return 'Build on a stone site';
   if (towerAt(tx, ty)) return 'A tower is already here';
   const c = buildCost(type);
@@ -2140,6 +2141,12 @@ function updateCritters(dt) {
   }
 }
 function drawCritters(c, time) {
+  for (const cl of scene.clouds || []) {
+    const x = ((cl.x + time * cl.v) % (W + cl.w * 2)) - cl.w, y = cl.y;
+    c.fillStyle = 'rgba(255,255,255,0.72)';
+    poly(c, [x - cl.w * 0.5, y + 6, x - cl.w * 0.25, y - 2, x, y - 7, x + cl.w * 0.3, y - 1, x + cl.w * 0.5, y + 6], 'rgba(255,255,255,0.75)');
+    poly(c, [x - cl.w * 0.5, y + 6, x + cl.w * 0.5, y + 6, x + cl.w * 0.2, y + 9, x - cl.w * 0.3, y + 9], 'rgba(220,232,240,0.7)');
+  }
   // drifting crests on the water
   c.strokeStyle = 'rgba(225,242,255,0.28)'; c.lineWidth = 1.2;
   for (const [x0, top] of scene.water || []) for (let i = 0; i < 2; i++) {
@@ -2228,6 +2235,36 @@ function drawBackground() {
     if ((i + j) % 2) { tri(P(i, j), P(i + 1, j), P(i + 1, j + 1)); tri(P(i, j), P(i + 1, j + 1), P(i, j + 1)); }
     else { tri(P(i, j), P(i + 1, j), P(i, j + 1)); tri(P(i + 1, j), P(i + 1, j + 1), P(i, j + 1)); }
   }
+  // the far edge: sky, a blue range with snow caps, a forested ridge and a spruce treeline
+  {
+    const base = TILE * 0.98;
+    const sky = g.createLinearGradient(0, 0, 0, base);
+    sky.addColorStop(0, hsl(200, 48, 70)); sky.addColorStop(1, hsl(185, 36, 82));
+    g.fillStyle = sky; g.fillRect(0, 0, W, base * 0.8);
+    const range = (yBase, minTop, maxTop, gapMin, gapMax, H0, S0, L0, snow) => {
+      let x = -40 - r() * 40;
+      while (x < W + 60) {
+        const w = 70 + r() * 70, top = minTop + r() * (maxTop - minTop), apx = x + w * (0.35 + r() * 0.3), l = x, rt = x + w, ridgeX = apx + (r() - 0.5) * w * 0.15;
+        poly(g, [l, yBase, apx, top, ridgeX, yBase], hsl(H0, S0, L0 + 9 + r() * 4));     // lit face
+        poly(g, [ridgeX, yBase, apx, top, rt, yBase], hsl(H0, S0 + 4, L0 - 7 + r() * 3));  // shaded face
+        if (snow && top < snow) {
+          const sd = (snow - top) * 0.55, fx = t => apx + (l - apx) * t, gx = t => apx + (rt - apx) * t;
+          poly(g, [fx(sd / (yBase - top)), top + sd, apx, top, apx + (ridgeX - apx) * 0.35, top + sd * 1.25], hsl(205, 30, 96));
+          poly(g, [apx + (ridgeX - apx) * 0.35, top + sd * 1.25, apx, top, gx(sd / (yBase - top)), top + sd], hsl(210, 25, 84));
+        }
+        x += gapMin + r() * (gapMax - gapMin);
+      }
+    };
+    range(base * 0.86, 2, 22, 55, 95, 214, 18, 54, 18);   // far peaks
+    range(base * 0.98, 22, 40, 45, 80, 165, 20, 32, 0);   // near forested ridge
+    // treeline along the foot of the ridge
+    for (let x = -6; x < W + 10; x += 9 + r() * 7) {
+      const y = base + 2 + r() * 5, h = 10 + r() * 9, w = 4 + r() * 2;
+      poly(g, [x - w, y, x, y - h, x, y], hsl(152, 36, 22 + r() * 5)); poly(g, [x, y - h, x + w, y, x, y], hsl(154, 38, 15 + r() * 4));
+    }
+    g.fillStyle = 'rgba(8,20,14,0.22)'; g.fillRect(0, base + 6, W, 3);
+    scene.clouds = [0, 1, 2].map(i => ({ x: r() * W, y: 6 + r() * 20, w: 34 + r() * 30, v: 4 + r() * 5 }));
+  }
   // build sites: low-poly granite plots with a worn rim
   for (const k of siteSet) {
     const [x, y] = k.split(',').map(Number), cx = (x + 0.5) * TILE, cy = (y + 0.55) * TILE, R = TILE * 0.47, n = 8, pts = [];
@@ -2270,7 +2307,7 @@ function drawBackground() {
     }
   }
   // scenery
-  scene = { water: [], dome: null, light: null };
+  scene = { water: [], dome: null, light: null, clouds: scene.clouds || [] };
   const lupin = (x, y, h) => {
     const col = [hsl(268, 52, 62), hsl(320, 50, 70), hsl(250, 45, 72), hsl(0, 0, 92)][Math.floor(r() * 4)];
     g.strokeStyle = hsl(120, 30, 26); g.lineWidth = 1.2; g.beginPath(); g.moveTo(x, y); g.lineTo(x, y - h); g.stroke();
@@ -2297,7 +2334,7 @@ function drawBackground() {
     for (let i = 0; i <= 6; i++) for (const [px, py] of [[x0 + w * i / 6, y0], [x0 + w * i / 6, y0 + h]]) g.fillRect(px - 1.5, py - 9, 3, 9);
     for (let i = 1; i < 4; i++) for (const px of [x0, x0 + w]) g.fillRect(px - 1.5, y0 + h * i / 4 - 9, 3, 9);
   };
-  const items = [...decor].map(([k, type]) => { const [tx, ty] = k.split(',').map(Number); return { tx, ty, type }; })
+  const items = [...decor].filter(([, type]) => type !== 'mountain').map(([k, type]) => { const [tx, ty] = k.split(',').map(Number); return { tx, ty, type }; })
     .filter(it => !bigDecor.some(b => b.type === it.type)).concat(bigDecor.map(b => ({ ...b, big: true })))
     .sort((p, q) => (p.type === 'lighthouse') - (q.type === 'lighthouse') || p.ty - q.ty);
   // lupins along the top of the shore
