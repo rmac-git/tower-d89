@@ -234,6 +234,8 @@ dl.kv dd .worse { color: var(--danger); }
 .panel.mini .cmp-cap.off { display: none; }
 .cmp-cap b { color: var(--ink); }
 .panel.mini.cmp dl.kv { display: grid; font-size: 12px; }
+/* phones: while comparing, show only what changes and keep the buy button in view */
+.panel.mini.cmp .same, .panel.mini.cmp .targ, .panel.mini.cmp .stat-toggle { display: none; }
 .panel.mini .cmp-cap { font-size: 11px; }
 .branch.pv, #btn-up.pv, #btn-mast.pv { outline: 2px solid var(--good); outline-offset: 1px; }
 .seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
@@ -3173,7 +3175,7 @@ function statRows(a, b, also = []) {
     const va = f(a), vb = b ? f(b) : null;
     if (va == null && vb == null) return '';
     const shownA = va == null ? '–' : va + unit;
-    if (vb == null || vb === va) return `<dt>${label}</dt><dd>${shownA}</dd>`;
+    if (vb == null || vb === va) return b ? `<dt class="same">${label}</dt><dd class="same">${shownA}</dd>` : `<dt>${label}</dt><dd>${shownA}</dd>`;
     const num = v => v === 'ignored' ? 1 : v === 'normal' ? 0 : parseFloat(v) || 0;
     const up = num(vb) > num(va) !== !!lowerIsBetter;
     return `<dt>${label}</dt><dd>${shownA} <span class="${up ? 'next' : 'worse'}">${up ? '▲' : '▼'} ${vb}${unit}</span></dd>`;
@@ -3222,9 +3224,11 @@ function renderCompare(t) {
   const opts = t.lvl === 0 ? [{ kind: 'up' }] : t.lvl === 1 ? [0, 1].map(branch => ({ kind: 'branch', branch }))
     : !unlocked('mastery') ? [] : !t.mast ? [0, 1].map(skill => ({ kind: 'mast', skill })) : t.mast.r < 3 ? [{ kind: 'mast', skill: t.mast.s }] : [];
   dl.innerHTML = statRows(tStats(t), p ? previewStats(t, p) : t.lvl === 0 ? veteran(scaled(baseStats(t.type, 1)), vetRank(t)) : null, opts.map(o => previewStats(t, o)));
-  if (cap) { cap.classList.toggle('off', !p); if (!p) cap.innerHTML = 'Hover an upgrade to compare'; if (p) cap.innerHTML = `Comparing with <b>${previewName(t, p)}</b>${lastPointer === 'touch' ? ' · tap it again to buy' : ''}`; }
+  const mini = els.panel.classList.contains('mini');
+  if (cap) { cap.classList.toggle('off', !p); if (!p) cap.innerHTML = 'Hover an upgrade to compare'; if (p) cap.innerHTML = mini ? `<b>${previewName(t, p)}</b> · tap it again to buy` : `Comparing with <b>${previewName(t, p)}</b>${lastPointer === 'touch' ? ' · tap it again to buy' : ''}`; }
   els.panel.classList.toggle('cmp', !!p);
   els.info.querySelectorAll('[data-pv]').forEach(b => b.classList.toggle('pv', !!p && b.dataset.pv === pvKey(p)));
+  if (mini) { placePanel(t); const pvb = p && els.info.querySelector('.pv'); if (pvb) pvb.scrollIntoView({ block: 'nearest' }); }
 }
 const pvKey = p => p.kind + (p.kind === 'branch' ? p.branch : p.kind === 'mast' ? p.skill : '');
 // Desktop: hover or focus previews and a click buys. Touch: the first tap previews, a second tap buys.
@@ -3235,7 +3239,7 @@ function wirePreview(t, btn, p, buy) {
   const show = () => { ui.preview = { t, ...p }; renderCompare(t); };
   const hide = () => { if (samePreview(ui.preview, { t, ...p }) && lastPointer !== 'touch') { ui.preview = null; renderCompare(t); } };
   btn.addEventListener('pointerenter', ev => { if (ev.pointerType !== 'touch') show(); });
-  btn.addEventListener('focus', show);
+  btn.addEventListener('focus', () => { if (lastPointer !== 'touch') show(); });   // a tap also focuses; only keyboard focus previews
   btn.addEventListener('pointerleave', hide); btn.addEventListener('blur', hide);
   btn.onclick = () => {
     if (lastPointer === 'touch' && !samePreview(ui.preview, { t, ...p })) { show(); return; }
@@ -3316,7 +3320,7 @@ function refreshPanel(force) {
       <button class="btn stat-toggle" id="stat-toggle" type="button" aria-expanded="${!!ui.statsOpen}">${ui.statsOpen ? 'Hide stats ▴' : 'Show stats ▾'}</button>
       <p class="cmp-cap off" id="cmp-cap">Hover an upgrade to compare</p>
       <dl class="kv" id="sel-stats">${statRows(tStats(t), next)}</dl>
-      ${unlocked('targeting') ? `<div><p class="eyebrow" style="margin-bottom:6px"><span>Targeting</span><span>T to cycle</span></p>
+      ${unlocked('targeting') ? `<div class="targ"><p class="eyebrow" style="margin-bottom:6px"><span>Targeting</span><span>T to cycle</span></p>
       <div class="seg" role="group" aria-label="Targeting">${MODES.map(([k, l]) => `<button type="button" data-mode="${k}" class="${t.mode === k ? 'on' : ''}" aria-pressed="${t.mode === k}">${l}</button>`).join('')}</div></div>` : ''}
       ${actions}
       <p class="meta" id="sel-meta">${vetMeta(t)}</p>`;
