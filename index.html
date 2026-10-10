@@ -110,6 +110,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--brass)
 .settings { display: grid; gap: 12px; width: 100%; text-align: left; }
 .settings section { display: grid; gap: 6px; }
 @media (max-height: 500px) { .set-row { padding: 5px 9px; } .set-row small { display: none; } .settings { gap: 8px; } .settings-card h2 { font-size: 26px; margin: 0; } }
+.set-done-row { position: relative; width: 100%; }
+.set-done-row .set-ver { position: absolute; right: 0; bottom: 4px; }
 .set-ver { margin: 0; font: 500 10.5px var(--font-mono); color: var(--muted); opacity: 0.7; }
 .set-col { display: grid; gap: 12px; align-content: start; min-width: 0; }
 @media (orientation: landscape) and (min-width: 600px) { .settings-card { max-width: 760px; } .settings { grid-template-columns: 1fr 1fr; align-items: start; } }
@@ -3759,8 +3761,7 @@ function openSettings() {
         ${CAN_VIBRATE ? tg('set-vib', 'Vibration', SET.vibrate, 'Buzz when you lose a life or a Warlord arrives') : ''}</section>
       <section><h3>Progress</h3><button type="button" class="btn danger" id="set-reset">${resetArmed ? 'Tap again to erase everything' : 'Reset progress'}</button></section></div>
     </div>
-    <div class="row"><button class="btn primary" id="set-done" type="button">Done</button></div>
-    <p class="set-ver">${GAME_VERSION}</p>`, 'wide settings-card');
+    <div class="row set-done-row"><button class="btn primary" id="set-done" type="button">Done</button><span class="set-ver">${GAME_VERSION}</span></div>`, 'wide settings-card');
   const flip = (id, fn) => { const b = $(id); if (b) b.onclick = () => { fn(); saveSettings(); openSettings(); }; };
   flip('set-auto', () => { SET.autoWave = !SET.autoWave; });
   flip('set-pause', () => { SET.autoPause = !SET.autoPause; });
