@@ -110,6 +110,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--brass)
 .settings { display: grid; gap: 12px; width: 100%; text-align: left; }
 .settings section { display: grid; gap: 6px; }
 @media (max-height: 500px) { .set-row { padding: 5px 9px; } .set-row small { display: none; } .settings { gap: 8px; } .settings-card h2 { font-size: 26px; margin: 0; } }
+.set-ver { margin: 0; font: 500 10.5px var(--font-mono); color: var(--muted); opacity: 0.7; }
 .set-col { display: grid; gap: 12px; align-content: start; min-width: 0; }
 @media (orientation: landscape) and (min-width: 600px) { .settings-card { max-width: 760px; } .settings { grid-template-columns: 1fr 1fr; align-items: start; } }
 @media (max-height: 420px) { .set-row { padding: 4px 9px; min-height: 0; } .set-row b { font-size: 13.5px; } .settings, .set-col { gap: 6px; } .settings section { gap: 4px; } .settings-card h2 { font-size: 22px; } .sw { width: 34px; height: 20px; } .sw::after { width: 14px; height: 14px; } .sw.on::after { left: 16px; } }
@@ -593,6 +594,7 @@ const SPEED_K = 0.9, RANGE_K = 0.75;   // the coarser grid has a shorter road, s
 const VICTORY_WAVE = 30;
 const WAVES_PER_MAP = 10;   // the campaign marches through the maps in order, ten waves each
 const START_GOLD = 180, START_LIVES = 20;
+const GAME_VERSION = 'v34 · compact phone compare';   // shown in Settings, so you can tell whether a fresh copy loaded
 // Player settings, kept on this device.
 const SET = { music: 0.5, sfx: 0.8, autoWave: false, autoPause: true, reduceFx: false, bigShots: false, vibrate: true };
 try { Object.assign(SET, JSON.parse(localStorage.getItem('bastion-line-settings')) || {}); } catch (e) {}
@@ -3757,7 +3759,8 @@ function openSettings() {
         ${CAN_VIBRATE ? tg('set-vib', 'Vibration', SET.vibrate, 'Buzz when you lose a life or a Warlord arrives') : ''}</section>
       <section><h3>Progress</h3><button type="button" class="btn danger" id="set-reset">${resetArmed ? 'Tap again to erase everything' : 'Reset progress'}</button></section></div>
     </div>
-    <div class="row"><button class="btn primary" id="set-done" type="button">Done</button></div>`, 'wide settings-card');
+    <div class="row"><button class="btn primary" id="set-done" type="button">Done</button></div>
+    <p class="set-ver">${GAME_VERSION}</p>`, 'wide settings-card');
   const flip = (id, fn) => { const b = $(id); if (b) b.onclick = () => { fn(); saveSettings(); openSettings(); }; };
   flip('set-auto', () => { SET.autoWave = !SET.autoWave; });
   flip('set-pause', () => { SET.autoPause = !SET.autoPause; });
