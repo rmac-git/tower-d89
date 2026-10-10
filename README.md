@@ -20,11 +20,13 @@ The second upgrade splits into two paths, so two players end up with different d
 
 **Veterancy:** towers earn rank from their own fighting. A kill is worth 1 point, and an assist is worth ½. An assist is an enemy the tower hurt that something else finished off, so Frost Spires and other support towers rank up too. The ranks are Recruit, Seasoned (25), Veteran (75), Elite (180) and Legend (400). Each rank adds 6% damage and 3% fire rate. A promotion flashes gold over the tower and announces the new rank. Gold stars on the tower's stone base show its rank, and the tower panel shows its kills, assists and how far it is to the next rank. Veterancy is kept in saves. It doesn't carry to a new map, because towers are salvaged when you march on.
 
+**Tower card on phones:** the card sits beside its tower, or above or below it when there isn't room. Opening stats, or comparing an upgrade, widens the card into two columns (stats on the left, targeting and skills on the right) instead of growing off the bottom of the screen.
+
 **Compare before you buy:** select a tower and hover an upgrade, path or mastery button (or tab to it) to preview it. The stats list shows each value as current ▲ new or current ▼ new, so better and worse don't depend on colour. Every stat any of the options touches is listed, so the panel doesn't jump while you compare. On the map the tower shows its upgraded form, and a dotted blue ring shows the new range. On touch screens the first tap previews and a second tap on the same button buys; tapping the other option switches the comparison.
 
-**Mastery (after wave 8):** once a tower is in its final form, it can learn one of two skills and rank that skill up three times. Choosing one skill locks the other for that tower, so two Archers can end up very different. Rank costs are 1.2×, 2× and 3× the tower's build cost. Small diamonds under the tower show its rank: orange for the first skill and blue for the second. `U` and `I` pick a skill, then `U` buys the next rank. Undo works on mastery too.
+**Tower skills (after wave 8):** as in Kingdom Rush, every final-form tower has both of its skills. Each one ranks up separately, three ranks each, so you never have to pick one and lose the other. Rank costs are 1×, 1.6× and 2.3× the tower's build cost per skill. Orange diamonds under the tower show the first skill's ranks and blue ones the second's. `U` buys a rank of the first skill and `I` a rank of the second. Undo works on skill ranks too.
 
-| Tower | Skill A | Skill B |
+| Tower | Skill 1 (`U`) | Skill 2 (`I`) |
 | --- | --- | --- |
 | Archer | **Volley**: also fires at 1/2/3 more enemies for half damage | **Eagle Eye**: 20/30/40% chance to crit for 3× damage |
 | Mortar | **Shrapnel**: +20/40/60% blast radius, +10/20/30% damage | **Concussion**: stuns the blast for 0.3/0.45/0.6s (once every 2s per enemy, shorter on Warlords) |

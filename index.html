@@ -238,9 +238,27 @@ dl.kv dd .worse { color: var(--danger); }
 .cmp-cap b { color: var(--ink); }
 .panel.mini.cmp dl.kv { display: grid; font-size: 12px; }
 /* phones: while comparing, show only what changes and keep the buy button in view */
-.panel.mini.cmp .same, .panel.mini.cmp .targ, .panel.mini.cmp .stat-toggle { display: none; }
+.panel.mini.cmp .same, .panel.mini.cmp .stat-toggle { display: none; }
 .panel.mini .cmp-cap { font-size: 11px; }
-.branch.pv, #btn-up.pv, #btn-mast.pv { outline: 2px solid var(--good); outline-offset: 1px; }
+.branch.pv, #btn-up.pv, .sk-buy.pv { outline: 2px solid var(--good); outline-offset: 1px; }
+.pcol { display: contents; }
+.skills2 { display: flex; flex-direction: column; gap: 5px; }
+.sk-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); }
+.sk-row.mast-0 { border-left: 3px solid #ff9b54; } .sk-row.mast-1 { border-left: 3px solid #7fd7ff; }
+.sk-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.sk-name { display: flex; align-items: center; gap: 6px; font-size: 13.5px; }
+.sk-desc { font-size: 11.5px; color: var(--muted); line-height: 1.25; }
+.sk-buy { flex: none; display: flex; flex-direction: column; align-items: center; gap: 0; padding: 3px 9px; min-width: 58px; font-size: 13px; line-height: 1.15; }
+.sk-buy small { font: 600 11px var(--font-mono); }
+.sk-max { font: 600 11px var(--font-mono); color: var(--good); padding: 0 6px; }
+.panel.mini .sk-desc { display: none; }
+.panel.mini .sk-row { padding: 4px 6px; }
+/* phones: opening stats or comparing widens the card into two columns instead of growing off the bottom */
+.panel.mini.open, .panel.mini.cmp { width: min(410px, 94%); }
+.panel.mini.open .info, .panel.mini.cmp .info { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 10px; align-items: start; }
+.panel.mini.open .pcol, .panel.mini.cmp .pcol { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.panel.mini.cmp .targ { display: block; }
+.panel.mini.open .pcol-b, .panel.mini.cmp .pcol-b { padding-top: 24px; }
 .seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
 .seg button { background: var(--panel-2); border: 1px solid var(--line); border-radius: 4px; padding: 5px 0; font-size: 12.5px; cursor: pointer; }
 .seg button.on { background: var(--brass); color: var(--brass-ink); border-color: var(--brass); font-weight: 600; }
@@ -596,7 +614,7 @@ const SPEED_K = 0.9, RANGE_K = 0.75;   // the coarser grid has a shorter road, s
 const VICTORY_WAVE = 30;
 const WAVES_PER_MAP = 10;   // the campaign marches through the maps in order, ten waves each
 const START_GOLD = 180, START_LIVES = 20;
-const GAME_VERSION = 'v34 · compact phone compare';   // shown in Settings, so you can tell whether a fresh copy loaded
+const GAME_VERSION = 'v36 · tower skills';   // shown in Settings, so you can tell whether a fresh copy loaded
 // Player settings, kept on this device.
 const SET = { music: 0.5, sfx: 0.8, autoWave: false, autoPause: true, reduceFx: false, bigShots: false, vibrate: true };
 try { Object.assign(SET, JSON.parse(localStorage.getItem('bastion-line-settings')) || {}); } catch (e) {}
@@ -689,32 +707,38 @@ const MASTERY = {
     { name: 'Ricochet', fx: r => ({ bounce: r }), text: r => `Each shot bounces to ${r} more ${r > 1 ? 'enemies' : 'enemy'} at 40% damage` },
   ],
 };
-const MAST_COST = [1.2, 2.0, 3.0];
-function masteryCost(t) {
+// Like Kingdom Rush, a final-form tower has both of its skills and ranks each one up separately.
+const MAST_COST = [1.0, 1.6, 2.3];
+const ROMAN = ['', 'I', 'II', 'III'];
+const sk = (t, i) => (t.skills && t.skills[i]) || 0;
+function masteryCost(t, skill = 0) {
   if (t.lvl < 2 || !unlocked('mastery')) return null;
-  const r = t.mast ? t.mast.r : 0; if (r >= 3) return null;
+  const r = sk(t, skill); if (r >= 3) return null;
   return Math.round(TOWERS[t.type].cost * MAST_COST[r] * S.mods.upCost);
 }
 function masterTower(t, skill) {
-  const c = masteryCost(t);
-  if (c == null || S.gold < c || (t.mast && t.mast.s !== skill)) return false;
-  const prev = t.mast ? { ...t.mast } : null;
+  const c = masteryCost(t, skill);
+  if (c == null || S.gold < c) return false;
   S.gold -= c; t.spent += c;
-  t.mast = { s: skill, r: (prev ? prev.r : 0) + 1 };
-  pushUndo({ kind: 'mastery', t, cost: c, prev, r: t.mast.r });
+  t.skills = [sk(t, 0), sk(t, 1)]; t.skills[skill]++;
+  pushUndo({ kind: 'mastery', t, cost: c, skill, r: t.skills[skill] });
   ring(t.x, t.y, 6, 34, 0.5, BRANCH_COL[skill]); burst(t.x, t.y - 20, '#ffd166', 14, 90); sfx('upgrade');
   return true;
 }
 function veteran(st, r) { return r ? { ...st, dmg: st.dmg * (1 + 0.06 * r), rate: st.rate * (1 + 0.03 * r), burn: st.burn && st.burn * (1 + 0.06 * r) } : st; }
-function withMastery(type, st, m) {
-  if (!m) return st;
-  const f = MASTERY[type][m.s].fx(m.r), o = { ...st, ...f };
-  if (f.dmgMul) o.dmg = st.dmg * f.dmgMul;
-  if (f.splashMul) o.splash = st.splash * f.splashMul;
-  if (f.slowAdd) o.slow = Math.min(0.85, st.slow + f.slowAdd);
-  if (f.durAdd) o.slowDur = st.slowDur + f.durAdd;
-  if (f.rangeAdd) o.range = st.range + f.rangeAdd;
-  if (f.chainAdd) o.chain = st.chain + f.chainAdd;
+function withMastery(type, st, skills) {
+  if (!skills) return st;
+  let o = st;
+  skills.forEach((r, i) => {
+    if (!r) return;
+    const f = MASTERY[type][i].fx(r), b = o; o = { ...b, ...f };
+    if (f.dmgMul) o.dmg = b.dmg * f.dmgMul;
+    if (f.splashMul) o.splash = b.splash * f.splashMul;
+    if (f.slowAdd) o.slow = Math.min(0.85, b.slow + f.slowAdd);
+    if (f.durAdd) o.slowDur = b.slowDur + f.durAdd;
+    if (f.rangeAdd) o.range = b.range + f.rangeAdd;
+    if (f.chainAdd) o.chain = b.chain + f.chainAdd;
+  });
   return o;
 }
 const mods0 = () => ({ dmg: 1, rate: 1, range: 0, hp: 1, speed: 1, armor: 0, bounty: 1, build: 1, upCost: 1, sell: 0.7, cd: 1 });
@@ -741,9 +765,9 @@ function scaled(st) {
   return { ...st, dmg: st.dmg * m.dmg * TOWER_POWER, rate: st.rate * m.rate, range: st.range * RANGE_K + m.range, burn: st.burn && st.burn * m.dmg * TOWER_POWER };
 }
 function tStats(t) {
-  const mk = (t.mast ? t.mast.s * 10 + t.mast.r : 0) + vetRank(t) * 100;
+  const mk = sk(t, 0) * 10 + sk(t, 1) + vetRank(t) * 100;
   if (t._s && t._v === S.modVer && t._l === t.lvl && t._b === t.branch && t._m === mk) return t._s;
-  t._s = veteran(withMastery(t.type, scaled(baseStats(t.type, t.lvl, t.branch)), t.mast), vetRank(t)); t._v = S.modVer; t._l = t.lvl; t._b = t.branch; t._m = mk;
+  t._s = veteran(withMastery(t.type, scaled(baseStats(t.type, t.lvl, t.branch)), t.skills), vetRank(t)); t._v = S.modVer; t._l = t.lvl; t._b = t.branch; t._m = mk;
   return t._s;
 }
 const buildCost = type => Math.round(TOWERS[type].cost * S.mods.build);
@@ -794,7 +818,7 @@ const UNLOCK_MSG = {
   paths: () => ['Upgrade paths unlocked', 'Level 2 towers can now specialize into one of two forms.'],
   snap: () => ['New ability: Cold Snap', 'Slows every enemy on the map for 5 seconds.'],
   targeting: () => ['Tower targeting unlocked', 'Select a tower to choose which enemy it shoots first.'],
-  mastery: () => ['Tower mastery unlocked', 'Towers in their final form can learn one of two skills and rank it up three times.'],
+  mastery: () => ['Tower skills unlocked', 'Final-form towers have two skills. Rank each one up separately, three ranks each.'],
 };
 const unlocked = k => !(k in UNLOCK) || (S.cleared || 0) >= UNLOCK[k];
 
@@ -1276,7 +1300,7 @@ function snapshot(full) {
   const c = { v: 1, at: Date.now(), mapI: S.mapI, wave: S.wave, cleared: S.cleared, gold: S.gold, perks: S.perks, mods: S.mods, totalKills: S.totalKills,
     hero: h && { k: h.k, lvl: h.lvl, xp: h.xp, sp: h.sp, learned: h.learned, evo: h.evo, ult: h.ult, toldSkill: h.toldSkill } };
   if (full) Object.assign(c, { lives: S.lives, endless: S.endless, won: S.won, mapDone: S.mapDone, perkDue: ui.perkOpen,
-    towers: S.towers.map(t => ({ type: t.type, lvl: t.lvl, branch: t.branch, tx: t.tx, ty: t.ty, spent: t.spent, mode: t.mode, kills: t.kills, assists: t.assists || 0, dealt: t.dealt, mast: t.mast || null })) });
+    towers: S.towers.map(t => ({ type: t.type, lvl: t.lvl, branch: t.branch, tx: t.tx, ty: t.ty, spent: t.spent, mode: t.mode, kills: t.kills, assists: t.assists || 0, dealt: t.dealt, skills: t.skills || [0, 0] })) });
   return c;
 }
 function store(key, val) { try { if (val == null) localStorage.removeItem(key); else localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val)); } catch (e) {} }
@@ -1290,7 +1314,7 @@ function clearResume() { store(KEY_RESUME, null); pushCloud(); }
 function clearCheckpoint() { store(KEY_CAMP, null); store(KEY_RESUME, null); pushCloud(); }
 // Between waves, save whenever something worth keeping changed (towers, gold, upgrades).
 let lastSaveSig = '';
-const saveSig = () => `${S.mapI}:${S.wave}:${S.gold}:${S.lives}:${S.perks.length}:${S.towers.map(t => t.tx + '.' + t.ty + '.' + t.lvl + t.branch + t.mode + (t.mast ? t.mast.s + '' + t.mast.r : '')).join(',')}:${S.hero ? S.hero.lvl + '.' + Object.keys(S.hero.learned || {}).length : ''}`;
+const saveSig = () => `${S.mapI}:${S.wave}:${S.gold}:${S.lives}:${S.perks.length}:${S.towers.map(t => t.tx + '.' + t.ty + '.' + t.lvl + t.branch + t.mode + sk(t, 0) + '' + sk(t, 1)).join(',')}:${S.hero ? S.hero.lvl + '.' + Object.keys(S.hero.learned || {}).length : ''}`;
 function autosave() {
   if (!ui.started || S.over || S.waveActive || S.won && !S.endless) return;
   if (saveSig() !== lastSaveSig) saveResume();
@@ -1403,7 +1427,7 @@ function lastUndo() {
     const u = S.undo[S.undo.length - 1];
     if (S.time - u.at > UNDO_SECS) { S.undo.length = 0; return null; }
     const ok = u.kind === 'sell' ? tileFree(u.t.tx, u.t.ty) && S.gold >= u.value
-      : u.kind === 'mastery' ? S.towers.includes(u.t) && u.t.mast && u.t.mast.r === u.r
+      : u.kind === 'mastery' ? S.towers.includes(u.t) && sk(u.t, u.skill) === u.r
       : S.towers.includes(u.t) && (u.kind === 'build' ? u.t.lvl === 0 : u.t.lvl === u.lvl + 1);
     if (ok) return u;
     S.undo.pop();
@@ -1420,7 +1444,7 @@ function undoLast() {
     if (ui.selected === t) ui.selected = null;
     notice(t.x, t.y - 34, `Undid ${name}: +${u.cost} BST`);
   } else if (u.kind === 'mastery') {
-    S.gold += u.cost; t.spent -= u.cost; t.mast = u.prev;
+    S.gold += u.cost; t.spent -= u.cost; t.skills[u.skill]--;
     notice(t.x, t.y - 34, `Undid mastery: +${u.cost} BST`);
   } else if (u.kind === 'upgrade') {
     S.gold += u.cost; t.spent -= u.cost; t.lvl = u.lvl; t.branch = u.branch;
@@ -2820,15 +2844,16 @@ function render() {
       ctx.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? R2 : R1; ctx.lineTo(sx + Math.cos(a) * rr, sy + Math.sin(a) * rr); }
       ctx.closePath(); ctx.fillStyle = "#ffd166"; ctx.fill(); ctx.strokeStyle = "rgba(10,10,8,0.9)"; ctx.lineWidth = 1.4; ctx.stroke();
     }
-    if (t.mast) for (let i = 0; i < t.mast.r; i++) {
-      const dx = t.x + (i - (t.mast.r - 1) / 2) * 9, dy = t.y + 23 * TK;
-      ctx.fillStyle = BRANCH_COL[t.mast.s]; ctx.strokeStyle = 'rgba(10,10,8,0.85)'; ctx.lineWidth = 1.2;
+    const marks = [...Array(sk(t, 0)).fill(0), ...Array(sk(t, 1)).fill(1)];
+    for (let i = 0; i < marks.length; i++) {
+      const dx = t.x + (i - (marks.length - 1) / 2) * 9, dy = t.y + 23 * TK;
+      ctx.fillStyle = BRANCH_COL[marks[i]]; ctx.strokeStyle = 'rgba(10,10,8,0.85)'; ctx.lineWidth = 1.2;
       ctx.beginPath(); ctx.moveTo(dx, dy - 4.5); ctx.lineTo(dx + 4, dy); ctx.lineTo(dx, dy + 4.5); ctx.lineTo(dx - 4, dy); ctx.closePath(); ctx.fill(); ctx.stroke();
     }
     if (t === sel) { ctx.strokeStyle = '#d9a84e'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.ellipse(t.x, t.y + 7 * TK, 24 * TK, 14 * TK, 0, 0, Math.PI * 2); ctx.stroke(); }
     else if (!S.over) {
-      const uc = upgradeCost(t) ?? (t.mast ? null : masteryCost(t));
-      if (uc != null && S.gold >= uc) {
+      const uc = upgradeCost(t) ?? Math.min(...[0, 1].filter(i => !sk(t, i)).map(i => masteryCost(t, i) ?? Infinity), Infinity);
+      if (uc != null && uc < Infinity && S.gold >= uc) {
         const ay = t.y - 36 * TK + Math.sin(performance.now() / 260 + t.id) * 2;
         ctx.fillStyle = '#4cc3ff'; ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(t.x, ay - 6); ctx.lineTo(t.x + 6, ay + 1); ctx.lineTo(t.x + 2.5, ay + 1); ctx.lineTo(t.x + 2.5, ay + 5); ctx.lineTo(t.x - 2.5, ay + 5); ctx.lineTo(t.x - 2.5, ay + 1); ctx.lineTo(t.x - 6, ay + 1); ctx.closePath(); ctx.fill(); ctx.stroke();
@@ -3246,14 +3271,14 @@ function previewStats(t, p) {
   const v = vetRank(t);
   if (p.kind === 'up') return veteran(scaled(baseStats(t.type, t.lvl + 1, 0)), v);
   if (p.kind === 'branch') return veteran(scaled(baseStats(t.type, 2, p.branch)), v);
-  if (p.kind === 'mast') return veteran(withMastery(t.type, scaled(baseStats(t.type, 2, t.branch)), { s: p.skill, r: (t.mast ? t.mast.r : 0) + 1 }), v);
+  if (p.kind === 'mast') { const nx = [sk(t, 0), sk(t, 1)]; nx[p.skill]++; return veteran(withMastery(t.type, scaled(baseStats(t.type, 2, t.branch)), nx), v); }
   return null;
 }
 function previewName(t, p) {
   const d = TOWERS[t.type];
   if (p.kind === 'up') return `Level ${t.lvl + 2}`;
   if (p.kind === 'branch') return d.br[p.branch].name;
-  return `${MASTERY[t.type][p.skill].name} ${['', 'I', 'II', 'III'][(t.mast ? t.mast.r : 0) + 1]}`;
+  return `${MASTERY[t.type][p.skill].name} ${ROMAN[sk(t, p.skill) + 1]}`;
 }
 const samePreview = (a, b) => !!a && !!b && a.t === b.t && a.kind === b.kind && a.branch === b.branch && a.skill === b.skill;
 // Redraw just the comparison, so the buttons under the pointer stay put.
@@ -3263,13 +3288,13 @@ function renderCompare(t) {
   if (!dl) return;
   // every option on offer contributes its rows, so previewing never changes the panel's height
   const opts = t.lvl === 0 ? [{ kind: 'up' }] : t.lvl === 1 ? [0, 1].map(branch => ({ kind: 'branch', branch }))
-    : !unlocked('mastery') ? [] : !t.mast ? [0, 1].map(skill => ({ kind: 'mast', skill })) : t.mast.r < 3 ? [{ kind: 'mast', skill: t.mast.s }] : [];
+    : !unlocked('mastery') ? [] : [0, 1].filter(i => sk(t, i) < 3).map(skill => ({ kind: 'mast', skill }));
   dl.innerHTML = statRows(tStats(t), p ? previewStats(t, p) : t.lvl === 0 ? veteran(scaled(baseStats(t.type, 1)), vetRank(t)) : null, opts.map(o => previewStats(t, o)));
   const mini = els.panel.classList.contains('mini');
   if (cap) { cap.classList.toggle('off', !p); if (!p) cap.innerHTML = 'Hover an upgrade to compare'; if (p) cap.innerHTML = mini ? `<b>${previewName(t, p)}</b> · tap it again to buy` : `Comparing with <b>${previewName(t, p)}</b>${lastPointer === 'touch' ? ' · tap it again to buy' : ''}`; }
   els.panel.classList.toggle('cmp', !!p);
   els.info.querySelectorAll('[data-pv]').forEach(b => b.classList.toggle('pv', !!p && b.dataset.pv === pvKey(p)));
-  if (mini) { placePanel(t); const pvb = p && els.info.querySelector('.pv'); if (pvb) pvb.scrollIntoView({ block: 'nearest' }); }
+  if (mini) { placePanel(t); const pvb = p && els.info.querySelector('.pv'); if (pvb) pvb.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
 }
 const pvKey = p => p.kind + (p.kind === 'branch' ? p.branch : p.kind === 'mast' ? p.skill : '');
 // Desktop: hover or focus previews and a click buys. Touch: the first tap previews, a second tap buys.
@@ -3294,10 +3319,17 @@ function placePanel(t) {
   const pn = els.panel, bd = $('board');
   if (!pn.classList.contains('mini') || !t || pn.hidden) { pn.style.left = pn.style.top = pn.style.right = ''; return; }
   const k = bd.clientWidth / W, tx = t.x * k, ty = t.y * k, pw = pn.offsetWidth, ph = pn.offsetHeight, gap = 0.7 * TILE * k;
-  const left = tx + gap + pw < bd.clientWidth - 4 ? tx + gap : Math.max(4, tx - gap - pw);
+  const BW = bd.clientWidth, BH = bd.clientHeight, clampY = y => Math.max(4, Math.min(BH - ph - 4, y)), clampX = x => Math.max(4, Math.min(BW - pw - 4, x));
+  let left, top;
+  // beside the tower if it fits; otherwise above or below it, so the card never hides its own tower
+  if (tx + gap + pw < BW - 4) { left = tx + gap; top = clampY(ty - ph / 2); }
+  else if (tx - gap - pw > 4) { left = tx - gap - pw; top = clampY(ty - ph / 2); }
+  else if (ty + gap + ph < BH - 4) { left = clampX(tx - pw / 2); top = ty + gap; }
+  else if (ty - gap - ph > 4) { left = clampX(tx - pw / 2); top = ty - gap - ph; }
+  else { left = tx > BW / 2 ? 4 : BW - pw - 4; top = clampY(ty - ph / 2); }
   pn.style.right = 'auto';
   pn.style.left = Math.round(left) + 'px';
-  pn.style.top = Math.round(Math.max(4, Math.min(bd.clientHeight - ph - 4, ty - ph / 2))) + 'px';
+  pn.style.top = Math.round(top) + 'px';
 }
 function refreshPanel(force) {
   for (const det of els.shop.querySelectorAll('.shop-detail')) {
@@ -3323,7 +3355,7 @@ function refreshPanel(force) {
   els.panel.classList.toggle('left', !!t && !small && t.x > W * 0.55);
   let sig;
   if (!t && ui.preview) ui.preview = null;
-  if (t) sig = `t${t.id}:v${vetRank(t)}:${t.lvl}:${t.branch}:${t.mode}:${t.mast ? t.mast.s + '.' + t.mast.r : ''}:${S.modVer}:${S.cleared}:${S.gold >= (upgradeCost(t) ?? Infinity)}:${S.gold >= (masteryCost(t) ?? Infinity)}`;
+  if (t) sig = `t${t.id}:v${vetRank(t)}:${t.lvl}:${t.branch}:${t.mode}:${sk(t, 0)}.${sk(t, 1)}:${S.modVer}:${S.cleared}:${S.gold >= (upgradeCost(t) ?? Infinity)}:${S.gold >= (masteryCost(t, 0) ?? Infinity)}:${S.gold >= (masteryCost(t, 1) ?? Infinity)}`;
   else if (ui.build) sig = `b${ui.build}:${S.modVer}:${S.gold >= buildCost(ui.build)}`;
   else sig = `w${S.wave}:${S.waveActive}:${S.modVer}:${ui.intel}`;
   if (t) { const m = $('sel-meta'); if (m) m.textContent = vetMeta(t); }
@@ -3335,16 +3367,14 @@ function refreshPanel(force) {
     const sell = `<button class="btn danger" id="btn-sell" type="button" ${c != null && t.lvl === 1 ? 'style="width:100%"' : ''}>Sell · ${tk(sellValue(t))}</button>`;
     let actions;
     if (max && t.lvl >= 2) {
-      const mc = masteryCost(t), M = MASTERY[t.type], m = t.mast;
-      if (!unlocked('mastery')) actions = `<div class="actions"><button class="btn" type="button" disabled>Mastery after wave ${UNLOCK.mastery}</button>${sell}</div>`;
-      else if (!m) actions = `<div><p class="eyebrow" style="margin-bottom:6px"><span>Mastery · choose one</span><span>U · I</span></p><div class="branches">${M.map((k, i) =>
-        `<button type="button" class="branch mast-${i}" data-mast="${i}" ${S.gold < mc ? 'disabled' : ''}><span class="br-top"><b>${k.name}</b><span class="br-cost">${tk(mc)}</span></span><span class="br-desc">${k.text(1)}</span><span class="br-stats">3 ranks · locks the other skill</span></button>`).join('')}</div></div>${sell}`;
-      else {
-        const k = M[m.s], ranks = `<span class="mrank mast-${m.s}">${[1, 2, 3].map(i => `<i class="${i <= m.r ? 'on' : ''}"></i>`).join('')}</span>`;
-        actions = `<div class="mast-now mast-${m.s}"><b>${k.name}</b>${ranks}<span>${k.text(m.r)}</span></div>
-          <div class="actions">${mc != null ? `<button class="btn primary" id="btn-mast" type="button" ${S.gold < mc ? 'disabled' : ''} title="${k.text(m.r + 1)}">Rank ${m.r + 1} · ${tk(mc)}</button>` : '<button class="btn" type="button" disabled>Mastered</button>'}${sell}</div>
-          ${mc != null ? `<p class="meta">Next: ${k.text(m.r + 1)}</p>` : ''}`;
-      }
+      const M = MASTERY[t.type];
+      if (!unlocked('mastery')) actions = `<div class="actions"><button class="btn" type="button" disabled>Skills after wave ${UNLOCK.mastery}</button>${sell}</div>`;
+      else actions = `<div class="skills2"><p class="eyebrow"><span>Tower skills</span><span>U · I</span></p>${M.map((k, i) => {
+        const r = sk(t, i), mc = masteryCost(t, i), dia = `<span class="mrank mast-${i}">${[1, 2, 3].map(j => `<i class="${j <= r ? 'on' : ''}"></i>`).join('')}</span>`;
+        return `<div class="sk-row mast-${i}"><div class="sk-info"><span class="sk-name"><b>${k.name}</b>${dia}</span><span class="sk-desc">${k.text(Math.max(1, r))}</span></div>${mc != null
+          ? `<button type="button" class="btn primary sk-buy" data-mast="${i}" ${S.gold < mc ? 'disabled' : ''} title="${k.text(r + 1)}">${r ? ROMAN[r + 1] : 'Learn'}<small>${tk(mc)}</small></button>`
+          : '<span class="sk-max">Max</span>'}</div>`;
+      }).join('')}</div>${sell}`;
     }
     else if (max) actions = `<div class="actions"><button class="btn" type="button" disabled>${t.lvl === 1 ? 'Paths after wave ' + UNLOCK.paths : 'Max level'}</button>${sell}</div>`;
     else if (t.lvl === 1) actions = `<div><p class="eyebrow" style="margin-bottom:6px"><span>Choose a path</span><span>U · I</span></p><div class="branches">${d.br.map((b, i) => {
@@ -3353,24 +3383,23 @@ function refreshPanel(force) {
     }).join('')}</div></div>${sell}`;
     else actions = `<div class="actions"><button class="btn primary" id="btn-up" type="button" ${S.gold < c ? 'disabled' : ''}>Upgrade · ${tk(c)}</button>${sell}</div>`;
     const next = t.lvl === 0 ? scaled(baseStats(t.type, 1)) : null;
-    els.info.innerHTML = `
+    els.info.innerHTML = `<div class="pcol pcol-a">
       <p class="eyebrow"><span>Selected tower</span><span>Esc to close</span></p>
-      <div class="sel-head"><span id="sel-icon"></span><div><h3>${br ? br.name : d.name}${t.mast ? ` <small class="mast-tag mast-${t.mast.s}">${MASTERY[t.type][t.mast.s].name} ${['', 'I', 'II', 'III'][t.mast.r]}</small>` : ''}</h3>
+      <div class="sel-head"><span id="sel-icon"></span><div><h3>${br ? br.name : d.name}</h3>
         <div class="pips">${[0, 1, 2].map(i => `<span class="pip${i <= t.lvl ? ' on' : ''}"></span>`).join('')}</div></div></div>
       ${br ? `<p class="meta">${d.name} · ${br.desc}</p>` : ''}
       <button class="btn stat-toggle" id="stat-toggle" type="button" aria-expanded="${!!ui.statsOpen}">${ui.statsOpen ? 'Hide stats ▴' : 'Show stats ▾'}</button>
       <p class="cmp-cap off" id="cmp-cap">Hover an upgrade to compare</p>
-      <dl class="kv" id="sel-stats">${statRows(tStats(t), next)}</dl>
+      <dl class="kv" id="sel-stats">${statRows(tStats(t), next)}</dl></div><div class="pcol pcol-b">
       ${unlocked('targeting') ? `<div class="targ"><p class="eyebrow" style="margin-bottom:6px"><span>Targeting</span><span>T to cycle</span></p>
       <div class="seg" role="group" aria-label="Targeting">${MODES.map(([k, l]) => `<button type="button" data-mode="${k}" class="${t.mode === k ? 'on' : ''}" aria-pressed="${t.mode === k}">${l}</button>`).join('')}</div></div>` : ''}
       ${actions}
-      <p class="meta" id="sel-meta">${vetMeta(t)}</p>`;
+      <p class="meta" id="sel-meta">${vetMeta(t)}</p></div>`;
     $('sel-icon').appendChild(iconCanvas(t.type, 48));
     if (ui.preview && ui.preview.t !== t) ui.preview = null;
     const up = $('btn-up'); if (up) wirePreview(t, up, { kind: 'up' }, () => upgradeTower(t, 0));
     els.info.querySelectorAll('[data-branch]').forEach(b => wirePreview(t, b, { kind: 'branch', branch: +b.dataset.branch }, () => upgradeTower(t, +b.dataset.branch)));
     els.info.querySelectorAll('[data-mast]').forEach(b => wirePreview(t, b, { kind: 'mast', skill: +b.dataset.mast }, () => masterTower(t, +b.dataset.mast)));
-    { const mb = $('btn-mast'); if (mb) wirePreview(t, mb, { kind: 'mast', skill: t.mast.s }, () => masterTower(t, t.mast.s)); }
     renderCompare(t);
     $('btn-sell').onclick = () => { if (steady()) sellTower(t); refreshPanel(true); };
     els.info.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { t.mode = b.dataset.mode; refreshPanel(true); });
@@ -3577,7 +3606,7 @@ function continueCampaign(c) {
   for (const o of c.towers || []) {
     if (!TOWERS[o.type] || !tileFree(o.tx, o.ty)) { if (TOWERS[o.type]) S.gold += o.spent || 0; continue; }
     S.towers.push({ id: S.nextId++, type: o.type, lvl: o.lvl, tx: o.tx, ty: o.ty, x: (o.tx + 0.5) * TILE, y: (o.ty + 0.5) * TILE, cd: 0.2, angle: -Math.PI / 2,
-      mode: o.mode || 'first', branch: o.branch || 0, spent: o.spent, kills: o.kills || 0, assists: o.assists || 0, vet: 0, dealt: o.dealt || 0, flash: 0, mast: o.mast && MASTERY[o.type] ? o.mast : null });
+      mode: o.mode || 'first', branch: o.branch || 0, spent: o.spent, kills: o.kills || 0, assists: o.assists || 0, vet: 0, dealt: o.dealt || 0, flash: 0, skills: o.skills || (o.mast && MASTERY[o.type] ? [o.mast.s === 0 ? o.mast.r : 0, o.mast.s === 1 ? o.mast.r : 0] : [0, 0]) });
   }
   for (const t of S.towers) t.vet = vetRank(t);
   if (c.lives) S.lives = c.lives;
@@ -3885,8 +3914,8 @@ window.addEventListener('keydown', ev => {
   else if (k === 'r') { useHero('r'); refreshHud(); }
   else if (k === 'h') toggleHeroSel();
   else if (k === 'k') openSkills();
-  else if (ui.selected && k === 'u' && ui.selected.lvl >= 2) { masterTower(ui.selected, ui.selected.mast ? ui.selected.mast.s : 0); refreshPanel(true); }
-  else if (ui.selected && k === 'i' && ui.selected.lvl >= 2) { if (!ui.selected.mast) masterTower(ui.selected, 1); refreshPanel(true); }
+  else if (ui.selected && k === 'u' && ui.selected.lvl >= 2) { masterTower(ui.selected, 0); refreshPanel(true); }
+  else if (ui.selected && k === 'i' && ui.selected.lvl >= 2) { masterTower(ui.selected, 1); refreshPanel(true); }
   else if (ui.selected && k === 'u') { upgradeTower(ui.selected, 0); refreshPanel(true); }
   else if (ui.selected && k === 'i' && ui.selected.lvl === 1) { upgradeTower(ui.selected, 1); refreshPanel(true); }
   else if (ui.selected && (k === 's' || k === 'delete' || k === 'backspace')) { sellTower(ui.selected); refreshPanel(true); }
