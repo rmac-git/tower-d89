@@ -38,7 +38,7 @@ The second upgrade splits into two paths, so two players end up with different d
 
 **Field orders:** from wave 10 on, before every fifth wave you pick one of three perks. Each gives a bonus and a cost, such as +20% damage for +1 enemy armor.
 
-**Enemies:** see the enemy table below — each Maritime critter has one trick and one counter. Herring Gulls fly but follow the road, so Mortars can't hit them. A boss arrives every 10 waves: Lobster King, Kraken, then the Warlord.
+**Enemies:** see the enemy table below — each Maritime critter has one trick and one counter. Herring Gulls fly but follow the road, so Mortars can't hit them. A boss arrives every 10 waves: The Old Lobster, The Kraken, then The Drowned Warlord.
 
 **Maps:** Switchback (long and winding), The Serpent (four long climbs), Short Fuse (a short road, hard), played in that order. Your best wave is saved.
 
