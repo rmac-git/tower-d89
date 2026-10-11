@@ -177,7 +177,40 @@ html.big .overlay p, html.big .n-desc { font-size: 15.5px; }
 .shop-item.new::after { content: 'NEW'; position: absolute; top: -6px; right: -5px; background: var(--good); color: #10200a; font: 700 9px/1 var(--font-mono); padding: 2px 4px; border-radius: 6px; }
 .node.locked .n-desc { display: none; }
 .hskills { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; text-align: left; }
-.hskill { background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
+.hskill { background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px; display: grid; grid-template-columns: minmax(96px, 38%) 1fr; gap: 10px; align-items: stretch; }
+.hs-art { width: 100%; height: 100%; min-height: 96px; border-radius: 8px; display: block; background: #1c3346; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
+.hs-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.hskill.locked .hs-art { filter: grayscale(0.85) brightness(0.7); }
+.pips { display: inline-flex; gap: 3px; vertical-align: middle; margin-left: 4px; }
+.pips i { width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--brass); }
+.pips i.on { background: var(--brass); }
+.hs-next { margin: 0; font-size: 12.5px; color: var(--muted); }
+.hs-next b { font: 600 11px var(--font-mono); color: #4cc3ff; margin-right: 4px; }
+.hs-next.done { color: var(--good); }
+.hpath { position: relative; display: grid; grid-template-columns: repeat(20, 1fr); width: 100%; max-width: 760px; gap: 0; padding: 0 2px; }
+.hpath::before, .hpath::after { content: ''; position: absolute; left: 2.5%; right: 2.5%; top: 12px; height: 3px; background: var(--line); border-radius: 2px; }
+.hpath::after { right: auto; width: calc(var(--fill) * 0.95); background: var(--hc); }
+.hp-node { position: relative; z-index: 1; background: none; border: 0; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 1px; cursor: pointer; color: var(--muted); font: inherit; min-width: 0; }
+.hp-node i { font: 700 11px var(--font-mono); font-style: normal; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; background: var(--panel); border: 2px solid var(--line); color: var(--muted); }
+.hp-node.k-s i { width: 12px; height: 12px; margin: 6px 0; }
+.hp-node.k-r i { border-radius: 5px; }
+.hp-node.k-cap i { width: 28px; height: 28px; margin: -2px 0; font-size: 15px; }
+.hp-node.on i { background: var(--hc); border-color: var(--hc); color: #14181c; }
+.hp-node.now i { box-shadow: 0 0 0 3px rgba(255,255,255,0.85); }
+.hp-node.sel i { outline: 2px dashed #4cc3ff; outline-offset: 3px; }
+.hp-node small { font: 600 9.5px var(--font-mono); }
+.hp-node.on small { color: var(--ink); }
+.hp-detail { margin: 0; font-size: 13px; min-height: 1.3em; max-width: 760px; text-align: center; }
+.hp-detail b { color: var(--brass); }
+.hp-detail .got { color: var(--good); font-weight: 700; }
+.talents { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.tal { display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); font: 600 12px var(--font-body, inherit); cursor: pointer; }
+.tal i { font-style: normal; color: var(--muted); }
+.tal small { font: 600 10px var(--font-mono); }
+.tal.on { color: var(--ink); border-color: var(--brass); }
+.tal.on i, .tal.on small { color: var(--brass); }
+.tal.cap { border-style: dashed; }
+.tal.cap.on { background: rgba(230,196,99,0.15); border-style: solid; }
 .hskill.locked { opacity: 0.6; }
 .hskill h4 { margin: 0; font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.04em; font-size: 20px; color: var(--brass); }
 .hs-key { margin: 0; font: 600 10.5px var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
@@ -189,7 +222,14 @@ html.big .overlay p, html.big .n-desc { font-size: 15.5px; }
 .hs-ranks li.on .lv { color: var(--good); }
 .hs-cd { margin: 2px 0 0; font: 600 11px var(--font-mono); color: var(--muted); }
 .hs-trait { max-width: 640px; }
-.skills-card.tight .hs-text, .skills-card.tight .hs-trait { display: none; }
+.skills-card.tight .hs-text, .skills-card.tight .hs-trait, .skills-card.tight .sk-stats { display: none; }
+.skills-card.tighter .hs-art { min-height: 72px; }
+.skills-card.tighter .hp-node small, .skills-card.tighter .hs-key, .skills-card.tighter .cd-hint { display: none; }
+.skills-card.tighter h2 { font-size: 22px; }
+.skills-card.tighter .hskill h4 { font-size: 17px; }
+.skills-card.tighter .hp-detail, .skills-card.tighter .hs-next { font-size: 12px; }
+.skills-card.tighter .tal { padding: 2px 8px; font-size: 11px; }
+.skills-card.tighter .hskill { grid-template-columns: minmax(84px, 34%) 1fr; }
 @media (max-width: 640px) and (orientation: portrait) { .hskills { grid-template-columns: 1fr; } }
 .skills-card.tight .chap, .skills-card.tight .sk-stats, .skills-card.tight .node.learned .n-desc { display: none; }
 .skills-card.tight h2 { font-size: 26px; margin: 0; }
@@ -451,6 +491,7 @@ div.map-btn.on:hover { border-color: var(--brass); }
 .heroes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; }
 .hero-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; cursor: pointer; min-width: 0; }
 .hero-btn:hover { border-color: var(--brass); }
+.hb-art { width: 100%; height: 92px; min-height: 0; flex: none; }
 .hero-btn.on { border-color: var(--brass); background: #2c3b31; }
 .hero-btn b { font-family: var(--font-display); font-weight: 700; font-size: 21px; letter-spacing: 0.03em; text-transform: uppercase; line-height: 1.05; }
 .hero-btn small { color: var(--muted); font-size: 12.5px; line-height: 1.3; }
@@ -620,7 +661,7 @@ const SPEED_K = 0.9, RANGE_K = 0.75;   // the coarser grid has a shorter road, s
 const VICTORY_WAVE = 30;
 const WAVES_PER_MAP = 10;   // the campaign marches through the maps in order, ten waves each
 const START_GOLD = 180, START_LIVES = 20;
-const GAME_VERSION = 'v37 · tide of new enemies';   // shown in Settings, so you can tell whether a fresh copy loaded
+const GAME_VERSION = 'v38 · heroes in motion';   // shown in Settings, so you can tell whether a fresh copy loaded
 // Player settings, kept on this device.
 const SET = { music: 0.5, sfx: 0.8, autoWave: false, autoPause: true, reduceFx: false, bigShots: false, vibrate: true };
 try { Object.assign(SET, JSON.parse(localStorage.getItem('bastion-line-settings')) || {}); } catch (e) {}
@@ -715,7 +756,7 @@ const MASTERY = {
 };
 // Like Kingdom Rush, a final-form tower has both of its skills and ranks each one up separately.
 const MAST_COST = [1.0, 1.6, 2.3];
-const ROMAN = ['', 'I', 'II', 'III'];
+const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V'];
 const sk = (t, i) => (t.skills && t.skills[i]) || 0;
 function masteryCost(t, skill = 0) {
   if (t.lvl < 2 || !unlocked('mastery')) return null;
@@ -829,8 +870,10 @@ const UNLOCK_MSG = {
 const unlocked = k => !(k in UNLOCK) || (S.cleared || 0) >= UNLOCK[k];
 
 // ---------- Heroes ----------
-const XP_NEXT = [95, 240, 450, 720, 1090, 1550, 2130, 2850, 3700];   // total xp to reach levels 2..10
-const FX_KEYS = ['dmg', 'hp', 'regen', 'rate', 'range', 'speed', 'cleave', 'exec', 'pierce', 'burn', 'skill', 'cdr', 'xp', 'gold', 'auraRate', 'auraDmg', 'auraR', 'respawn', 'thorns', 'radius'];
+const MAX_LVL = 20;
+const XP_NEXT = Array.from({ length: MAX_LVL - 1 }, (_, i) => Math.round(18.5 * (i + 1) ** 2 + 50 * (i + 1)));   // total xp to reach levels 2..20
+const lvlForXp = xp => 1 + XP_NEXT.filter(x => xp >= x).length;
+const FX_KEYS = ['dmg', 'hp', 'regen', 'rate', 'range', 'speed', 'cleave', 'exec', 'pierce', 'burn', 'skill', 'cdr', 'xp', 'gold', 'auraRate', 'auraDmg', 'auraR', 'respawn', 'thorns', 'radius', 'armor', 'last', 'star'];
 const fx0 = () => Object.fromEntries(FX_KEYS.map(k => [k, 0]));
 const ATK = { grunt: 6, runner: 3, tank: 16, swarm: 2.5, boss: 55, flyer: 0, healer: 0, shell: 7, split: 5, jellet: 2, burrow: 6, captain: 14, blink: 4 };   // contact damage per second
 const md = t => t.replace(/\*(.+?)\*/g, '<em>$1</em>');
@@ -840,9 +883,9 @@ const HEROES = {
     role: 'Frontline fighter. Charges into packs, stuns them, and steadies nearby towers.',
     melee: true, air: false, dmg: 15, rate: 1.4, range: 1.3, hp: 420, speed: 3.0, pierce: false,
     active: { name: 'Leap Slam', cd: 18, r: 2.2, text: 'Leap to any spot you choose and slam it, damaging and stunning everything nearby.',
-      ranks: ['The slam also knocks enemies back down the road.', 'An aftershock slams the spot again a moment later.'] },
+      ranks: ['The slam also knocks enemies back down the road.', 'An aftershock slams the spot again a moment later.', 'Landing heals Maren for 15% of her health, and stuns last 30% longer.', 'A second aftershock follows, and both hit as hard as the slam.'] },
     ult: { name: 'Hold the Line', cd: 90, text: 'Plant the old banner: for 8s Maren cannot fall and hits 60% harder, and towers near her fire 30% faster.',
-      up: 'The banner stuns everything near Maren every 2.5 seconds.' },
+      ranks: ['The banner stuns everything near Maren every 2.5 seconds.', 'Lasts 12 seconds, and Maren starts it at full health.'] },
     evo: [
       { name: 'Earthbreaker', quote: 'Break the ground he trained you on.', text: 'Leap Slam grows wider, hits 40% harder and stuns longer.' },
       { name: 'Aegis Slam', quote: 'Hold the line he taught you to hold.', text: 'Leap Slam also slows what it hits and shields Maren for 40% of her health.' },
@@ -865,9 +908,9 @@ const HEROES = {
     role: 'Ranged mage. Calls meteors onto the thickest packs and sets them burning.',
     melee: false, air: true, dmg: 13, rate: 1.0, range: 3.4, hp: 230, speed: 2.6, pierce: true,
     active: { name: 'Meteor', cd: 14, r: 1.5, text: 'Call a burning meteor down on any spot you choose.',
-      ranks: ['The impact leaves the ground burning for 4 seconds.', 'Two smaller meteors chase it in.'] },
+      ranks: ['The impact leaves the ground burning for 4 seconds.', 'Two smaller meteors chase it in.', 'Meteors hit 30% harder, and their fire burns twice as hot.', 'A third chaser falls, and the burning ground lasts 8 seconds.'] },
     ult: { name: 'Sunfall', cd: 90, text: 'Twelve meteors rain on the enemy over four seconds.',
-      up: 'Twenty meteors, and every one leaves the ground burning.' },
+      ranks: ['Twenty meteors, and every one leaves the ground burning.', 'Thirty meteors, each hitting 30% harder.'] },
     evo: [
       { name: 'Cataclysm', quote: 'One perfect, enormous strike.', text: 'Meteor becomes a single huge impact with a much wider blast.' },
       { name: 'Meteor Shower', quote: 'A storm of everything you held back.', text: 'Meteor splits into three, each finding its own pack.' },
@@ -890,9 +933,9 @@ const HEROES = {
     role: 'Engineer and marksman. Overclocks the towers around Tick and keeps the Line running.',
     melee: false, air: true, dmg: 10, rate: 2.6, range: 3.6, hp: 270, speed: 3.4, pierce: false,
     active: { name: 'Sentry Drop', cd: 18, r: 0.6, text: 'Drop an auto-turret on any spot you choose. It fires fast for 12 seconds.',
-      ranks: ['The sentry overclocks towers around it: +50% fire rate.', 'Two sentries drop instead of one.'] },
+      ranks: ['The sentry overclocks towers around it: +50% fire rate.', 'Two sentries drop instead of one.', 'Sentries fire 40% faster.', 'Sentries blow up when they shut down, blasting everything nearby.'] },
     ult: { name: 'Total Overclock', cd: 90, text: 'Every tower on the map fires twice as fast and hits 50% harder for 8 seconds.',
-      up: 'Lasts 12 seconds and instantly recharges Sentry Drop.' },
+      ranks: ['Lasts 12 seconds and instantly recharges Sentry Drop.', 'Lasts 16 seconds and drops two sentries in front of the lead enemy.'] },
     evo: [
       { name: 'Overdrive', quote: 'Run everything past the red line.', text: 'Sentries last 18 seconds and reach further.' },
       { name: 'Arc Reactor', quote: 'Build it steady. Build it loud.', text: 'Sentries fire chain lightning that jumps between three enemies.' },
@@ -911,15 +954,49 @@ const HEROES = {
     ],
   },
 };
-// Hero growth is automatic. Skills rank up at fixed levels, and a few traits grow alongside them.
-const RANK_LVL = [1, 3, 7], ULT_LVL = 5, ULT2_LVL = 9;
-const sigRank = h => RANK_LVL.filter(l => h.lvl >= l).length;          // 1..3
-const ultRank = h => h.lvl >= ULT2_LVL ? 2 : h.lvl >= ULT_LVL ? 1 : 0;   // 0..2
+// Hero growth is automatic. Every level adds a little power, and most levels unlock something on the hero's path:
+// signature ranks, ultimate ranks, and five named talents ending in a capstone at level 20.
+const RANK_LVL = [1, 4, 8, 12, 16], ULT_LVLS = [6, 11, 18], ULT_LVL = ULT_LVLS[0];
+const sigRank = h => RANK_LVL.filter(l => h.lvl >= l).length;          // 1..5
+const ultRank = h => ULT_LVLS.filter(l => h.lvl >= l).length;          // 0..3
 const TRAITS = {
-  maren: { text: 'Toughens with every level. From level 4 she regains health between fights, and from level 6 her blows cleave.', fx: l => ({ hp: 0.05 * (l - 1), regen: l >= 4 ? 0.01 : 0, cleave: l >= 6 ? 1 : 0, auraRate: 0.1 }) },
-  ilse: { text: 'Hits harder with every level. From level 4 her bolts set enemies alight.', fx: l => ({ dmg: 0.05 * (l - 1), burn: l >= 4 ? 1 : 0, radius: 0.03 * (l - 1) }) },
-  tick: { text: 'Reaches further with every level. Towers near him fire 10% faster, and from level 6 hit 10% harder.', fx: l => ({ range: 0.08 * (l - 1), auraRate: 0.1, auraDmg: l >= 6 ? 0.1 : 0 }) },
+  maren: { text: 'More health every level.', fx: l => ({ hp: 0.025 * (l - 1), auraRate: 0.1 }),
+    talents: [
+      { lvl: 3, name: 'Second Wind', text: 'Regains 1% of her health every second, even mid-fight.', fx: { regen: 0.01 } },
+      { lvl: 7, name: 'Cleave', text: 'Her sword also hits everything beside her target.', fx: { cleave: 1 } },
+      { lvl: 10, name: 'Rallying Cry', text: 'Towers near her fire 20% faster instead of 10%.', fx: { auraRate: 0.1 } },
+      { lvl: 14, name: 'Iron Hide', text: 'Takes 25% less damage, and whatever hits her gets hurt back.', fx: { armor: 0.25, thorns: 1 } },
+      { lvl: 20, name: 'The Wall Does Not Fall', text: 'Once a wave, a killing blow leaves her standing at 40% health.', fx: { last: 1 }, cap: true },
+    ] },
+  ilse: { text: 'More damage and a wider blast every level.', fx: l => ({ dmg: 0.025 * (l - 1), radius: 0.015 * (l - 1) }),
+    talents: [
+      { lvl: 3, name: 'Kindling', text: 'Her bolts set enemies alight.', fx: { burn: 1 } },
+      { lvl: 7, name: 'Wide Sigils', text: 'Both skills cover 20% more ground.', fx: { radius: 0.2 } },
+      { lvl: 10, name: 'Quickened Ink', text: 'Meteor and Sunfall recharge 25% faster.', fx: { cdr: 0.25 } },
+      { lvl: 14, name: 'Flashpoint', text: '+50% damage to enemies under 30% health.', fx: { exec: 0.5 } },
+      { lvl: 20, name: 'Falling Star', text: 'Every fifth bolt calls a small meteor down on its target.', fx: { star: 1 }, cap: true },
+    ] },
+  tick: { text: 'More reach every level. Towers near Tick fire 10% faster.', fx: l => ({ range: 0.04 * (l - 1), auraRate: 0.1 }),
+    talents: [
+      { lvl: 3, name: 'Long Barrel', text: 'His rifle reaches one tile further.', fx: { range: 1 } },
+      { lvl: 7, name: 'Tuned Up', text: 'Towers near Tick also hit 10% harder.', fx: { auraDmg: 0.1 } },
+      { lvl: 10, name: 'Quick Hands', text: 'Fires 30% faster.', fx: { rate: 0.3 } },
+      { lvl: 14, name: 'Spare Parts', text: 'Sentry Drop and Total Overclock recharge 25% faster.', fx: { cdr: 0.25 } },
+      { lvl: 20, name: 'Grand Design', text: 'Towers near him fire 25% faster and hit 25% harder, from further away.', fx: { auraRate: 0.15, auraDmg: 0.15, auraR: 1.5 }, cap: true },
+    ] },
 };
+// the hero's whole path, one node per level
+function heroPath(k) {
+  const d = HEROES[k], out = [];
+  for (let l = 1; l <= MAX_LVL; l++) {
+    const ri = RANK_LVL.indexOf(l), ui2 = ULT_LVLS.indexOf(l), tal = TRAITS[k].talents.find(t => t.lvl === l);
+    if (ri >= 0) out.push({ lvl: l, kind: 'e', name: `${d.active.name} ${ROMAN[ri + 1]}`, text: ri ? d.active.ranks[ri - 1] : d.active.text });
+    else if (ui2 >= 0) out.push({ lvl: l, kind: 'r', name: `${d.ult.name} ${ROMAN[ui2 + 1]}`, text: ui2 ? d.ult.ranks[ui2 - 1] : d.ult.text });
+    else if (tal) out.push({ lvl: l, kind: tal.cap ? 'cap' : 't', name: tal.name, text: tal.text });
+    else out.push({ lvl: l, kind: 's', name: 'Stronger', text: 'More damage, health and skill power.' });
+  }
+  return out;
+}
 
 // ---------- Sound (synthesized, no assets) ----------
 const A = { ctx: null, on: true, master: null, sfxBus: null, musicBus: null, last: {}, noiseBuf: null };
@@ -1821,7 +1898,10 @@ function update(dt) {
       } else { S.shots.push({ kind: 'bolt', x: sn.x + Math.cos(sn.angle) * 12, y: sn.y - 8 + Math.sin(sn.angle) * 12, target: tgt, dmg: sn.dmg, pierce: false, tower: S.hero, speed: 520, col: '#8ff0d8' }); sfx('arrow'); }
     }
   }
-  if (S.sentries.length) S.sentries = S.sentries.filter(sn => sn.until > S.time);
+  if (S.sentries.length) {
+    for (const sn of S.sentries) if (sn.until <= S.time && sn.boom) S.strikes.push({ at: S.time, x: sn.x, y: sn.y, r: 1.5 * TILE, dmg: sn.boom, src: S.hero, col: '#7fd9c0', boom: 1 });
+    S.sentries = S.sentries.filter(sn => sn.until > S.time);
+  }
   { const h = S.hero;
     if (h && !h.dead && h.rage > S.time && ultRank(h) >= 2 && h.k === 'maren') {
       h.pulseT = (h.pulseT || 0) - dt;
@@ -1883,7 +1963,7 @@ function strikeBlast(k) {
     if (k.burn && e.alive) { e.burnT = 3; e.burnD = k.burn; e.burnSrc = k.src; }
     if (k.stun && e.alive && !e.air) e.freezeT = Math.max(e.freezeT || 0, e.type === 'boss' ? k.stun * 0.4 : k.stun);
   }
-  if (k.ground) S.fires.push({ x: k.x, y: k.y, r: R * 0.9, until: S.time + 4, dps: k.ground, src: k.src });
+  if (k.ground) S.fires.push({ x: k.x, y: k.y, r: R * 0.9, until: S.time + (k.groundT || 4), dps: k.ground, src: k.src });
   ring(k.x, k.y, 4, R, 0.4, k.col || '#f0a35a'); burst(k.x, k.y, k.col || '#f0a35a', 18, 140); sfx('boom');
   if (k.boom || k.quake) shake(k.quake ? 5 : 3);
 }
@@ -1903,29 +1983,31 @@ function makeHero(k) {
   return h;
 }
 const skillName = h => h.evo ? HEROES[h.k].evo[h.evo === 'a' ? 0 : 1].name : HEROES[h.k].active.name;
-function hMax(h) { return Math.round(HEROES[h.k].hp * (1 + 0.14 * (h.lvl - 1)) * (1 + h.fx.hp)); }
-function heroDmg(h) { return HEROES[h.k].dmg * (1 + 0.2 * (h.lvl - 1)) * (1 + 0.05 * (S.wave - 1)) * (1 + h.fx.dmg); }
-function skillPower(h) { return (80 + 22 * h.lvl + 8 * S.wave) * (1 + h.fx.skill); }
+function hMax(h) { return Math.round(HEROES[h.k].hp * (1 + 0.07 * (h.lvl - 1)) * (1 + h.fx.hp)); }
+function heroDmg(h) { return HEROES[h.k].dmg * (1 + 0.1 * (h.lvl - 1)) * (1 + 0.05 * (S.wave - 1)) * (1 + h.fx.dmg); }
+function skillPower(h) { return (80 + 11 * h.lvl + 8 * S.wave) * (1 + h.fx.skill); }
 function cdOf(h, base) { return base * (1 - Math.min(0.6, h.fx.cdr)) * S.mods.cd; }
 function recomputeFx(h) {
   h.fx = fx0();
   for (const [key, v] of Object.entries(TRAITS[h.k].fx(h.lvl))) h.fx[key] += v;
+  for (const t of TRAITS[h.k].talents) if (h.lvl >= t.lvl) for (const [key, v] of Object.entries(t.fx)) h.fx[key] += v;
 }
 function learn() { return false; }   // the old skill tree is gone; kept so old scripts don't break
 function heroXp(e) {
   const h = S.hero;
-  if (!h || h.dead || h.lvl >= 10) return;
+  if (!h || h.dead || h.lvl >= MAX_LVL) return;
   const near = Math.hypot(e.x - h.x, e.y - h.y) <= 7 * TILE;
   h.xp += (e.xp || 1) * (near ? 1 : 0.4) * (1 + h.fx.xp);
-  while (h.lvl < 10 && h.xp >= XP_NEXT[h.lvl - 1]) {
+  while (h.lvl < MAX_LVL && h.xp >= XP_NEXT[h.lvl - 1]) {
     h.lvl++; recomputeFx(h); h.maxHp = hMax(h); h.hp = h.maxHp;
     const d = HEROES[h.k], first = d.name.split(' ')[0];
     floatText(h.x, h.y - 26, 'Level ' + h.lvl, '#ffffff'); ring(h.x, h.y, 6, 44, 0.6, d.color); sfx('upgrade');
     let sub = 'Stronger in every way';
-    const ri = RANK_LVL.indexOf(h.lvl);
-    if (ri > 0) { sub = `${skillName(h)} rank ${ri + 1}: ${d.active.ranks[ri - 1]}`; toast(`${skillName(h)} · rank ${ri + 1}`, d.active.ranks[ri - 1]); }
-    if (h.lvl === ULT_LVL) { h.ult = true; h.ab.r = S.time + 2; sub = `New ultimate: ${d.ult.name} (R)`; toast(`Ultimate unlocked: ${d.ult.name}`, d.ult.text); }
-    if (h.lvl === ULT2_LVL) { sub = `${d.ult.name} rank 2: ${d.ult.up}`; toast(`${d.ult.name} · rank 2`, d.ult.up); }
+    const ri = RANK_LVL.indexOf(h.lvl), ur = ULT_LVLS.indexOf(h.lvl), tal = TRAITS[h.k].talents.find(t => t.lvl === h.lvl);
+    if (ri > 0) { sub = `${skillName(h)} ${ROMAN[ri + 1]}: ${d.active.ranks[ri - 1]}`; toast(`${skillName(h)} · rank ${ROMAN[ri + 1]}`, d.active.ranks[ri - 1]); }
+    if (ur === 0) { h.ult = true; h.ab.r = S.time + 2; sub = `New ultimate: ${d.ult.name} (R)`; toast(`Ultimate unlocked: ${d.ult.name}`, d.ult.text); }
+    if (ur > 0) { sub = `${d.ult.name} ${ROMAN[ur + 1]}: ${d.ult.ranks[ur - 1]}`; toast(`${d.ult.name} · rank ${ROMAN[ur + 1]}`, d.ult.ranks[ur - 1]); }
+    if (tal) { sub = `${tal.cap ? 'Capstone' : 'Talent'}: ${tal.name}`; toast(`${tal.cap ? 'Capstone talent' : 'New talent'}: ${tal.name}`, tal.text); }
     S.banner = { text: `${first} reached level ${h.lvl}`, sub, life: 2.4 };
     renderHeroUI();
   }
@@ -1957,7 +2039,7 @@ function heroAttack(h, d, t) {
   let dmg = heroDmg(h) * (raged ? 1.6 : 1);
   if (t.hp < t.maxHp * 0.3) dmg *= 1 + h.fx.exec;
   const pierce = d.pierce || h.fx.pierce > 0;
-  h.flash = 0.12;
+  h.flash = 0.12; h.atkAt = S.time;
   if (d.melee) {
     const R = h.fx.cleave ? TILE : 0;
     for (const e of S.enemies) {
@@ -1969,6 +2051,7 @@ function heroAttack(h, d, t) {
     burst(t.x, t.y, '#fff3d6', 5, 80); if (R) ring(t.x, t.y, 4, R, 0.2, d.color); sfx('arrow');
   } else {
     const tip = (h.k === 'ilse' ? 17 : 23) * K, a = Math.atan2(t.y - h.y, t.x - h.x);
+    if (h.fx.star && (h.bolts = (h.bolts || 0) + 1) % 5 === 0) S.strikes.push({ at: S.time + 0.5, x: t.x, y: t.y, r: 1.0 * TILE, dmg: skillPower(h) * 0.45, burn: skillPower(h) * 0.05, src: h, col: '#ffb347', boom: 1 });
     S.shots.push({ kind: 'bolt', x: h.x + Math.cos(a) * tip, y: h.y + Math.sin(a) * tip, target: t, dmg, pierce, tower: h, speed: 460, col: h.k === 'ilse' ? '#ff8a3c' : '#8ff0d8', big: h.k === 'ilse', ignite: h.fx.burn > 0 });
     sfx('arrow');
   }
@@ -1978,7 +2061,7 @@ function updateHero(dt) {
   const d = HEROES[h.k];
   if (h.dead) {
     if (S.time >= h.respawnAt) {
-      h.dead = false; h.maxHp = hMax(h); h.hp = h.maxHp; h.x = h.post[0]; h.y = h.post[1]; h.invuln = S.time + 2;
+      h.dead = false; h.maxHp = hMax(h); h.hp = h.maxHp; h.x = h.post[0]; h.y = h.post[1]; h.invuln = S.time + 2; h.spawnAt = S.time;
       ring(h.x, h.y, 6, 40, 0.5, d.color); burst(h.x, h.y, d.color, 14, 100); sfx('upgrade');
     }
     return;
@@ -1991,7 +2074,7 @@ function updateHero(dt) {
   const go = (tx, ty) => {
     const dx = tx - h.x, dy = ty - h.y, dist = Math.hypot(dx, dy);
     if (dist < 3) return true;
-    const m = Math.min(step, dist); h.x += dx / dist * m; h.y += dy / dist * m; h.movedAt = S.time;
+    const m = Math.min(step, dist); h.x += dx / dist * m; h.y += dy / dist * m; h.movedAt = S.time; h.angle = Math.atan2(dy, dx);
     return false;
   };
   if (h.dest) { if (go(h.dest[0], h.dest[1])) h.dest = null; }
@@ -2012,9 +2095,15 @@ function updateHero(dt) {
     if (thorns) hurt(e, thorns * dt, h, true, true);
   }
   if (taken > 0 && S.time >= h.invuln) {
-    h.lastHit = S.time;
+    h.lastHit = S.time; taken *= 1 - h.fx.armor;
+    if (S.time - (h.flinchAt || -9) > 0.9) h.flinchAt = S.time;
     if (h.shield > 0) { const a = Math.min(h.shield, taken); h.shield -= a; taken -= a; }
     h.hp -= taken;
+    if (h.hp <= 0 && h.fx.last && h.lastStand !== S.wave) {
+      h.lastStand = S.wave; h.hp = h.maxHp * 0.4; h.invuln = S.time + 1.5; h.castAt = S.time; h.castK = 'r';
+      ring(h.x, h.y, 10, 2.5 * TILE, 0.6, d.color); shake(5); sfx('bosswave');
+      S.banner = { text: 'The wall does not fall', sub: 'Maren stands back up', life: 1.8 };
+    }
     if (h.hp <= 0) heroDie(h);
   }
 }
@@ -2047,25 +2136,30 @@ const CAST = {
       const a = h.evo === 'a', b = h.evo === 'b', rk = sigRank(h);
       const R = (a ? 3.0 : 2.2) * TILE * (1 + h.fx.radius), dmg = skillPower(h) * 0.85 * (a ? 1.4 : 1);
       ring(h.x, h.y, 4, 20, 0.3, d.color);
+      h.leap = { x0: h.x, y0: h.y, at: S.time };
       h.x = x; h.y = y; h.post = [x, y]; h.dest = null;
       for (const e of S.enemies) {
         if (!e.alive || e.air || e.d < 0 || Math.hypot(e.x - x, e.y - y) > R) continue;
         hurt(e, dmg, h, true);
-        e.freezeT = Math.max(e.freezeT || 0, e.type === 'boss' ? 0.5 : a ? 1.7 : 1.2);
+        e.freezeT = Math.max(e.freezeT || 0, (e.type === 'boss' ? 0.5 : a ? 1.7 : 1.2) * (rk >= 4 ? 1.3 : 1));
         if (b) { e.slowF = Math.max(e.slowT > 0 ? e.slowF : 0, 0.5); e.slowT = Math.max(e.slowT, 4); }
         if (rk >= 2 && e.type !== 'boss') e.d = Math.max(0, e.d - TILE * 0.7);
       }
       if (b) { h.shield = h.maxHp * 0.4; h.shieldUntil = S.time + 6; }
-      if (rk >= 3) S.strikes.push({ at: S.time + 0.8, x, y, r: R * 0.85, dmg: dmg * 0.6, stun: 0.9, src: h, quake: true, col: d.color });
+      if (rk >= 4) { h.hp = Math.min(h.maxHp, h.hp + h.maxHp * 0.15); floatText(x, y - 30, '+' + Math.round(h.maxHp * 0.15), '#7fd9c0'); }
+      if (rk >= 3) S.strikes.push({ at: S.time + 0.8, x, y, r: R * 0.85, dmg: dmg * (rk >= 5 ? 1 : 0.6), stun: 0.9, src: h, quake: true, col: d.color });
+      if (rk >= 5) S.strikes.push({ at: S.time + 1.6, x, y, r: R * 0.85, dmg, stun: 0.9, src: h, quake: true, col: d.color });
       ring(x, y, 10, R, 0.55, d.color); ring(x, y, 6, R * 0.6, 0.4, '#ffffff'); burst(x, y, '#e8d28a', 30, 190); shake(7); sfx('boom');
       return true;
     },
     // Hold the Line: invulnerable fury, faster towers nearby; rank 2 pulses a stun.
     r(h, d) {
-      S.buffs.push({ follow: true, r: 5 * TILE, until: S.time + 8, rate: 0.3, dmg: 0, col: 'rgba(230,196,99,0.6)' });
-      h.invuln = S.time + 8; h.rage = S.time + 8; h.pulseT = 0.2;
+      const dur = ultRank(h) >= 3 ? 12 : 8;
+      S.buffs.push({ follow: true, r: 5 * TILE, until: S.time + dur, rate: 0.3, dmg: 0, col: 'rgba(230,196,99,0.6)' });
+      h.invuln = S.time + dur; h.rage = S.time + dur; h.pulseT = 0.2;
+      if (ultRank(h) >= 3) h.hp = h.maxHp;
       ring(h.x, h.y, 10, 5 * TILE, 0.7, d.color); shake(5); sfx('bosswave');
-      S.banner = { text: 'Hold the Line', sub: 'Maren cannot fall for 8 seconds', life: 1.8 };
+      S.banner = { text: 'Hold the Line', sub: `Maren cannot fall for ${dur} seconds`, life: 1.8 };
       return true;
     },
   },
@@ -2074,17 +2168,18 @@ const CAST = {
     e(h, d, x, y) {
       const a = h.evo === 'a', b = h.evo === 'b', rk = sigRank(h);
       const r = (a ? 2.3 : 1.5) * TILE * (1 + h.fx.radius), pw = skillPower(h);
-      const dmg = pw * (a ? 1.35 : 1.05), burn = pw * 0.1, ground = rk >= 2 ? pw * 0.18 : 0;
+      const hot = rk >= 4 ? 2 : 1, groundT = rk >= 5 ? 8 : 4;
+      const dmg = pw * (a ? 1.35 : 1.05) * (rk >= 4 ? 1.3 : 1), burn = pw * 0.1 * hot, ground = rk >= 2 ? pw * 0.18 * hot : 0;
       const pts = [[x, y]];
       if (b) for (let i = 0; i < 2; i++) { const ang = Math.random() * 6.283; pts.push([x + Math.cos(ang) * r * 1.3, y + Math.sin(ang) * r * 1.3]); }
-      pts.forEach((p, i) => S.strikes.push({ at: S.time + 0.8 + i * 0.3, x: p[0], y: p[1], r: i ? r * 0.8 : r, dmg: i ? dmg * 0.6 : dmg, burn, ground, src: h, col: '#ff8a3c', boom: 1 }));
-      if (rk >= 3) for (let i = 0; i < 2; i++) { const ang = Math.random() * 6.283; S.strikes.push({ at: S.time + 1.4 + i * 0.25, x: x + Math.cos(ang) * r * 0.9, y: y + Math.sin(ang) * r * 0.9, r: r * 0.7, dmg: dmg * 0.5, burn, ground: ground * 0.6, src: h, col: '#ffb347', boom: 1 }); }
+      pts.forEach((p, i) => S.strikes.push({ at: S.time + 0.8 + i * 0.3, x: p[0], y: p[1], r: i ? r * 0.8 : r, dmg: i ? dmg * 0.6 : dmg, burn, ground, groundT, src: h, col: '#ff8a3c', boom: 1 }));
+      if (rk >= 3) for (let i = 0, n = rk >= 5 ? 3 : 2; i < n; i++) { const ang = Math.random() * 6.283; S.strikes.push({ at: S.time + 1.4 + i * 0.25, x: x + Math.cos(ang) * r * 0.9, y: y + Math.sin(ang) * r * 0.9, r: r * 0.7, dmg: dmg * 0.5, burn, ground: ground * 0.6, groundT, src: h, col: '#ffb347', boom: 1 }); }
       sfx('whistle');
       return true;
     },
     r(h, d) {
-      const pw = skillPower(h), up = ultRank(h) >= 2;
-      S.rains.push({ left: up ? 20 : 12, every: up ? 0.22 : 0.33, t: 0, dmg: pw * 0.9, r: 1.3 * TILE * (1 + h.fx.radius), burn: pw * 0.1, ground: up ? pw * 0.12 : 0, src: h });
+      const pw = skillPower(h), up = ultRank(h) >= 2, up3 = ultRank(h) >= 3;
+      S.rains.push({ left: up3 ? 30 : up ? 20 : 12, every: up3 ? 0.16 : up ? 0.22 : 0.33, t: 0, dmg: pw * 0.9 * (up3 ? 1.3 : 1), r: 1.3 * TILE * (1 + h.fx.radius), burn: pw * 0.1, ground: up ? pw * 0.12 : 0, src: h });
       shake(4); sfx('bosswave'); S.banner = { text: 'Sunfall', sub: 'The sky is falling on them', life: 1.8 };
       return true;
     },
@@ -2095,7 +2190,7 @@ const CAST = {
       const a = h.evo === 'a', b = h.evo === 'b', rk = sigRank(h), life = a ? 18 : 12;
       const spots = rk >= 3 ? [[x - 0.45 * TILE, y], [x + 0.45 * TILE, y]] : [[x, y]];
       for (const [sx, sy] of spots) {
-        S.sentries.push({ x: sx, y: sy, until: S.time + life, life, cd: 0.3, range: (a ? 3.4 : 2.8) * TILE, dmg: heroDmg(h) * 1.1, rate: 3.2, chain: b ? 3 : 0, angle: -Math.PI / 2, drop: 0.35 });
+        S.sentries.push({ x: sx, y: sy, until: S.time + life, life, cd: 0.3, range: (a ? 3.4 : 2.8) * TILE, dmg: heroDmg(h) * 1.1, rate: 3.2 * (rk >= 4 ? 1.4 : 1), chain: b ? 3 : 0, angle: -Math.PI / 2, drop: 0.35, boom: rk >= 5 ? skillPower(h) * 0.9 : 0 });
         burst(sx, sy, d.color, 14, 110);
       }
       if (rk >= 2) S.buffs.push({ x, y, r: 2.6 * TILE, until: S.time + life, rate: 0.5, dmg: 0, col: 'rgba(127,217,192,0.6)' });
@@ -2103,9 +2198,13 @@ const CAST = {
       return true;
     },
     r(h, d) {
-      const up = ultRank(h) >= 2, dur = up ? 12 : 8;
+      const up = ultRank(h) >= 2, dur = ultRank(h) >= 3 ? 16 : up ? 12 : 8;
       S.buffs.push({ x: 0, y: 0, r: 1e9, until: S.time + dur, rate: 1.0, dmg: 0.5 });
       if (up) h.ab.e = S.time;
+      if (ultRank(h) >= 3) {
+        const lead = S.enemies.filter(e => e.alive && e.d >= 0 && !e.air).sort((p, q) => q.d - p.d)[0];
+        if (lead) { const [px, py] = posAt(Math.min(pathLen - TILE, lead.d + 1.6 * TILE)); CAST.tick.e(h, d, px, py); }
+      }
       ring(W / 2, H / 2, 20, W * 0.7, 0.9, d.color); shake(4); sfx('bosswave');
       S.banner = { text: 'Total Overclock', sub: 'Every tower, full power', life: 1.8 };
       return true;
@@ -2126,6 +2225,7 @@ function useHero(which, tx, ty) {
   if (which === 'e' && tx == null) { ui.targeting = ui.targeting === 'hero' ? null : 'hero'; ui.build = null; ui.selected = null; ui.heroSel = false; refreshPanel(true); return false; }
   if (!CAST[h.k][which](h, d, tx, ty)) { sfx('nope'); notice(h.x, h.y - 30, 'No enemies in reach'); return false; }
   h.ab[which] = S.time + cdOf(h, which === 'e' ? d.active.cd : d.ult.cd);
+  h.castAt = S.time; h.castK = which;
   return true;
 }
 function toggleHeroSel() {
@@ -2881,11 +2981,33 @@ function drawCoin(c, x, y, r) {
 // Heroes: animated low-poly figures. They face their target, bob and step when walking, breathe when idle,
 // and each carries a signature prop: Maren's banner, Ilse's floating spellbook, Tick's scout drone.
 // o: { scale, angle, flash, aura, moving, power (ultimate active), lvl }
+// where the hero is drawn (mid-leap they arc between spots) and what their body is doing right now
+function heroDrawPos(h) {
+  const lp = h.leap, p = lp ? (S.time - lp.at) / 0.42 : 1;
+  return p < 1 ? [lp.x0 + (h.x - lp.x0) * p, lp.y0 + (h.y - lp.y0) * p] : [h.x, h.y];
+}
+function heroPose(h) {
+  const lp = h.leap, lpP = lp ? (S.time - lp.at) / 0.42 : 9;
+  return {
+    atk: Math.min(1, (S.time - (h.atkAt ?? -9)) / 0.3),
+    cast: Math.min(1, (S.time - (h.castAt ?? -9)) / 0.7), castK: h.castK,
+    flinch: Math.min(1, (S.time - (h.flinchAt ?? -9)) / 0.25),
+    air: lpP < 1 ? Math.sin(Math.PI * lpP) * 30 : 0, land: lpP >= 1 && lpP < 1.5 ? 1 - (lpP - 1) / 0.5 : 0,
+    low: h.hp < h.maxHp * 0.3,
+  };
+}
+const easeOut = x => 1 - (1 - x) * (1 - x);
 function drawHero(c, k, x, y, o = {}) {
   const d = HEROES[k], s = o.scale || 1, col = o.flash ? '#ffffff' : d.color, t = performance.now() / 1000;
   const mv = !!o.moving, step = mv ? Math.sin(t * 11) : 0, bob = mv ? -Math.abs(Math.sin(t * 11)) * 1.8 : Math.sin(t * 2.2) * 0.5;
   const face = Math.cos(o.angle || 0) < -0.15 ? -1 : 1, sway = Math.sin(t * 3.1) * 1.4 + (mv ? -face * 2.2 : 0), pw = !!o.power;
+  const P = o.pose || {}, atk = P.atk ?? 1, cast = P.cast ?? 1, flinch = 1 - (P.flinch ?? 1), air = P.air || 0, land = P.land || 0;
+  const lunge = atk < 1 ? Math.sin(Math.PI * Math.min(1, atk * 1.6)) * (1 - atk) * 1.6 : 0;   // snaps forward, then eases back
+  const castUp = cast < 1 ? Math.sin(Math.PI * Math.min(1, cast * 1.25)) : 0;                     // rises into the cast and settles
+  const chan = k === 'ilse' && pw ? 0.75 + Math.sin(t * 6) * 0.1 : 0;                              // Ilse holds Sunfall overhead
+  const raise = Math.max(castUp, chan, air ? 1 : 0);
   c.save(); c.translate(x, y); c.scale(s, s);
+  if (o.sceneScale) c.scale(o.sceneScale, o.sceneScale);
   // ground: a slowly turning ring in the hero's colour
   if (o.aura) {
     c.save(); c.strokeStyle = d.color; c.globalAlpha = 0.45 + Math.sin(t * 3) * 0.12; c.lineWidth = 1.6; c.setLineDash([5, 4]); c.lineDashOffset = -t * 12;
@@ -2895,11 +3017,20 @@ function drawHero(c, k, x, y, o = {}) {
     const g = c.createRadialGradient(0, -6, 2, 0, -6, 26); g.addColorStop(0, d.color); g.addColorStop(1, 'rgba(0,0,0,0)');
     c.globalAlpha = 0.45 + Math.sin(t * 8) * 0.15; c.fillStyle = g; c.beginPath(); c.arc(0, -6, 26, 0, 6.283); c.fill(); c.globalAlpha = 1;
   }
-  c.fillStyle = 'rgba(8,20,14,0.42)'; c.beginPath(); c.ellipse(3, 11.5, 12, 4.5, 0, 0, 6.283); c.fill();
+  { const sh = 1 - Math.min(0.6, air / 50); c.fillStyle = `rgba(8,20,14,${0.42 * sh})`; c.beginPath(); c.ellipse(3, 11.5, 12 * sh, 4.5 * sh, 0, 0, 6.283); c.fill(); }
+  if (land) { c.strokeStyle = `rgba(255,243,214,${land * 0.7})`; c.lineWidth = 1.5; c.beginPath(); c.ellipse(0, 11, 14 + (1 - land) * 12, 4 + (1 - land) * 3, 0, 0, 6.283); c.stroke(); }
+  c.translate(0, -air - (k === 'ilse' ? raise * 5 : 0));
   // boots step when walking
   c.fillStyle = '#2a2018';
   c.beginPath(); c.ellipse(-3.6 + step * 2.2, 10.5, 2.8, 1.8, 0, 0, 6.283); c.fill();
   c.beginPath(); c.ellipse(3.6 - step * 2.2, 10.5, 2.8, 1.8, 0, 0, 6.283); c.fill();
+  // the body bends around the feet: lean into a walk, lunge into a strike, recoil from a hit, stretch into a cast, squash on landing
+  { const breathe = Math.sin(t * 2.2) * 0.018, stepSq = mv ? (1 - Math.abs(Math.sin(t * 11))) * 0.05 : 0;
+    const lean = face * ((mv ? 0.13 : 0) + lunge * 0.22 - flinch * 0.28 + (P.low ? 0.1 : 0)) + (air ? face * 0.25 * Math.cos(Math.PI * (1 - air / 30)) : 0);
+    const sy = (1 + breathe - stepSq + raise * 0.12 - land * 0.22 - (P.low ? 0.05 : 0)) * (pw ? 1.08 : 1);
+    const sx = (1 - breathe * 0.6 + stepSq + lunge * 0.05 - raise * 0.06 + land * 0.18) * (pw ? 1.08 : 1);
+    c.translate(face * (lunge * 4 - flinch * 3), 10); c.rotate(lean); c.scale(sx, sy); c.translate(0, -10); }
+  if (flinch > 0.3) { c.strokeStyle = `rgba(255,120,90,${flinch})`; c.lineWidth = 1.6; c.beginPath(); c.arc(0, -4, 15, Math.PI - 0.8 + (face < 0 ? Math.PI : 0), Math.PI + 0.8 + (face < 0 ? Math.PI : 0)); c.stroke(); }
   c.translate(0, bob);
   if (k === 'maren') {
     c.save(); c.scale(face, 1);
@@ -2922,7 +3053,11 @@ function drawHero(c, k, x, y, o = {}) {
     c.fillStyle = col; c.fillRect(-11.9, -3, 1.8, 7); c.fillStyle = '#c0453a'; c.fillRect(-11.9, -0.8, 1.8, 1.4); c.fillRect(-11.9, 2.4, 1.8, 1.4);
     poly(c, [-12.6, -3, -11, -5, -9.4, -3], '#ffd166');
     c.restore();
-    c.save(); c.translate(7 * face, 0); c.rotate(o.angle || 0);
+    // the sword sweeps through each blow, and goes up over her head for the leap
+    const sw = atk < 0.45 ? -1.7 + 2.6 * easeOut(atk / 0.45) : 0.9 * (1 - (atk - 0.45) / 0.55), base = o.angle || 0;
+    const up = -Math.PI / 2 - face * 0.5, ang = base + sw * face * (atk < 1 ? 1 : 0), fin = ang + (up - ang) * raise;
+    if (atk < 0.45 && !raise) { c.strokeStyle = 'rgba(255,255,255,0.55)'; c.lineWidth = 3; c.beginPath(); c.arc(7 * face, 0, 20, base - 1.7 * face, base + (sw) * face, face < 0); c.stroke(); }
+    c.save(); c.translate(7 * face, -raise * 6); c.rotate(fin);
     poly(c, [3, -1.5, 20, -0.2, 3, 0], '#eef3f8', INK); poly(c, [3, 0, 20, -0.2, 3, 1.5], '#9aa6b2', INK);
     c.fillStyle = col; c.fillRect(1.4, -3.6, 2, 7.2); c.fillStyle = '#5a4630'; c.fillRect(-2, -0.9, 3.6, 1.8);
     if (o.flash) { c.strokeStyle = 'rgba(255,255,255,0.85)'; c.lineWidth = 2.4; c.beginPath(); c.arc(0, 0, 19, -0.8, 0.8); c.stroke(); }
@@ -2949,11 +3084,12 @@ function drawHero(c, k, x, y, o = {}) {
     poly(c, [-6, -1, 0, 0.5, 0, 4, -6, 2.5], hsl(20, 45, 30), INK); poly(c, [0, 0.5, 6, -1, 6, 2.5, 0, 4], hsl(20, 45, 24), INK);
     poly(c, [-5.5, -1.8, 0, -0.2, 0, 3, -5.5, 1.6], '#fff3d6', INK); poly(c, [0, -0.2, 5.5, -1.8, 5.5, 1.6, 0, 3], '#efe0c0', INK);
     c.restore();
-    c.save(); c.rotate(o.angle || 0);
+    { const ang = o.angle || 0, up = -Math.PI / 2 + face * 0.25; c.save(); c.translate(0, -raise * 4); c.rotate(ang + (up - ang) * raise); c.translate(lunge * 4, 0); }
     c.strokeStyle = '#7a5a34'; c.lineWidth = 2.2; c.beginPath(); c.moveTo(0, 3); c.lineTo(16, 0); c.stroke();
+    if (raise > 0.3) { c.strokeStyle = `rgba(255,179,71,${raise * 0.7})`; c.lineWidth = 1.2; for (let i = 0; i < 3; i++) { const a2 = t * 7 + i * 2.1; c.beginPath(); c.arc(17, 0, 10 + i * 4 + Math.sin(a2) * 2, a2, a2 + 1.4); c.stroke(); } }
     const og = c.createRadialGradient(17, 0, 0.5, 17, 0, 8);
     og.addColorStop(0, '#fff3d0'); og.addColorStop(0.35, '#ff8a3c'); og.addColorStop(1, 'rgba(255,138,60,0)');
-    c.fillStyle = og; c.beginPath(); c.arc(17, 0, (pw ? 11 : 8) + (o.flash ? 3 : Math.sin(t * 5)), 0, 6.283); c.fill();
+    c.fillStyle = og; c.beginPath(); c.arc(17, 0, (pw ? 11 : 8) + raise * 5 + lunge * 3 + (o.flash ? 3 : Math.sin(t * 5)), 0, 6.283); c.fill();
     c.restore();
     for (let i = 0, n = pw ? 6 : 3; i < n; i++) {
       const a = t * 2 + i * 6.283 / n, ex = Math.cos(a) * 13, ey = Math.sin(a) * 5 - 4;
@@ -2983,7 +3119,8 @@ function drawHero(c, k, x, y, o = {}) {
     c.fillStyle = '#8fe0f0'; c.beginPath(); c.arc(-2.6, -10.3, 2, 0, 6.283); c.arc(2.6, -10.3, 2, 0, 6.283); c.fill();
     c.fillStyle = '#ffffff'; c.fillRect(-3.4, -11.4, 1, 1); c.fillRect(1.8, -11.4, 1, 1);            // lens glints
     c.restore();
-    c.save(); c.rotate(o.angle || 0);
+    { const ang = o.angle || 0, kick = atk < 1 ? (1 - atk) ** 2 : 0, up = -Math.PI / 2 + face * 0.9;
+      c.save(); c.rotate(ang - face * kick * 0.35 + (up - ang) * raise * 0.8); c.translate(-kick * 5, 0); }
     poly(c, [4, -2.4, 22, -1.6, 22, 0, 4, 0], hsl(40, 60, 58), INK); poly(c, [4, 0, 22, 0, 22, 1.6, 4, 2.4], hsl(214, 10, 40), INK);
     c.fillStyle = '#20262a'; c.fillRect(9, -4.6, 6, 2);                                              // scope
     c.fillStyle = col; c.fillRect(10, -2.6, 4, 6);
@@ -2999,6 +3136,114 @@ function drawHero(c, k, x, y, o = {}) {
     if (pw && Math.random() < 0.3) { c.strokeStyle = '#fff6c0'; c.lineWidth = 1; c.beginPath(); const a2 = Math.random() * 6.283; c.moveTo(Math.cos(a2) * 8, -6 + Math.sin(a2) * 8); c.lineTo(Math.cos(a2) * 14, -6 + Math.sin(a2) * 14); c.stroke(); }
   }
   c.restore();
+}
+// ---------- Hero action art: a small looping scene of the hero using a skill ----------
+const SCENE_W = 150, SCENE_H = 110;
+function sceneCrab(c, x, y, type, wob, spin = 0) {
+  c.save(); c.translate(x, y); c.rotate(spin); c.scale(0.85 / K, 0.85 / K);
+  drawEnemy(c, { type, x: 0, y: 0, wob, hp: 1, maxHp: 1, alive: true, air: false, hitT: 0 });
+  c.restore();
+}
+function drawScene(c, k, which, t) {
+  const d = HEROES[k], T = which === 'r' ? 3.2 : 2.6, p = (t % T) / T, W2 = SCENE_W, H2 = SCENE_H;
+  c.save();
+  // backdrop: evening sky, far hills, a strip of sea, the grassy road
+  const sky = c.createLinearGradient(0, 0, 0, H2);
+  if (which === 'r' && k === 'ilse') { sky.addColorStop(0, '#3a1f2a'); sky.addColorStop(0.6, '#a2483a'); }
+  else if (which === 'r') { sky.addColorStop(0, '#1d2c3a'); sky.addColorStop(0.6, k === 'tick' ? '#2c5a5a' : '#6a5a34'); }
+  else { sky.addColorStop(0, '#1c3346'); sky.addColorStop(0.6, '#4b7a86'); }
+  sky.addColorStop(1, '#2f5338'); c.fillStyle = sky; c.fillRect(-300, -300, W2 + 600, 370);
+  c.fillStyle = 'rgba(20,40,40,0.55)'; c.beginPath(); c.moveTo(-300, 62);
+  for (let x = -300; x <= W2 + 300; x += 15) c.lineTo(x, 50 + Math.sin(x * 0.07 + 1) * 6 + (x % 30 ? 4 : -3)); c.lineTo(W2 + 300, 70); c.lineTo(-300, 70); c.fill();
+  c.fillStyle = '#1f5f73'; c.fillRect(-300, 62, W2 + 600, 10);
+  c.fillStyle = 'rgba(255,255,255,0.25)'; for (let i = 0; i < 5; i++) c.fillRect(((i * 37 + t * 8) % (W2 + 20)) - 10, 65 + (i % 2) * 3, 8, 1);
+  c.fillStyle = '#3f6b45'; c.fillRect(-300, 70, W2 + 600, 400);
+  c.fillStyle = '#c9b48a'; c.beginPath(); c.ellipse(W2 / 2, 96, W2 * 0.62, 11, 0, 0, 6.283); c.fill();
+  const hero = (x, y, pose, o = {}) => drawHero(c, k, x, y, Object.assign({ scale: 1.55, pose, angle: o.angle ?? 0, power: !!o.power, flash: !!o.flash }, o));
+  const ringAt = (x, y, r, a, col) => { c.strokeStyle = col; c.globalAlpha = a; c.lineWidth = 2.5; c.beginPath(); c.ellipse(x, y, r, r * 0.35, 0, 0, 6.283); c.stroke(); c.globalAlpha = 1; };
+  const meteor = (x, y, sz, a) => {
+    c.save(); c.translate(x, y); c.rotate(a);
+    const tr = c.createLinearGradient(0, 0, -sz * 6, 0); tr.addColorStop(0, 'rgba(255,200,110,0.9)'); tr.addColorStop(1, 'rgba(255,120,50,0)');
+    c.fillStyle = tr; c.beginPath(); c.moveTo(0, -sz); c.lineTo(-sz * 6, 0); c.lineTo(0, sz); c.fill();
+    c.fillStyle = '#ffdf9a'; c.beginPath(); c.arc(0, 0, sz, 0, 6.283); c.fill(); c.strokeStyle = '#a23c1a'; c.lineWidth = 1; c.stroke(); c.restore();
+  };
+  const flame = (x, y, a) => { for (let i = 0; i < 4; i++) { const fx = x - 12 + i * 8, fh = 6 + Math.sin(t * 14 + i * 2) * 3; c.fillStyle = `rgba(255,${120 + i * 25},50,${a})`; c.beginPath(); c.moveTo(fx - 3, y); c.quadraticCurveTo(fx, y - fh * 2, fx + 3, y); c.fill(); } };
+  if (k === 'maren' && which === 'e') {        // leap in, slam, crabs bounce away
+    const lp = Math.min(1, p / 0.32), imp = p >= 0.32 ? (p - 0.32) / 0.4 : -1, X = 18 + (72 - 18) * easeOut(lp);
+    for (const [cx, cy, ty, i] of [[96, 94, 'grunt', 0], [112, 88, 'tank', 1], [104, 100, 'runner', 2]]) {
+      const kn = imp >= 0 && imp < 1 ? Math.sin(Math.PI * imp) : 0;
+      sceneCrab(c, cx + (imp >= 0 ? Math.min(1, imp) * 10 : 0), cy - kn * (14 + i * 4), ty, t * 6 + i, kn * (i % 2 ? 0.8 : -0.8));
+    }
+    if (imp >= 0 && imp < 1) { ringAt(76, 97, 8 + imp * 46, 1 - imp, d.color); ringAt(76, 97, 4 + imp * 26, (1 - imp) * 0.8, '#ffffff'); for (let i = 0; i < 6; i++) { const a = i * 1.05; c.fillStyle = `rgba(200,170,120,${1 - imp})`; c.fillRect(76 + Math.cos(a) * imp * 30, 92 - Math.abs(Math.sin(a)) * imp * 22, 3, 3); } }
+    hero(X, 92, { air: lp < 1 ? Math.sin(Math.PI * lp) * 22 : 0, land: imp >= 0 && imp < 0.4 ? 1 - imp / 0.4 : 0, atk: imp > 0.4 ? Math.min(1, (imp - 0.4) * 2) : 1 }, { angle: 0 });
+  } else if (k === 'maren') {                   // Hold the Line: banner up, golden rays, stun pulses
+    c.save(); c.translate(W2 / 2, 70); c.rotate(t * 0.4); c.fillStyle = 'rgba(230,196,99,0.18)';
+    for (let i = 0; i < 10; i++) { c.rotate(0.628); c.beginPath(); c.moveTo(0, 0); c.lineTo(90, -9); c.lineTo(90, 9); c.fill(); } c.restore();
+    for (let i = 0; i < 2; i++) { const q = (p * 2 + i * 0.5) % 1; ringAt(W2 / 2, 97, 10 + q * 60, (1 - q) * 0.9, d.color); }
+    for (const [cx, cy, ty, i] of [[22, 94, 'grunt', 0], [128, 92, 'tank', 1], [116, 102, 'swarm', 2]]) { sceneCrab(c, cx, cy, ty, 0, 0); c.fillStyle = '#ffe08a'; for (let j = 0; j < 3; j++) { const a = t * 4 + j * 2.1 + i; c.beginPath(); c.arc(cx + Math.cos(a) * 8, cy - 12 + Math.sin(a) * 3, 1.3, 0, 6.283); c.fill(); } }
+    hero(W2 / 2, 92, { atk: (p * 3) % 1, cast: Math.min(1, p * 3) }, { power: true, angle: Math.sin(t * 2) * 0.4 });
+  } else if (k === 'ilse' && which === 'e') {   // Meteor: staff up, a meteor streaks in, the ground burns
+    const fall = Math.min(1, Math.max(0, (p - 0.12) / 0.3)), imp = p >= 0.42 ? (p - 0.42) / 0.58 : -1, MX = 104, MY = 94;
+    if (imp >= 0) flame(MX, MY + 2, Math.max(0, 0.9 - imp * 0.6));
+    for (const [cx, cy, ty, i] of [[MX - 6, MY - 2, 'grunt', 0], [MX + 12, MY + 4, 'swarm', 1], [MX + 4, MY + 8, 'runner', 2]]) {
+      const kn = imp >= 0 && imp < 0.6 ? Math.sin(Math.PI * imp / 0.6) : 0; sceneCrab(c, cx + (imp > 0 ? Math.min(1, imp * 2) * (i - 1) * 8 : 0), cy - kn * 16, ty, t * 6 + i, kn * (i - 1));
+    }
+    if (fall < 1 && fall > 0) meteor(150 - 46 * fall, -10 + (MY + 10) * fall, 6, 2.2);
+    if (imp >= 0 && imp < 0.5) { const q = imp / 0.5; c.fillStyle = `rgba(255,220,140,${1 - q})`; c.beginPath(); c.arc(MX, MY, 6 + q * 22, 0, 6.283); c.fill(); ringAt(MX, MY + 2, 10 + q * 34, 1 - q, '#ff8a3c'); }
+    hero(38, 92, { cast: Math.min(1, p / 0.5) }, { angle: -0.4 });
+  } else if (k === 'ilse') {                    // Sunfall: meteors everywhere, Ilse floating in the middle
+    for (let i = 0; i < 7; i++) {
+      const q = (p * 2 + i / 7) % 1, x = 12 + ((i * 53) % 126), y = 84 + (i % 3) * 7;
+      if (q < 0.55) meteor(x + 30 - 30 * (q / 0.55), -8 + (y + 8) * (q / 0.55), 4, 2.3);
+      else { const r2 = (q - 0.55) / 0.45; c.fillStyle = `rgba(255,190,90,${1 - r2})`; c.beginPath(); c.arc(x, y, 4 + r2 * 14, 0, 6.283); c.fill(); }
+    }
+    flame(30, 100, 0.6); flame(122, 98, 0.6);
+    hero(W2 / 2, 90, {}, { power: true, angle: -1.2 });
+  } else if (k === 'tick' && which === 'e') {   // Sentry Drop: tossed in, lands, opens fire
+    const drop = Math.min(1, p / 0.25), SX = 86, SY = 94, live = p > 0.28;
+    const sy = drop < 1 ? -10 + (SY + 10) * drop * drop : SY;
+    sceneCrab(c, 128, 90, 'grunt', t * 6, 0); sceneCrab(c, 116, 100, 'runner', t * 6 + 1, 0);
+    c.save(); c.translate(SX, sy);
+    if (drop < 1) { c.strokeStyle = 'rgba(255,255,255,0.6)'; c.lineWidth = 1; c.beginPath(); c.moveTo(-8, -6); c.lineTo(0, -22); c.lineTo(8, -6); c.stroke(); c.fillStyle = '#e8e0c8'; c.beginPath(); c.arc(0, -24, 10, Math.PI, 0); c.fill(); }
+    c.strokeStyle = '#2a2a2a'; c.lineWidth = 2; c.beginPath(); c.moveTo(-6, 4); c.lineTo(0, -4); c.lineTo(6, 4); c.moveTo(0, -4); c.lineTo(0, 5); c.stroke();
+    c.fillStyle = '#7fd9c0'; c.strokeStyle = INK; c.lineWidth = 1; c.beginPath(); c.arc(0, -6, 5, 0, 6.283); c.fill(); c.stroke();
+    c.fillStyle = '#20262a'; c.fillRect(2, -7.5, 10, 3); c.restore();
+    if (live) for (let i = 0; i < 3; i++) { const q = ((p - 0.28) * 9 + i / 3) % 1; c.fillStyle = '#8ff0d8'; c.fillRect(SX + 12 + q * 30, SY - 7 + q * 2, 6, 2); }
+    if (drop >= 1 && p < 0.4) ringAt(SX, SY + 4, 8 + (p - 0.25) * 200, 1 - (p - 0.25) / 0.15, d.color);
+    hero(36, 92, { cast: Math.min(1, p / 0.4), atk: live ? (p * 6) % 1 : 1 }, { angle: 0 });
+  } else {                                      // Total Overclock: towers crackle with power
+    drawTower(c, 'tesla', 2, 22, 84, 0, 0.7); drawTower(c, 'arrow', 2, 128, 84, Math.PI, 0.7);
+    for (const tx of [24, 126]) {
+      c.strokeStyle = '#fff6c0'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(tx, 72);
+      for (let i = 1; i <= 6; i++) c.lineTo(tx + (W2 / 2 - tx) * i / 6 + (Math.random() - 0.5) * 8, 72 - Math.sin(i / 6 * Math.PI) * 18 + (Math.random() - 0.5) * 6); c.stroke();
+    }
+    c.save(); c.translate(W2 / 2, 58); c.rotate(t * 1.5); c.strokeStyle = 'rgba(127,217,192,0.5)'; c.lineWidth = 3; c.beginPath();
+    for (let i = 0; i < 24; i++) { const a = i / 24 * 6.283, rr = i % 2 ? 26 : 21; c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } c.closePath(); c.stroke(); c.restore();
+    hero(W2 / 2, 92, { atk: (p * 5) % 1 }, { power: true, angle: Math.sin(t * 3) * 0.6 });
+  }
+  // vignette
+  const vg = c.createRadialGradient(W2 / 2, H2 / 2, H2 * 0.35, W2 / 2, H2 / 2, W2 * 0.8); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.45)');
+  c.fillStyle = vg; c.fillRect(-300, -300, W2 + 600, H2 + 600);
+  c.restore();
+}
+// keep every scene canvas on screen animating; stops by itself once they are gone
+const sceneLoop = { on: false };
+function animateScenes() {
+  if (sceneLoop.on) return; sceneLoop.on = true;
+  const tick = () => {
+    const cs = [...document.querySelectorAll('canvas.hs-art')];
+    if (!cs.length) { sceneLoop.on = false; return; }
+    const t = performance.now() / 1000;
+    for (const cv of cs) {
+      const w = cv.clientWidth, h = cv.clientHeight; if (!w || !h) continue;
+      if (cv.width !== Math.round(w * DPR)) { cv.width = Math.round(w * DPR); cv.height = Math.round(h * DPR); }
+      const g = cv.getContext('2d'), sc = Math.min(w / SCENE_W, h / SCENE_H) * 1.06;
+      g.setTransform(DPR * sc, 0, 0, DPR * sc, DPR * (w - SCENE_W * sc) / 2, DPR * (h - SCENE_H * sc) * 0.55);
+      drawScene(g, cv.dataset.k, cv.dataset.s, t + (cv.dataset.s === 'r' ? 0.7 : 0));
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
 }
 function iconHero(k, size) {
   const c = document.createElement('canvas');
@@ -3094,7 +3339,7 @@ function render() {
       ctx.beginPath(); ctx.moveTo(dx - 5, dy - 5); ctx.lineTo(dx + 5, dy + 5); ctx.moveTo(dx + 5, dy - 5); ctx.lineTo(dx - 5, dy + 5); ctx.stroke();
     }
     const power = hh.k === 'maren' ? S.time < (hh.rage || 0) : hh.k === 'ilse' ? S.rains.length > 0 : S.buffs.some(b => b.r > 1e8 && b.until > S.time);
-    drawHero(ctx, hh.k, hh.x, hh.y, { angle: hh.angle, flash: hh.flash > 0, scale: K * 1.25, aura: true, moving: S.time - (hh.movedAt || -9) < 0.12, power });
+    drawHero(ctx, hh.k, ...heroDrawPos(hh), { angle: hh.angle, flash: hh.flash > 0, scale: K * 1.25 * Math.min(1, 0.3 + (S.time - (hh.spawnAt ?? -9)) / 0.35 * 0.7), aura: true, moving: S.time - (hh.movedAt || -9) < 0.12, power, pose: heroPose(hh) });
     if (S.time < hh.invuln || hh.shield > 0) { ctx.strokeStyle = 'rgba(255,240,200,0.85)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(hh.x, hh.y, 15 * K, 0, Math.PI * 2); ctx.stroke(); }
     const bw = 28 * K, bx = hh.x - bw / 2, by = hh.y - 43 * K;
     ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.fillRect(bx - 1, by - 1, bw + 2, 6);
@@ -3717,9 +3962,9 @@ function refreshHud() {
     }
     $('hc-hp').style.width = (h.dead ? 0 : h.hp / h.maxHp * 100) + '%';
     const prev = h.lvl <= 1 ? 0 : XP_NEXT[h.lvl - 2], next = XP_NEXT[h.lvl - 1];
-    $('hc-xp').style.width = (h.lvl >= 10 ? 100 : (h.xp - prev) / (next - prev) * 100) + '%';
+    $('hc-xp').style.width = (h.lvl >= MAX_LVL ? 100 : (h.xp - prev) / (next - prev) * 100) + '%';
     $('hc-lvl').textContent = 'Lv ' + h.lvl;
-    $('hc-state').textContent = h.dead ? `Fallen · back in ${Math.max(0, Math.ceil(h.respawnAt - S.time))}s` : `${Math.ceil(h.hp)} / ${h.maxHp} health${h.lvl < 10 ? ` · ${Math.floor(h.xp - prev)} / ${next - prev} xp` : ' · max level'}`;
+    $('hc-state').textContent = h.dead ? `Fallen · back in ${Math.max(0, Math.ceil(h.respawnAt - S.time))}s` : `${Math.ceil(h.hp)} / ${h.maxHp} health${h.lvl < MAX_LVL ? ` · ${Math.floor(h.xp - prev)} / ${next - prev} xp` : ' · max level'}`;
     $('hc-sel').classList.toggle('on', ui.heroSel);
   }
 }
@@ -3814,7 +4059,7 @@ function continueCampaign(c) {
   S.mods = Object.assign(mods0(), c.mods || {}); S.modVer = 1;
   ui.hero = c.hero.k;
   const h = S.hero = makeHero(c.hero.k);
-  Object.assign(h, { lvl: c.hero.lvl, xp: c.hero.xp, sp: c.hero.sp, learned: c.hero.learned || {}, evo: c.hero.evo, ult: c.hero.ult, toldSkill: c.hero.toldSkill });
+  Object.assign(h, { lvl: lvlForXp(c.hero.xp || 0), xp: c.hero.xp, sp: c.hero.sp, learned: c.hero.learned || {}, evo: c.hero.evo, ult: c.hero.ult, toldSkill: c.hero.toldSkill });
   h.ult = h.lvl >= ULT_LVL; recomputeFx(h); h.maxHp = hMax(h); h.hp = h.maxHp; if (h.ult) h.ab.r = 3;
   for (const o of c.towers || []) {
     if (!TOWERS[o.type] || !tileFree(o.tx, o.ty)) { if (TOWERS[o.type]) S.gold += o.spent || 0; continue; }
@@ -3864,9 +4109,9 @@ function heroSelect() {
   showOverlay(`
     <h2>Choose your <span>champion</span></h2>
     <p>Your hero fights beside the towers, levels up, and earns new skills as the story unfolds.</p>
-    <div class="heroes">${Object.entries(HEROES).map(([k, d]) => `<button type="button" class="hero-btn${k === ui.hero ? ' on' : ''}" data-k="${k}"><span data-icon="${k}"></span><b>${d.name}</b><small class="hb-title" style="color:${d.color}">${d.title}</small><small class="hb-role">${d.role}</small><small class="hb-skills">E · ${d.active.name}<br>R · ${d.ult.name} (Lv ${ULT_LVL})</small><small class="hb-tree">Both skills grow stronger as ${d.name.split(' ')[0]} levels up</small></button>`).join('')}</div>
+    <div class="heroes">${Object.entries(HEROES).map(([k, d]) => `<button type="button" class="hero-btn${k === ui.hero ? ' on' : ''}" data-k="${k}"><canvas class="hs-art hb-art" data-k="${k}" data-s="e" aria-hidden="true"></canvas><b>${d.name}</b><small class="hb-title" style="color:${d.color}">${d.title}</small><small class="hb-role">${d.role}</small><small class="hb-skills">E · ${d.active.name}<br>R · ${d.ult.name} (Lv ${ULT_LVL})</small><small class="hb-tree">20 levels: 5 skill ranks, 3 ultimate ranks and 5 talents</small></button>`).join('')}</div>
     <div class="row"><button class="btn primary" id="ov-begin" type="button">Begin</button><button class="btn" id="ov-back" type="button">Back</button></div>`, 'wide xl');
-  els.card.querySelectorAll('[data-icon]').forEach(el => el.appendChild(iconHero(el.dataset.icon, 56)));
+  animateScenes();
   els.card.querySelectorAll('.hero-btn').forEach(b => b.onclick = () => { ui.hero = b.dataset.k; els.card.querySelectorAll('.hero-btn').forEach(x => x.classList.toggle('on', x === b)); });
   $('ov-begin').onclick = () => restart(true);
   $('ov-back').onclick = titleScreen;
@@ -3905,27 +4150,36 @@ function closeSkills() {
   if (!ui.skillsOpen) return;
   ui.skillsOpen = false; ui.paused = ui.pausedBefore; hideOverlay(); refreshPanel(true); refreshHud();
 }
-function renderSkills() {
+function renderSkills(sel) {
   const h = S.hero, d = HEROES[h.k], first = d.name.split(' ')[0];
   const prev = h.lvl <= 1 ? 0 : XP_NEXT[h.lvl - 2], next = XP_NEXT[h.lvl - 1], rk = sigRank(h), ur = ultRank(h);
-  const step = (on, lvl, text) => `<li class="${on ? 'on' : ''}"><span class="lv">${on ? '✓ ' : ''}Lv ${lvl}</span><span>${text}</span></li>`;
+  const path = heroPath(h.k), pick = path[(sel || Math.min(MAX_LVL, h.lvl + 1)) - 1];
+  const ICON = { e: 'E', r: 'R', t: '★', cap: '★', s: '' };
+  const nextOf = (lv, list) => { const i = lv.findIndex(l => l > h.lvl); return i < 0 ? null : { lvl: lv[i], text: list[i] }; };
+  const eNext = nextOf(RANK_LVL, [d.active.text, ...d.active.ranks]), rNext = nextOf(ULT_LVLS, [d.ult.text, ...d.ult.ranks]);
+  const pips = (n, of) => `<span class="pips">${Array.from({ length: of }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</span>`;
+  const card = (which, key, name, rank, of, text, nx, cd, locked) => `
+      <div class="hskill${locked ? ' locked' : ''}"><canvas class="hs-art" data-k="${h.k}" data-s="${which}" aria-hidden="true"></canvas>
+        <div class="hs-body"><p class="hs-key">${key}</p><h4>${name}${rank > 1 ? ' ' + ROMAN[rank] : ''} ${pips(rank, of)}</h4>
+        <p class="hs-text">${text}</p>
+        ${nx ? `<p class="hs-next"><b>Lv ${nx.lvl}</b> ${nx.text}</p>` : `<p class="hs-next done">Fully ranked</p>`}
+        <p class="hs-cd">${cd}</p></div></div>`;
   showOverlay(`
     <p class="chap" style="color:${d.color}">${d.name} · ${d.title}</p>
     <h2>Hero <span>skills</span></h2>
-    <div class="skillhead"><span>Level <b>${h.lvl}</b>${h.lvl < 10 ? ` · ${Math.floor(h.xp - prev)} / ${next - prev} xp` : ' · max'}</span></div>
-    <div class="skillhead sk-stats" style="font-size:12px">${Math.round(heroDmg(h))} damage · ${(d.rate * (1 + h.fx.rate)).toFixed(1)} attacks/s · ${(d.range + h.fx.range).toFixed(1)} reach · ${Math.ceil(h.hp)}/${h.maxHp} health</div>
+    <div class="skillhead"><span>Level <b>${h.lvl}</b> of ${MAX_LVL}${h.lvl < MAX_LVL ? ` · ${Math.floor(h.xp - prev)} / ${next - prev} xp` : ' · max'}</span><span class="sk-stats">${Math.round(heroDmg(h))} damage · ${(d.rate * (1 + h.fx.rate)).toFixed(1)}/s · ${Math.ceil(h.hp)}/${h.maxHp} health</span></div>
+    <div class="hpath" style="--hc:${d.color};--fill:${(h.lvl - 1) / (MAX_LVL - 1) * 100}%">${path.map(n => `<button type="button" class="hp-node k-${n.kind}${n.lvl <= h.lvl ? ' on' : ''}${n.lvl === h.lvl ? ' now' : ''}${n === pick ? ' sel' : ''}" data-l="${n.lvl}" aria-label="Level ${n.lvl}: ${n.name}"><i>${ICON[n.kind]}</i><small>${n.lvl}</small></button>`).join('')}</div>
+    <p class="hp-detail"><b>Lv ${pick.lvl} · ${pick.name}</b> ${pick.lvl <= h.lvl ? '<span class="got">✓</span>' : ''} ${pick.text}</p>
     <div class="hskills">
-      <div class="hskill"><p class="hs-key">E · signature</p><h4>${skillName(h)}${rk > 1 ? ' ' + ['', '', 'II', 'III'][rk] : ''}</h4><p class="hs-text">${h.evo ? d.evo[h.evo === 'a' ? 0 : 1].text + ' ' : ''}${d.active.text}</p>
-        <ul class="hs-ranks">${step(true, 1, 'Rank I: the skill as described')}${step(rk >= 2, RANK_LVL[1], d.active.ranks[0])}${step(rk >= 3, RANK_LVL[2], d.active.ranks[1])}</ul>
-        <p class="hs-cd">${Math.round(cdOf(h, d.active.cd))}s recharge · ${COARSE ? 'tap it, then tap the map' : 'press E, then click the map'}</p></div>
-      <div class="hskill${ur ? '' : ' locked'}"><p class="hs-key">R · ultimate</p><h4>${d.ult.name}${ur > 1 ? ' II' : ''}</h4><p class="hs-text">${d.ult.text}</p>
-        <ul class="hs-ranks">${step(ur >= 1, ULT_LVL, 'Rank I: unlocks')}${step(ur >= 2, ULT2_LVL, d.ult.up)}</ul>
-        <p class="hs-cd">${Math.round(cdOf(h, d.ult.cd))}s recharge</p></div>
+      ${card('e', 'E · signature', skillName(h), rk, RANK_LVL.length, (h.evo ? d.evo[h.evo === 'a' ? 0 : 1].text + ' ' : '') + d.active.text, eNext, `${Math.round(cdOf(h, d.active.cd))}s recharge<span class="cd-hint"> · ${COARSE ? 'tap it, then the map' : 'press E, then click the map'}</span>`, false)}
+      ${card('r', 'R · ultimate', d.ult.name, ur, ULT_LVLS.length, d.ult.text, rNext, `${Math.round(cdOf(h, d.ult.cd))}s recharge`, !ur)}
     </div>
-    <p class="meta hs-trait"><b>${first} also grows:</b> ${TRAITS[h.k].text}</p>
+    <div class="talents">${TRAITS[h.k].talents.map(t => `<button type="button" class="tal${h.lvl >= t.lvl ? ' on' : ''}${t.cap ? ' cap' : ''}" data-l="${t.lvl}"><i>★</i>${t.name}<small>${h.lvl >= t.lvl ? '✓' : 'Lv ' + t.lvl}</small></button>`).join('')}</div>
     <div class="row"><button class="btn primary" id="sk-close" type="button">Back to the fight</button></div>`, 'wide xl skills-card');
   for (const cls of ['tight', 'tighter']) { if (els.overlay.scrollHeight <= els.overlay.clientHeight + 1) break; els.card.classList.add(cls); }
   $('sk-close').onclick = closeSkills;
+  els.card.querySelectorAll('[data-l]').forEach(b => b.onclick = () => { renderSkills(+b.dataset.l); });
+  animateScenes();
 }
 function offerPerks() {
   const pool = PERKS.filter(p => !S.perks.includes(p.id)), picks = [];
@@ -4219,7 +4473,7 @@ requestAnimationFrame(frame);
 connectCloud();
 
 // Test hook for automated play-throughs.
-window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get decor() { return decor; }, __spawn: spawnEnemy, __hurt: hurt, drawHero, gameOver, victory, showMapComplete, openSettings, CAST, sigRank, ultRank, skillRadius, vetRank, VET, get sites() { return siteSet; }, A, SET, Music, previewStats, statRows, masterTower, masteryCost, MASTERY, tStats, loadLatest, saveResume, titleScreen, undoLast, lastUndo, sellTower, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, unlocked, UNLOCK, HEROES, COLS, ROWS, TILE, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero, nextMap, openGallery, closeGallery, pickFromGallery, continueCampaign, loadCheckpoint };
+window.__bastion = { get S() { return S; }, get pathSet() { return pathSet; }, get decor() { return decor; }, __spawn: spawnEnemy, __hurt: hurt, drawHero, drawScene, heroPath, TRAITS, MAX_LVL, XP_NEXT, gameOver, victory, showMapComplete, openSettings, CAST, sigRank, ultRank, skillRadius, vetRank, VET, get sites() { return siteSet; }, A, SET, Music, previewStats, statRows, masterTower, masteryCost, MASTERY, tStats, loadLatest, saveResume, titleScreen, undoLast, lastUndo, sellTower, get air() { return [airA, airB]; }, ui, TOWERS, ENEMIES, MAPS, placeTower, upgradeTower, upgradeCost, buildCost, startWave, update, tileFree, waveGroups, restart, loadMap, pickPerk, offerPerks, useAbility, strikeBlast, unlocked, UNLOCK, HEROES, COLS, ROWS, TILE, learn, useHero, closeStory, showChapter, openSkills, closeSkills, heroSelect, moveHero, nextMap, openGallery, closeGallery, pickFromGallery, continueCampaign, loadCheckpoint };
 })();
 </script>
 </body>
