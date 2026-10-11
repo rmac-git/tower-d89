@@ -63,6 +63,18 @@ The game starts simple and adds one system at a time. Each unlock arrives with a
 
 The hero's ultimate unlocks at hero level 6 (usually near the end of the first map). The first wave shows tips on the board.
 
+## Difficulty
+
+You pick a difficulty on the hero screen when a campaign starts, and it stays with that campaign (Settings shows it under Hero chatter):
+
+| | Enemy health | Enemy speed | Lives per map | Starting BST |
+|---|---|---|---|---|
+| Casual | ×0.78 | ×0.95 | 30 | 216 |
+| Normal | ×1.2 | ×1 | 20 | 180 |
+| Veteran | ×1.75 | ×1.1 | 10 | 162 |
+
+Normal was made tougher than before, because the test bot was winning every run with all 20 lives. Now it wins about two runs in three with a close finish. On Veteran it wins about one in three.
+
 ## Heroes
 
 After picking a map you choose a hero who fights on the field beside your towers. Click or tap the hero (or press `H`) to command them, then click anywhere to send them there. Heroes gain experience from nearby kills, level up to 20 (reached around the last waves of the campaign), and fall and respawn if overrun.
@@ -81,6 +93,12 @@ Growth is still automatic, but it is spread along a **20-level path** so somethi
 | Tick Brannock, the Gate Tinker | **Sentry Drop**: overclocks nearby towers · two sentries · fire 40% faster · sentries blow up when they shut down | **Total Overclock**: every tower 2× fire rate and +50% damage for 8s · 12s and recharges Sentry Drop · 16s and drops two sentries ahead of the lead enemy | Long Barrel (+1 reach) · Tuned Up (towers near him +10% damage) · Quick Hands (+30% fire rate) · Spare Parts (−25% recharge) · **Grand Design** (towers near him +25% fire rate and damage, wider aura) |
 
 Big moments shake the screen a little (off with **Fewer effects**). The ★ button (or `K`) opens the hero skills card. It shows the whole 20-level path as a row of nodes: E for signature ranks, R for ultimate ranks, ★ for talents and dots for plain power levels. Tap any node to read what it gives. Below the path, each skill card has a small animated picture of the hero using that skill, with rank pips and what the next rank adds, and a row of talent chips. The hero picker shows the same animated pictures. Older saves keep their experience and are placed on the new path by it.
+
+**Evolution swap:** the Chapter 2 evolution isn't final. Once per map, the hero skills card (★ or `K`) offers **Swap to …** on the signature skill card, so you can try both versions.
+
+**Hero chatter:** heroes say short lines in a speech bubble at big moments: the start of each map, level-ups, ultimates (and sometimes the signature skill), a boss's first appearance, dropping below 30% health, coming back from a fall, and a leak. Turn it off with **Hero chatter** in Settings.
+
+**Outfits:** finishing the campaign with a hero unlocks their second outfit. Maren's is **Dawn Warden** (sun-gold armour, sea-blue cape), Ilse's is **Northern Lights** (midnight robe, aurora scarf) and Tick's is **Lobster Skipper** (yellow oilskin and sou'wester). Toggle it on the hero's card in the hero picker; it shows in battle, on the rail and in the skill art. Unlocks sync with your account's cloud save.
 
 **Story:** each hero has a prologue and five chapters (after waves 5, 10, 15, 20 and 25) following the fall of the High Marshal, Corvane. Chapter 2 asks you to choose how the hero's signature skill evolves (for example, Meteor becomes Cataclysm or Meteor Shower, and Sentry Drop becomes Overdrive or Arc Reactor). The victory epilogue changes with your choice.
 

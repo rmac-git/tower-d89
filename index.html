@@ -187,6 +187,8 @@ html.big .overlay p, html.big .n-desc { font-size: 15.5px; }
 .hs-next { margin: 0; font-size: 12.5px; color: var(--muted); }
 .hs-next b { font: 600 11px var(--font-mono); color: #4cc3ff; margin-right: 4px; }
 .hs-next.done { color: var(--good); }
+.hs-swap { align-self: flex-start; margin-top: 2px; padding: 3px 10px; font-size: 12px; min-height: 0; }
+.hs-swap[disabled] { opacity: 0.55; cursor: default; }
 .hpath { position: relative; display: grid; grid-template-columns: repeat(20, 1fr); width: 100%; max-width: 760px; gap: 0; padding: 0 2px; }
 .hpath::before, .hpath::after { content: ''; position: absolute; left: 2.5%; right: 2.5%; top: 12px; height: 3px; background: var(--line); border-radius: 2px; }
 .hpath::after { right: auto; width: calc(var(--fill) * 0.95); background: var(--hc); }
@@ -492,6 +494,22 @@ div.map-btn.on:hover { border-color: var(--brass); }
 .hero-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; cursor: pointer; min-width: 0; }
 .hero-btn:hover { border-color: var(--brass); }
 .hb-art { width: 100%; height: 92px; min-height: 0; flex: none; }
+.hb-outfit { font: 600 11.5px var(--font-mono); padding: 3px 10px; border-radius: 999px; border: 1px dashed var(--brass); color: var(--brass); cursor: pointer; }
+.hb-outfit.on { background: var(--brass); color: #14181c; border-style: solid; }
+.diffs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 720px; }
+.diff { background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 6px 10px; color: var(--muted); cursor: pointer; display: flex; flex-direction: column; gap: 1px; font: inherit; }
+.diff b { font-family: var(--font-display); font-size: 17px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink); }
+.diff small { font-size: 11.5px; line-height: 1.25; }
+.diff.on { border-color: var(--brass); background: #2c3b31; box-shadow: inset 0 0 0 1px var(--brass); }
+.diff.on b { color: var(--brass); }
+@media (max-height: 480px) {
+  .hero-pick > p, .hero-pick .hb-role, .hero-pick .diff small { display: none; }
+  .hero-pick h2 { font-size: 26px; margin: 0; }
+  .hero-pick .hb-art { height: 70px; }
+  .hero-pick .hero-btn { padding: 6px 8px; gap: 2px; }
+  .hero-pick .hero-btn b { font-size: 18px; }
+  .hero-pick .diff { padding: 4px 8px; }
+}
 .hero-btn.on { border-color: var(--brass); background: #2c3b31; }
 .hero-btn b { font-family: var(--font-display); font-weight: 700; font-size: 21px; letter-spacing: 0.03em; text-transform: uppercase; line-height: 1.05; }
 .hero-btn small { color: var(--muted); font-size: 12.5px; line-height: 1.3; }
@@ -661,9 +679,27 @@ const SPEED_K = 0.9, RANGE_K = 0.75;   // the coarser grid has a shorter road, s
 const VICTORY_WAVE = 30;
 const WAVES_PER_MAP = 10;   // the campaign marches through the maps in order, ten waves each
 const START_GOLD = 180, START_LIVES = 20;
-const GAME_VERSION = 'v38 · heroes in motion';   // shown in Settings, so you can tell whether a fresh copy loaded
+// Difficulty is picked when a campaign starts and stays with that campaign.
+const DIFF = {
+  casual:  { name: 'Casual', hp: 0.78, speed: 0.95, lives: 30, gold: 1.2, text: 'Softer enemies, 30 lives, extra starting BST' },
+  normal:  { name: 'Normal', hp: 1.2, speed: 1, lives: 20, gold: 1, text: 'The intended challenge' },
+  veteran: { name: 'Veteran', hp: 1.75, speed: 1.1, lives: 10, gold: 0.9, text: 'Tougher, faster enemies and only 10 lives' },
+};
+const diff = () => DIFF[(S && S.diff) || 'normal'] || DIFF.normal;
+// Second outfits: earned by finishing the campaign with that hero.
+const OUTFITS = {
+  maren: { name: 'Dawn Warden', text: 'Sun-gold armour and a sea-blue cape' },
+  ilse: { name: 'Northern Lights', text: 'A midnight robe with an aurora scarf' },
+  tick: { name: 'Lobster Skipper', text: 'A yellow oilskin coat and sou\'wester' },
+};
+const KEY_WARD = 'bastion-line-outfits';
+const WARD = { unlocked: {}, wear: {} };
+try { Object.assign(WARD, JSON.parse(localStorage.getItem(KEY_WARD)) || {}); } catch (e) {}
+function saveWard() { try { localStorage.setItem(KEY_WARD, JSON.stringify(WARD)); } catch (e) {} if (typeof pushCloud === 'function') pushCloud(); }
+const wearing = k => !!(WARD.unlocked[k] && WARD.wear[k]);
+const GAME_VERSION = 'v39 · difficulty, chatter and outfits';   // shown in Settings, so you can tell whether a fresh copy loaded
 // Player settings, kept on this device.
-const SET = { music: 0.5, sfx: 0.8, autoWave: false, autoPause: true, reduceFx: false, bigShots: false, vibrate: true };
+const SET = { music: 0.5, sfx: 0.8, autoWave: false, autoPause: true, reduceFx: false, bigShots: false, vibrate: true, barks: true, diff: 'normal' };
 try { Object.assign(SET, JSON.parse(localStorage.getItem('bastion-line-settings')) || {}); } catch (e) {}
 function saveSettings() { try { localStorage.setItem('bastion-line-settings', JSON.stringify(SET)); } catch (e) {} }
 const OS_REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -954,6 +990,61 @@ const HEROES = {
     ],
   },
 };
+// Short lines heroes say in a speech bubble at big moments (off with Hero chatter in Settings).
+const BARKS = {
+  maren: {
+    start: ['Nothing gets through.', "Gate's shut. Let them knock.", 'Steady. Here they come.'],
+    level: ['I feel it in my arms.', 'Stronger. Good.', 'The old drills are coming back.'],
+    sig: ['Down you go!', 'Mind the landing!', 'From above!'],
+    ult: ['Hold the line!', 'To me! Plant the banner!', 'The wall does not fall!'],
+    boss: ["That one's mine.", 'Big claws. Bigger shield.', "Stand fast, it's a big one."],
+    low: ['Just a scratch...', "I've had worse at Peggy's Cove.", 'Still standing.'],
+    back: ['Back on my feet.', 'Did I miss anything?', 'Where were we?'],
+    leak: ['One slipped by!', 'Tighten up!', 'Watch the gate!'],
+  },
+  ilse: {
+    start: ['Notes ready. Let us begin.', "Page one. Let's make it count.", 'The tide smells like trouble.'],
+    level: ['Another chapter learned.', "Oh, that's a new spell.", 'The ink runs hotter.'],
+    sig: ['Incoming!', 'Look up!', 'Fire from the sky!'],
+    ult: ['Let the sky fall!', 'Sunfall!', 'Read this, crabs!'],
+    boss: ['Fascinating. Also terrifying.', "That isn't in the field notes.", 'A big one. More to burn.'],
+    low: ['Footnote: ouch.', 'I need a moment...', 'Too close, too close!'],
+    back: ['Rewritten and returned.', "I'm back. Where's my hat?", 'Right. Where was I?'],
+    leak: ['One got past!', "That wasn't in the plan.", 'Missed one!'],
+  },
+  tick: {
+    start: ['Wrench? Check. Courage? Mostly.', "Let's get this machine humming.", 'Somebody hold my tea.'],
+    level: ['Upgrade installed!', 'Ooh, new parts.', 'Recalibrated!'],
+    sig: ['Sentry, go!', 'Catch!', 'Deploying!'],
+    ult: ['Everything to the red line!', 'Total Overclock!', 'Hit the big switch!'],
+    boss: ["Okay, that's a big lobster.", 'Need a bigger wrench.', "That thing's got no warranty."],
+    low: ['Losing pressure!', 'Bolts are rattling...', 'Not the face!'],
+    back: ['Patched up!', 'Rebooted. Missed me?', 'Back in working order.'],
+    leak: ['Leak in the line!', 'Plug that gap!', 'One got through!'],
+  },
+};
+// say a line; important ones (forced) always play, the rest wait out a short quiet spell
+function bark(type, force) {
+  const h = S.hero; if (!SET.barks || !h || h.dead || !ui.started) return;
+  if (!force && S.time < (S.barkQuiet || 0)) return;
+  const pool = BARKS[h.k][type]; if (!pool) return;
+  let text = pool[Math.floor(Math.random() * pool.length)];
+  if (S.bark && S.bark.text === text && pool.length > 1) text = pool[(pool.indexOf(text) + 1) % pool.length];
+  S.bark = { text, at: S.time, until: S.time + 2.4 }; S.barkQuiet = S.time + 7;
+}
+function drawBark() {
+  const h = S.hero, b = S.bark; if (!b || !h || h.dead || S.time > b.until) return;
+  const [hx, hy] = heroDrawPos(h), a = Math.min(1, (S.time - b.at) / 0.15, (b.until - S.time) / 0.3);
+  ctx.save(); ctx.globalAlpha = Math.max(0, a); ctx.font = '600 12px "Barlow", system-ui, sans-serif';
+  const w = ctx.measureText(b.text).width + 16, bh = 22, x = Math.max(4, Math.min(W - w - 4, hx - w / 2)), y = Math.max(4, hy - 48 * K - bh - 6 + (1 - a) * 6);
+  ctx.fillStyle = 'rgba(250,246,236,0.96)'; ctx.strokeStyle = HEROES[h.k].color; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.roundRect(x, y, w, bh, 8); ctx.fill(); ctx.stroke();
+  const tx = Math.max(x + 10, Math.min(x + w - 10, hx));
+  ctx.beginPath(); ctx.moveTo(tx - 5, y + bh - 1); ctx.lineTo(tx, y + bh + 6); ctx.lineTo(tx + 5, y + bh - 1); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(tx - 5, y + bh); ctx.lineTo(tx, y + bh + 6); ctx.lineTo(tx + 5, y + bh); ctx.stroke();
+  ctx.fillStyle = '#1b1f1c'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(b.text, x + 8, y + bh / 2 + 0.5);
+  ctx.restore();
+}
 // Hero growth is automatic. Every level adds a little power, and most levels unlock something on the hero's path:
 // signature ranks, ultimate ranks, and five named talents ending in a capstone at level 20.
 const RANK_LVL = [1, 4, 8, 12, 16], ULT_LVLS = [6, 11, 18], ULT_LVL = ULT_LVLS[0];
@@ -1411,8 +1502,8 @@ const isModal = () => ui.perkOpen || ui.storyOpen || ui.skillsOpen || ui.mapOpen
 const KEY_CAMP = 'bastion-line-camp', KEY_RESUME = 'bastion-line-resume', KEY_BEST = 'bastion-line-best';
 function snapshot(full) {
   const h = S.hero;
-  const c = { v: 1, at: Date.now(), mapI: S.mapI, wave: S.wave, cleared: S.cleared, gold: S.gold, perks: S.perks, mods: S.mods, totalKills: S.totalKills,
-    hero: h && { k: h.k, lvl: h.lvl, xp: h.xp, sp: h.sp, learned: h.learned, evo: h.evo, ult: h.ult, toldSkill: h.toldSkill } };
+  const c = { v: 1, at: Date.now(), diff: S.diff || 'normal', mapI: S.mapI, wave: S.wave, cleared: S.cleared, gold: S.gold, perks: S.perks, mods: S.mods, totalKills: S.totalKills,
+    hero: h && { k: h.k, lvl: h.lvl, xp: h.xp, sp: h.sp, learned: h.learned, evo: h.evo, ult: h.ult, toldSkill: h.toldSkill, respec: h.respec } };
   if (full) Object.assign(c, { lives: S.lives, endless: S.endless, won: S.won, mapDone: S.mapDone, perkDue: ui.perkOpen,
     towers: S.towers.map(t => ({ type: t.type, lvl: t.lvl, branch: t.branch, tx: t.tx, ty: t.ty, spent: t.spent, mode: t.mode, kills: t.kills, assists: t.assists || 0, dealt: t.dealt, skills: t.skills || [0, 0] })) });
   return c;
@@ -1442,7 +1533,7 @@ async function pushCloud() {
   cloud.busy = true;
   try {
     let raw = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
-    await cloud.ref.set({ camp: raw(KEY_CAMP), resume: raw(KEY_RESUME), best: bestWave(), at: Date.now() });
+    await cloud.ref.set({ camp: raw(KEY_CAMP), resume: raw(KEY_RESUME), best: bestWave(), outfits: raw(KEY_WARD), at: Date.now() });
   } catch (e) { if (e && (e.code === 'invalid_argument' || e.code === 'revoked' || e.code === 'not_granted')) cloud.ref = null; }
   cloud.busy = false;
   if (cloud.dirty) { cloud.dirty = false; pushCloud(); }
@@ -1465,6 +1556,7 @@ async function connectCloud() {
         else if (local && (!remote || (local.at || 0) > (remote.at || 0))) localNewer = true;
       }
       if ((+d.best || 0) > bestWave()) { store(KEY_BEST, String(d.best)); pulled = true; }
+      try { const ow = d.outfits ? JSON.parse(d.outfits) : null; if (ow && ow.unlocked) { for (const k in ow.unlocked) if (!WARD.unlocked[k]) { WARD.unlocked[k] = true; pulled = true; } Object.assign(WARD.wear, ow.wear || {}, WARD.wear); store(KEY_WARD, WARD); } } catch (e) {}
     } else localNewer = !!(readSave(KEY_CAMP) || readSave(KEY_RESUME));
     cloud.ref = ref;
     if (pulled && !ui.started && els.card.classList.contains('title-card') && !els.overlay.hidden) titleScreen();
@@ -1578,6 +1670,7 @@ function startWave() {
   S.wave++;
   if (S.wave === 1) ui.intel = false;
   const w = S.wave;
+  if ((w - 1) % WAVES_PER_MAP === 0) bark('start', true);
   let t = S.time + 0.5;
   const groups = waveGroups(w);
   for (const [type, count, gap] of groups) {
@@ -1593,9 +1686,9 @@ function startWave() {
 
 function spawnEnemy(type, w, at) {
   const d = ENEMIES[type], kind = type === 'boss' ? bossKind() : null;
-  const hp = Math.round(d.hp * hpMul(w) * S.mods.hp * (kind ? BOSSES[kind].hpMul : 1));
+  const hp = Math.round(d.hp * hpMul(w) * S.mods.hp * diff().hp * (kind ? BOSSES[kind].hpMul : 1));
   const e = {
-    id: S.nextId++, type, hp, maxHp: hp, speed: d.speed * S.mods.speed * SPEED_K, armor: d.armor + (d.armor > 0 ? armorAdd(w) + S.mods.armor : 0),
+    id: S.nextId++, type, hp, maxHp: hp, speed: d.speed * S.mods.speed * diff().speed * SPEED_K, armor: d.armor + (d.armor > 0 ? armorAdd(w) + S.mods.armor : 0),
     bounty: Math.round(d.bounty * bountyMul(w) * S.mods.bounty), xp: Math.round(d.bounty * bountyMul(w)), air: !!d.air, d: at != null ? at : -Math.random() * 6, x: -TILE, y: (2.5) * TILE,
     slowT: 0, slowF: 0, healT: 1, hitT: 0, wob: Math.random() * 6.28, alive: true, w, bt: 1.5 + Math.random() * 2,
   };
@@ -1607,7 +1700,7 @@ function spawnEnemy(type, w, at) {
   const key = kind || type;
   if (!d.baby && !(S.seen || (S.seen = {}))[key] && S.wave > 0) {
     S.seen[key] = true;
-    if (kind) S.banner = { text: BOSSES[kind].name, sub: BOSSES[kind].intro, life: 3, boss: true };
+    if (kind) { S.banner = { text: BOSSES[kind].name, sub: BOSSES[kind].intro, life: 3, boss: true }; S.barkQuiet = 0; setTimeout(() => bark('boss', true), 1200); }
     if (type !== 'grunt') toast(`${kind ? 'Boss' : 'New enemy'}: ${d.name}`, d.tip);
   }
   return e;
@@ -1862,7 +1955,7 @@ function updateEnemies(dt) {
     if (e.d >= pathLen) {
       e.alive = false; e.leaked = true;
       S.lives -= ENEMIES[e.type].lives;
-      flashLives(); sfx('leak');
+      flashLives(); sfx('leak'); if (Math.random() < 0.5) bark('leak');
       buzz(40);
       if (S.lives <= 0) { S.lives = 0; gameOver(); }
     }
@@ -2009,6 +2102,7 @@ function heroXp(e) {
     if (ur > 0) { sub = `${d.ult.name} ${ROMAN[ur + 1]}: ${d.ult.ranks[ur - 1]}`; toast(`${d.ult.name} · rank ${ROMAN[ur + 1]}`, d.ult.ranks[ur - 1]); }
     if (tal) { sub = `${tal.cap ? 'Capstone' : 'Talent'}: ${tal.name}`; toast(`${tal.cap ? 'Capstone talent' : 'New talent'}: ${tal.name}`, tal.text); }
     S.banner = { text: `${first} reached level ${h.lvl}`, sub, life: 2.4 };
+    bark('level', true);
     renderHeroUI();
   }
 }
@@ -2061,7 +2155,7 @@ function updateHero(dt) {
   const d = HEROES[h.k];
   if (h.dead) {
     if (S.time >= h.respawnAt) {
-      h.dead = false; h.maxHp = hMax(h); h.hp = h.maxHp; h.x = h.post[0]; h.y = h.post[1]; h.invuln = S.time + 2; h.spawnAt = S.time;
+      h.dead = false; h.maxHp = hMax(h); h.hp = h.maxHp; h.x = h.post[0]; h.y = h.post[1]; h.invuln = S.time + 2; h.spawnAt = S.time; bark('back', true);
       ring(h.x, h.y, 6, 40, 0.5, d.color); burst(h.x, h.y, d.color, 14, 100); sfx('upgrade');
     }
     return;
@@ -2099,6 +2193,7 @@ function updateHero(dt) {
     if (S.time - (h.flinchAt || -9) > 0.9) h.flinchAt = S.time;
     if (h.shield > 0) { const a = Math.min(h.shield, taken); h.shield -= a; taken -= a; }
     h.hp -= taken;
+    if (h.hp > 0 && h.hp < h.maxHp * 0.3 && h.lowSaid !== S.wave) { h.lowSaid = S.wave; bark('low', true); }
     if (h.hp <= 0 && h.fx.last && h.lastStand !== S.wave) {
       h.lastStand = S.wave; h.hp = h.maxHp * 0.4; h.invuln = S.time + 1.5; h.castAt = S.time; h.castK = 'r';
       ring(h.x, h.y, 10, 2.5 * TILE, 0.6, d.color); shake(5); sfx('bosswave');
@@ -2226,6 +2321,7 @@ function useHero(which, tx, ty) {
   if (!CAST[h.k][which](h, d, tx, ty)) { sfx('nope'); notice(h.x, h.y - 30, 'No enemies in reach'); return false; }
   h.ab[which] = S.time + cdOf(h, which === 'e' ? d.active.cd : d.ult.cd);
   h.castAt = S.time; h.castK = which;
+  if (which === 'r') bark('ult', true); else if (Math.random() < 0.35) bark('sig');
   return true;
 }
 function toggleHeroSel() {
@@ -2998,7 +3094,8 @@ function heroPose(h) {
 }
 const easeOut = x => 1 - (1 - x) * (1 - x);
 function drawHero(c, k, x, y, o = {}) {
-  const d = HEROES[k], s = o.scale || 1, col = o.flash ? '#ffffff' : d.color, t = performance.now() / 1000;
+  const d = HEROES[k], s = o.scale || 1, alt = o.alt ?? wearing(k), t = performance.now() / 1000;
+  const col = o.flash ? '#ffffff' : alt ? ({ maren: '#4cc3ff', ilse: '#7fe0c8', tick: '#f0c93a' })[k] : d.color;
   const mv = !!o.moving, step = mv ? Math.sin(t * 11) : 0, bob = mv ? -Math.abs(Math.sin(t * 11)) * 1.8 : Math.sin(t * 2.2) * 0.5;
   const face = Math.cos(o.angle || 0) < -0.15 ? -1 : 1, sway = Math.sin(t * 3.1) * 1.4 + (mv ? -face * 2.2 : 0), pw = !!o.power;
   const P = o.pose || {}, atk = P.atk ?? 1, cast = P.cast ?? 1, flinch = 1 - (P.flinch ?? 1), air = P.air || 0, land = P.land || 0;
@@ -3039,15 +3136,16 @@ function drawHero(c, k, x, y, o = {}) {
     c.strokeStyle = '#5a4630'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-5, 6); c.lineTo(-8, -30 * fl); c.stroke();
     poly(c, [-8, -30 * fl, -8 - 13 * fl, -27 * fl + wv, -8 - 10 * fl, -22 * fl + wv * 0.6, -8, -21 * fl], col, INK);
     c.fillStyle = '#fff3d6'; c.beginPath(); c.arc(-8 - 6 * fl, -25 * fl + wv * 0.5, 1.6 * fl, 0, 6.283); c.fill();
-    poly(c, [-7, -7, 7, -7, 10 + sway, 10, -10 + sway, 10], hsl(355, 45, 30), INK);                // cape
-    poly(c, [-7.5, -8, 0, -8, 0, 8, -8, 8], hsl(210, 12, 74), INK); poly(c, [0, -8, 7.5, -8, 8, 8, 0, 8], hsl(210, 12, 52), INK);   // armour
+    poly(c, [-7, -7, 7, -7, 10 + sway, 10, -10 + sway, 10], alt ? hsl(214, 55, 36) : hsl(355, 45, 30), INK);                // cape
+    const AH = alt ? 44 : 210, AS = alt ? 45 : 12;
+    poly(c, [-7.5, -8, 0, -8, 0, 8, -8, 8], hsl(AH, AS, 74), INK); poly(c, [0, -8, 7.5, -8, 8, 8, 0, 8], hsl(AH, AS, 52), INK);   // armour
     poly(c, [-3.5, -6, 3.5, -6, 4.2, 8, -4.2, 8], col, INK);                                         // tabard
     poly(c, [0, -3, 1, 0, 0, 3, -1, 0], '#fff3d6');                                                  // tabard star
-    c.fillStyle = hsl(210, 14, 80); c.strokeStyle = INK; c.lineWidth = 1;
+    c.fillStyle = hsl(AH, AS + 2, 80); c.strokeStyle = INK; c.lineWidth = 1;
     for (const px of [-8, 8]) { c.beginPath(); c.ellipse(px, -6.5, 3.6, 2.6, 0, Math.PI, 0); c.fill(); c.stroke(); }   // pauldrons
-    poly(c, [-5, -9, -5, -15, 0, -20, 0, -9], hsl(210, 12, 80), INK); poly(c, [0, -20, 5, -15, 5, -9, 0, -9], hsl(210, 12, 58), INK);   // helm
+    poly(c, [-5, -9, -5, -15, 0, -20, 0, -9], hsl(AH, AS, 80), INK); poly(c, [0, -20, 5, -15, 5, -9, 0, -9], hsl(AH, AS, 58), INK);   // helm
     c.fillStyle = '#14181c'; c.fillRect(-3.4, -13.4, 6.8, 1.5); c.fillRect(-0.7, -13.4, 1.4, 4);    // T-visor
-    poly(c, [0, -20, 7 + sway, -27 + Math.sin(t * 6), 4, -18.5], hsl(0, 65, 52), INK);             // plume
+    poly(c, [0, -20, 7 + sway, -27 + Math.sin(t * 6), 4, -18.5], alt ? '#f4f1e6' : hsl(0, 65, 52), INK);             // plume
     // kite shield with a lighthouse
     poly(c, [-14.5, -5, -7.5, -5, -7.5, 4, -11, 11, -14.5, 4], hsl(210, 14, 66), INK); poly(c, [-11, -5, -7.5, -5, -7.5, 4, -11, 11], hsl(210, 14, 50), INK);
     c.fillStyle = col; c.fillRect(-11.9, -3, 1.8, 7); c.fillStyle = '#c0453a'; c.fillRect(-11.9, -0.8, 1.8, 1.4); c.fillRect(-11.9, 2.4, 1.8, 1.4);
@@ -3064,16 +3162,18 @@ function drawHero(c, k, x, y, o = {}) {
     c.restore();
   } else if (k === 'ilse') {
     c.save(); c.scale(face, 1);
-    poly(c, [-1, -7, -13 + sway * 1.4, -4 + Math.sin(t * 4), -11 + sway, -1, 1, -5], hsl(40, 75, 55), INK);   // scarf
-    poly(c, [0, -10, 0, 10, -11 + sway, 10], hsl(272, 42, 50), INK); poly(c, [0, -10, 11 + sway, 10, 0, 10], hsl(272, 42, 34), INK);   // robe
+    poly(c, [-1, -7, -13 + sway * 1.4, -4 + Math.sin(t * 4), -11 + sway, -1, 1, -5], alt ? hsl(165, 60, 52) : hsl(40, 75, 55), INK);
+    const RH = alt ? 222 : 272, HH = alt ? 224 : 270;   // scarf
+    poly(c, [0, -10, 0, 10, -11 + sway, 10], hsl(RH, 42, alt ? 36 : 50), INK); poly(c, [0, -10, 11 + sway, 10, 0, 10], hsl(RH, 42, alt ? 24 : 34), INK);   // robe
     c.fillStyle = '#ffd166'; for (const [sx, sy] of [[-4, 4], [3, 7], [-6, 8], [5, 2]]) { c.beginPath(); c.arc(sx + sway * 0.4, sy, 0.7, 0, 6.283); c.fill(); }   // stars on the robe
     poly(c, [-5.8, 1.5, 5.8, 1.5, 6.4, 4, -6.4, 4], hsl(40, 70, 55), INK);                         // sash
     poly(c, [-4.6, -10, -5.4, -4, -2, -6], '#3a2440');                                              // hair
     c.fillStyle = '#e2bf9a'; c.beginPath(); c.arc(0, -8.5, 3.6, 0, 6.283); c.fill(); c.strokeStyle = INK; c.lineWidth = 1; c.stroke();
     c.fillStyle = '#1b1420'; c.fillRect(0.8, -9.4, 1.2, 1.2);                                       // eye
-    poly(c, [-10, -9.5, 0, -11, 0, -7, -9, -7], hsl(268, 40, 30), INK); poly(c, [0, -11, 10, -9.5, 9, -7, 0, -7], hsl(268, 40, 22), INK);   // brim
-    poly(c, [-5.5, -10.5, 0, -10.5, 1.5, -21], hsl(270, 40, 40), INK); poly(c, [0, -10.5, 5.5, -10.5, 1.5, -21], hsl(270, 40, 26), INK);  // cone
-    poly(c, [1.5, -21, -5 + sway, -27 + Math.sin(t * 2.5), -0.5, -19.5], hsl(270, 40, 34), INK);    // bent tip
+    poly(c, [-10, -9.5, 0, -11, 0, -7, -9, -7], hsl(HH, 40, 30), INK); poly(c, [0, -11, 10, -9.5, 9, -7, 0, -7], hsl(HH, 40, 22), INK);   // brim
+    poly(c, [-5.5, -10.5, 0, -10.5, 1.5, -21], hsl(HH, 40, 40), INK); poly(c, [0, -10.5, 5.5, -10.5, 1.5, -21], hsl(HH, 40, 26), INK);  // cone
+    poly(c, [1.5, -21, -5 + sway, -27 + Math.sin(t * 2.5), -0.5, -19.5], hsl(HH, 40, 34), INK);
+    if (alt) { c.strokeStyle = 'rgba(127,224,200,0.7)'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(-6, 6 + Math.sin(t * 3)); c.quadraticCurveTo(0, 2, 7, 6 + Math.cos(t * 3)); c.stroke(); }    // bent tip
     c.fillStyle = '#ffd166'; c.fillRect(-5, -12.2, 10, 1.4);                                        // hat band
     c.restore();
     // floating spellbook, pages glowing
@@ -3109,12 +3209,14 @@ function drawHero(c, k, x, y, o = {}) {
     c.closePath(); c.fill(); c.strokeStyle = INK; c.lineWidth = 1; c.stroke();
     c.fillStyle = '#3a2a1a'; c.beginPath(); c.arc(0, 0, 1.3, 0, 6.283); c.fill();
     c.restore();
-    poly(c, [-8, -6, 0, -6, 0, 10, -9 + sway * 0.5, 10], hsl(24, 58, 52), INK); poly(c, [0, -6, 8, -6, 9 + sway * 0.5, 10, 0, 10], hsl(24, 58, 38), INK);   // coat
+    const CH = alt ? 48 : 24, CS = alt ? 85 : 58;
+    poly(c, [-8, -6, 0, -6, 0, 10, -9 + sway * 0.5, 10], hsl(CH, CS, alt ? 56 : 52), INK); poly(c, [0, -6, 8, -6, 9 + sway * 0.5, 10, 0, 10], hsl(CH, CS, alt ? 42 : 38), INK);   // coat
     c.fillStyle = '#2a2018'; c.fillRect(-8.5, 2.5, 17, 2.4); c.fillStyle = '#d9a84e'; c.fillRect(-1.5, 2.3, 3, 2.8);   // belt
     c.fillStyle = '#9aa6b2'; c.fillRect(4, 3, 1.4, 6); c.beginPath(); c.arc(4.7, 9.4, 1.6, 0, 6.283); c.fill();         // wrench
     c.fillStyle = '#e2bf9a'; c.beginPath(); c.arc(0, -10.5, 5, 0, 6.283); c.fill(); c.strokeStyle = INK; c.stroke();
     poly(c, [-3, -15.5, -1, -18, 1, -15.5], '#8a5a30');                                              // tuft of hair
-    poly(c, [-5.5, -13, 0, -17, 5.5, -13, 0, -14], col, INK); c.fillStyle = '#20262a'; c.fillRect(-5.5, -12.4, 13, 2.4);   // cap and brim
+    if (alt) { poly(c, [-6, -13, -4, -17, 4, -17, 6, -13], col, INK); poly(c, [-7.5, -13, 8.5, -13, 11, -9.5, -6, -11.5], hsl(48, 80, 44), INK); }   // sou'wester
+    else { poly(c, [-5.5, -13, 0, -17, 5.5, -13, 0, -14], col, INK); c.fillStyle = '#20262a'; c.fillRect(-5.5, -12.4, 13, 2.4); }   // cap and brim
     c.fillStyle = '#20262a'; c.fillRect(-5.5, -11.6, 11, 2.8);
     c.fillStyle = '#8fe0f0'; c.beginPath(); c.arc(-2.6, -10.3, 2, 0, 6.283); c.arc(2.6, -10.3, 2, 0, 6.283); c.fill();
     c.fillStyle = '#ffffff'; c.fillRect(-3.4, -11.4, 1, 1); c.fillRect(1.8, -11.4, 1, 1);            // lens glints
@@ -3346,6 +3448,7 @@ function render() {
     ctx.fillStyle = '#4cc3ff'; ctx.fillRect(bx, by, bw * Math.max(0, hh.hp / hh.maxHp), 4);
     ctx.font = '700 10px "JetBrains Mono", monospace'; ctx.textAlign = 'left'; ctx.fillStyle = hd.color; ctx.fillText(hh.lvl, bx + bw + 3, by + 5);
   }
+  drawBark();
 
   // shots
   for (const s of S.shots) {
@@ -3876,7 +3979,7 @@ function refreshPanel(force) {
     const nextW = S.wave + 1, groups = waveGroups(nextW);
     const tally = {};
     for (const [type, n] of groups) tally[type] = (tally[type] || 0) + n;
-    const hp = hpMul(nextW) * S.mods.hp;
+    const hp = hpMul(nextW) * S.mods.hp * diff().hp;
     const orders = S.perks.map(id => PERKS.find(p => p.id === id).name);
     els.info.innerHTML = `
       <p class="eyebrow"><span>Scouting · wave ${nextW}</span><span>HP ×${hp.toFixed(1)}</span></p>
@@ -4031,9 +4134,13 @@ function gameOver() {
 }
 function victory() {
   ui.paused = true; sfx('win'); clearCheckpoint();
+  const hk = S.hero && S.hero.k, fresh = hk && !WARD.unlocked[hk];
+  if (hk) { WARD.unlocked[hk] = true; saveWard(); }
   showOverlay(`
     <h2>The line <span>held</span></h2>
     ${S.hero ? `<p class="story">${md(HEROES[S.hero.k].end[S.hero.evo === 'b' ? 1 : 0])}</p>` : ''}
+    ${fresh ? `<p class="unlock"><b>New outfit: ${OUTFITS[hk].name}</b><span>${OUTFITS[hk].text}. Put it on from the hero screen.</span></p>` : ''}
+    <p class="meta">Difficulty: ${diff().name}</p>
     <p>All three roads held through ${VICTORY_WAVE} waves, with ${fmt(S.totalKills)} enemies defeated.</p>
     <div class="row"><button class="btn primary" id="ov-endless" type="button">Keep going (endless)</button><button class="btn" id="ov-title" type="button">Back to title</button></div>`);
   $('ov-endless').onclick = () => { S.endless = true; hideOverlay(); ui.paused = false; refreshHud(); };
@@ -4045,8 +4152,9 @@ function resetUi() {
   ui.perkOpen = false; ui.storyOpen = false; ui.skillsOpen = false; ui.mapOpen = false; ui.galleryOpen = false; ui.settingsOpen = false; ui.buildPause = false; ui.paused = false; ui.started = true;
 }
 function restart(intro = true) {
-  S = newState(); loadMap(0); S.hero = makeHero(ui.hero);
-  resetUi(); ui.intel = true;
+  S = newState(); S.diff = DIFF[SET.diff] ? SET.diff : 'normal'; S.lives = diff().lives; S.gold = Math.round(START_GOLD * diff().gold);
+  loadMap(0); S.hero = makeHero(ui.hero);
+  resetUi(); ui.intel = true; shownLives = S.lives;
   store(KEY_RESUME, null); saveCheckpoint(); lastSaveSig = saveSig();
   hideOverlay(); renderHeroUI(); refreshPanel(true); refreshHud();
   if (intro) showChapter(0);
@@ -4054,12 +4162,12 @@ function restart(intro = true) {
 }
 function continueCampaign(c) {
   if (!c) { toTitle(); return; }
-  S = newState(); S.mapI = c.mapI; loadMap(c.mapI);
+  S = newState(); S.diff = DIFF[c.diff] ? c.diff : 'normal'; S.lives = diff().lives; S.mapI = c.mapI; loadMap(c.mapI);
   Object.assign(S, { wave: c.wave, cleared: c.cleared, gold: c.gold, perks: c.perks || [], totalKills: c.totalKills || 0 });
   S.mods = Object.assign(mods0(), c.mods || {}); S.modVer = 1;
   ui.hero = c.hero.k;
   const h = S.hero = makeHero(c.hero.k);
-  Object.assign(h, { lvl: lvlForXp(c.hero.xp || 0), xp: c.hero.xp, sp: c.hero.sp, learned: c.hero.learned || {}, evo: c.hero.evo, ult: c.hero.ult, toldSkill: c.hero.toldSkill });
+  Object.assign(h, { lvl: lvlForXp(c.hero.xp || 0), xp: c.hero.xp, sp: c.hero.sp, learned: c.hero.learned || {}, evo: c.hero.evo, ult: c.hero.ult, toldSkill: c.hero.toldSkill, respec: c.hero.respec });
   h.ult = h.lvl >= ULT_LVL; recomputeFx(h); h.maxHp = hMax(h); h.hp = h.maxHp; if (h.ult) h.ab.r = 3;
   for (const o of c.towers || []) {
     if (!TOWERS[o.type] || !tileFree(o.tx, o.ty)) { if (TOWERS[o.type]) S.gold += o.spent || 0; continue; }
@@ -4085,7 +4193,7 @@ function showMapComplete() {
   showOverlay(`
     <p class="chap" style="color:var(--good)">Map ${S.mapI + 1} of ${MAPS.length} held</p>
     <h2>${MAPS[S.mapI].name} <span>held</span></h2>
-    <p>${S.lives} of ${START_LIVES} lives left · ${fmt(S.totalKills)} enemies defeated so far</p>
+    <p>${S.lives} of ${diff().lives} lives left · ${fmt(S.totalKills)} enemies defeated so far</p>
     <div class="unlock"><b>Next: ${next.name}</b><span>${next.blurb} Waves ${(S.mapI + 1) * WAVES_PER_MAP + 1}–${(S.mapI + 2) * WAVES_PER_MAP}.</span>
       <span class="meta">Your crews salvage every tower for its full cost: +${salvage} BST. You start the new road with ${S.gold + salvage} BST and full lives, and ${S.hero ? HEROES[S.hero.k].name.split(' ')[0] + ' marches with you' : 'your upgrades carry over'}.</span></div>
     <div class="row"><button class="btn primary" id="ov-next" type="button">March to ${next.name}</button></div>`, 'wide story-card');
@@ -4095,7 +4203,7 @@ function nextMap() {
   if (!ui.mapOpen) return;
   S.gold += S.towers.reduce((a, t) => a + t.spent, 0);
   S.towers = []; S.undo = []; S.sentries = []; S.fires = []; S.shots = []; S.slashes = []; S.strikes = []; S.rains = []; S.buffs = []; S.particles = []; S.texts = []; S.rings = []; S.bolts = []; S.tracers = [];
-  S.mapI++; S.mapDone = false; S.lives = START_LIVES;
+  S.mapI++; S.mapDone = false; S.lives = diff().lives;
   loadMap(S.mapI);
   const h = S.hero;
   if (h) { const f = makeHero(h.k); Object.assign(h, { x: f.x, y: f.y, post: f.post, dest: null, dead: false, hp: h.maxHp }); }
@@ -4109,10 +4217,13 @@ function heroSelect() {
   showOverlay(`
     <h2>Choose your <span>champion</span></h2>
     <p>Your hero fights beside the towers, levels up, and earns new skills as the story unfolds.</p>
-    <div class="heroes">${Object.entries(HEROES).map(([k, d]) => `<button type="button" class="hero-btn${k === ui.hero ? ' on' : ''}" data-k="${k}"><canvas class="hs-art hb-art" data-k="${k}" data-s="e" aria-hidden="true"></canvas><b>${d.name}</b><small class="hb-title" style="color:${d.color}">${d.title}</small><small class="hb-role">${d.role}</small><small class="hb-skills">E · ${d.active.name}<br>R · ${d.ult.name} (Lv ${ULT_LVL})</small><small class="hb-tree">20 levels: 5 skill ranks, 3 ultimate ranks and 5 talents</small></button>`).join('')}</div>
-    <div class="row"><button class="btn primary" id="ov-begin" type="button">Begin</button><button class="btn" id="ov-back" type="button">Back</button></div>`, 'wide xl');
+    <div class="heroes">${Object.entries(HEROES).map(([k, d]) => `<button type="button" class="hero-btn${k === ui.hero ? ' on' : ''}" data-k="${k}"><canvas class="hs-art hb-art" data-k="${k}" data-s="e" aria-hidden="true"></canvas><b>${d.name}</b><small class="hb-title" style="color:${d.color}">${d.title}</small><small class="hb-role">${d.role}</small><small class="hb-skills">E · ${d.active.name}<br>R · ${d.ult.name} (Lv ${ULT_LVL})</small>${WARD.unlocked[k] ? `<span class="hb-outfit${WARD.wear[k] ? ' on' : ''}" role="switch" aria-checked="${!!WARD.wear[k]}" data-o="${k}">Outfit: ${WARD.wear[k] ? OUTFITS[k].name : 'Classic'}</span>` : `<small class="hb-tree">Finish the campaign with ${d.name.split(' ')[0]} to unlock the ${OUTFITS[k].name} outfit</small>`}</button>`).join('')}</div>
+    <div class="diffs" role="radiogroup" aria-label="Difficulty">${Object.entries(DIFF).map(([k, v]) => `<button type="button" class="diff${SET.diff === k ? ' on' : ''}" role="radio" aria-checked="${SET.diff === k}" data-d="${k}"><b>${v.name}</b><small>${v.text}</small></button>`).join('')}</div>
+    <div class="row"><button class="btn primary" id="ov-begin" type="button">Begin</button><button class="btn" id="ov-back" type="button">Back</button></div>`, 'wide xl hero-pick');
   animateScenes();
   els.card.querySelectorAll('.hero-btn').forEach(b => b.onclick = () => { ui.hero = b.dataset.k; els.card.querySelectorAll('.hero-btn').forEach(x => x.classList.toggle('on', x === b)); });
+  els.card.querySelectorAll('[data-o]').forEach(o => o.onclick = ev => { ev.stopPropagation(); const k = o.dataset.o; WARD.wear[k] = !WARD.wear[k]; ui.hero = k; saveWard(); heroSelect(); });
+  els.card.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { SET.diff = b.dataset.d; saveSettings(); els.card.querySelectorAll('[data-d]').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-checked', x === b); }); });
   $('ov-begin').onclick = () => restart(true);
   $('ov-back').onclick = titleScreen;
   $('ov-begin').focus();
@@ -4158,12 +4269,14 @@ function renderSkills(sel) {
   const nextOf = (lv, list) => { const i = lv.findIndex(l => l > h.lvl); return i < 0 ? null : { lvl: lv[i], text: list[i] }; };
   const eNext = nextOf(RANK_LVL, [d.active.text, ...d.active.ranks]), rNext = nextOf(ULT_LVLS, [d.ult.text, ...d.ult.ranks]);
   const pips = (n, of) => `<span class="pips">${Array.from({ length: of }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</span>`;
+  const other = h.evo ? d.evo[h.evo === 'a' ? 1 : 0] : null, swapped = h.respec === S.mapI;
+  const swap = other ? `<button type="button" class="btn tiny hs-swap" id="sk-swap"${swapped ? ' disabled' : ''}>${swapped ? 'Evolution swapped on this map' : `Swap to ${other.name} · once per map`}</button>` : '';
   const card = (which, key, name, rank, of, text, nx, cd, locked) => `
       <div class="hskill${locked ? ' locked' : ''}"><canvas class="hs-art" data-k="${h.k}" data-s="${which}" aria-hidden="true"></canvas>
         <div class="hs-body"><p class="hs-key">${key}</p><h4>${name}${rank > 1 ? ' ' + ROMAN[rank] : ''} ${pips(rank, of)}</h4>
         <p class="hs-text">${text}</p>
         ${nx ? `<p class="hs-next"><b>Lv ${nx.lvl}</b> ${nx.text}</p>` : `<p class="hs-next done">Fully ranked</p>`}
-        <p class="hs-cd">${cd}</p></div></div>`;
+        <p class="hs-cd">${cd}</p>${which === 'e' && h.evo ? swap : ''}</div></div>`;
   showOverlay(`
     <p class="chap" style="color:${d.color}">${d.name} · ${d.title}</p>
     <h2>Hero <span>skills</span></h2>
@@ -4178,6 +4291,12 @@ function renderSkills(sel) {
     <div class="row"><button class="btn primary" id="sk-close" type="button">Back to the fight</button></div>`, 'wide xl skills-card');
   for (const cls of ['tight', 'tighter']) { if (els.overlay.scrollHeight <= els.overlay.clientHeight + 1) break; els.card.classList.add(cls); }
   $('sk-close').onclick = closeSkills;
+  if ($('sk-swap')) $('sk-swap').onclick = () => {
+    if (h.respec === S.mapI) return;
+    h.evo = h.evo === 'a' ? 'b' : 'a'; h.respec = S.mapI; sfx('upgrade');
+    toast(`${skillName(h)}`, d.evo[h.evo === 'a' ? 0 : 1].text); bark('level', true);
+    renderHeroUI(); if (!S.waveActive) saveResume(); renderSkills(sel);
+  };
   els.card.querySelectorAll('[data-l]').forEach(b => b.onclick = () => { renderSkills(+b.dataset.l); });
   animateScenes();
 }
@@ -4286,7 +4405,8 @@ function openSettings() {
       <div class="set-col"><section><h3>Sound</h3>${sl('set-music', 'Music', SET.music)}${sl('set-sfx', 'Sound effects', SET.sfx)}</section>
       <section><h3>Gameplay</h3>
         ${tg('set-auto', 'Send waves automatically', SET.autoWave, 'The next wave starts 3 seconds after one is cleared')}
-        ${tg('set-pause', 'Pause when you leave', SET.autoPause, 'Pauses if you switch apps or tabs')}</section></div>
+        ${tg('set-pause', 'Pause when you leave', SET.autoPause, 'Pauses if you switch apps or tabs')}
+        ${tg('set-barks', 'Hero chatter', SET.barks, `Speech bubbles at big moments${ui.started ? ` · Difficulty: ${diff().name}` : ''}`)}</section></div>
       <div class="set-col"><section><h3>Display and accessibility</h3>
         ${tg('set-big', 'Larger text', big)}
         ${tg('set-shots', 'Bigger shots', SET.bigShots, 'Makes arrows, shells and bolts easier to see')}
@@ -4298,6 +4418,7 @@ function openSettings() {
   const flip = (id, fn) => { const b = $(id); if (b) b.onclick = () => { fn(); saveSettings(); openSettings(); }; };
   flip('set-auto', () => { SET.autoWave = !SET.autoWave; });
   flip('set-pause', () => { SET.autoPause = !SET.autoPause; });
+  flip('set-barks', () => { SET.barks = !SET.barks; if (!SET.barks && S) S.bark = null; });
   flip('set-shots', () => { SET.bigShots = !SET.bigShots; SK = SET.bigShots ? 1.7 : 1; });
   flip('set-fx', () => { SET.reduceFx = !SET.reduceFx; REDUCED_MOTION = OS_REDUCED || SET.reduceFx; });
   flip('set-vib', () => { SET.vibrate = !SET.vibrate; if (SET.vibrate) buzz(30); });
