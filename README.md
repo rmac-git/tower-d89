@@ -70,10 +70,10 @@ You pick a difficulty on the hero screen when a campaign starts, and it stays wi
 | | Enemy health | Enemy speed | Lives per map | Starting BST |
 |---|---|---|---|---|
 | Casual | ×0.78 | ×0.95 | 30 | 216 |
-| Normal | ×1.2 | ×1 | 20 | 180 |
-| Veteran | ×1.75 | ×1.1 | 10 | 162 |
+| Normal | ×1.3 | ×1 | 20 | 180 |
+| Veteran | ×1.7 | ×1.06 | 15 | 162 |
 
-Normal was made tougher than before, because the test bot was winning every run with all 20 lives. Now it wins about two runs in three with a close finish. On Veteran it wins about one in three.
+Normal was made tougher than before, because the test bot was winning every run with all 20 lives. The bot still clears Normal (it plays near-perfectly), and on Veteran it wins about one run in three. Veteran has 15 lives rather than 10, because a boss that gets through costs 10 lives and would otherwise end the run on the spot.
 
 ## Heroes
 
@@ -94,13 +94,25 @@ Growth is still automatic, but it is spread along a **20-level path** so somethi
 
 Big moments shake the screen a little (off with **Fewer effects**). The ★ button (or `K`) opens the hero skills card. It shows the whole 20-level path as a row of nodes: E for signature ranks, R for ultimate ranks, ★ for talents and dots for plain power levels. Tap any node to read what it gives. Below the path, each skill card has a small animated picture of the hero using that skill, with rank pips and what the next rank adds, and a row of talent chips. The hero picker shows the same animated pictures. Older saves keep their experience and are placed on the new path by it.
 
-**Evolution swap:** the Chapter 2 evolution isn't final. Once per map, the hero skills card (★ or `K`) offers **Swap to …** on the signature skill card, so you can try both versions.
+**Evolution:** like Pokémon, each hero evolves twice as they level, at levels 7 and 14 (usually the end of map 1 and late in map 2):
+
+| Hero | Form 1 (start) | Form 2 (level 7) | Form 3 (level 14) |
+|---|---|---|---|
+| Maren | **Squire**: leather jerkin and coif, wooden buckler, short sword, no banner | **Knight**: plate armour, plumed helm, kite shield, banner | **Warden of the Cove**: winged helm, gold-rimmed pauldrons, glowing blade, a lantern on her banner pole |
+| Ilse | **Apprentice**: plain hood and robe, short staff, no spellbook | **Ember Scribe**: starry robe, witch's hat, floating spellbook | **Starcaller**: floats, wears a turning crown of flames, three spellbooks circle her |
+| Tick | **Tinkerer**: tool satchel, short rivet gun, no drone | **Gate Tinker**: steam backpack, scoped rifle, scout drone | **Gearwright**: rides a two-legged walker with a twin-barrel rifle and two drones |
+
+Each form is drawn bigger, and evolving heals the hero fully and adds 10% to health, damage and skill power. When it happens the battle drops to slow motion for about two seconds: "What? Maren is evolving!" appears, the board dims around the hero, light rays turn and sparks are drawn in, and the hero glows and flickers between the old and new forms faster and faster. Then a flash reveals the new form, a banner names it, and the hero says a line. **Fewer effects** shortens this to a quick flash. The skills card shows the three forms in a row, with forms not yet reached shown as dark silhouettes, and the hero picker lists them.
+
+Levels also arrive quickly at first and slow down toward the end: about a wave per level early on, and two to three waves per level from 16 to 20, so level 20 lands in the last waves of the campaign.
+
+**Path swap:** the Chapter 2 choice (for example Cataclysm or Meteor Shower) is now called the hero's **path**, so it isn't confused with evolution. It isn't final: once per map, the hero skills card (★ or `K`) offers **Swap path to …** on the signature skill card, so you can try both versions.
 
 **Hero chatter:** heroes say short lines in a speech bubble at big moments: the start of each map, level-ups, ultimates (and sometimes the signature skill), a boss's first appearance, dropping below 30% health, coming back from a fall, and a leak. Turn it off with **Hero chatter** in Settings.
 
 **Outfits:** finishing the campaign with a hero unlocks their second outfit. Maren's is **Dawn Warden** (sun-gold armour, sea-blue cape), Ilse's is **Northern Lights** (midnight robe, aurora scarf) and Tick's is **Lobster Skipper** (yellow oilskin and sou'wester). Toggle it on the hero's card in the hero picker; it shows in battle, on the rail and in the skill art. Unlocks sync with your account's cloud save.
 
-**Story:** each hero has a prologue and five chapters (after waves 5, 10, 15, 20 and 25) following the fall of the High Marshal, Corvane. Chapter 2 asks you to choose how the hero's signature skill evolves (for example, Meteor becomes Cataclysm or Meteor Shower, and Sentry Drop becomes Overdrive or Arc Reactor). The victory epilogue changes with your choice.
+**Story:** each hero has a prologue and five chapters (after waves 5, 10, 15, 20 and 25) following the fall of the High Marshal, Corvane. Chapter 2 asks you to choose the hero's path, which reshapes their signature skill (for example, Meteor becomes Cataclysm or Meteor Shower, and Sentry Drop becomes Overdrive or Arc Reactor). The victory epilogue changes with your choice.
 
 ## The BST token
 

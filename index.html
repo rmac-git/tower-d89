@@ -187,7 +187,22 @@ html.big .overlay p, html.big .n-desc { font-size: 15.5px; }
 .hs-next { margin: 0; font-size: 12.5px; color: var(--muted); }
 .hs-next b { font: 600 11px var(--font-mono); color: #4cc3ff; margin-right: 4px; }
 .hs-next.done { color: var(--good); }
-.hs-swap { align-self: flex-start; margin-top: 2px; padding: 3px 10px; font-size: 12px; min-height: 0; }
+.forms { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.form { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px 2px 3px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.form i { display: block; width: 34px; height: 34px; }
+.form:not(.on) i canvas { filter: brightness(0) opacity(0.6); }
+.form b { display: block; font: 700 13px var(--font-display); text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.1; }
+.form small { font: 600 10px var(--font-mono); }
+.form.on { color: var(--ink); }
+.form.now { border-color: var(--brass); background: rgba(230,196,99,0.12); }
+.form.now b { color: var(--brass); }
+.form-arrow { color: var(--muted); }
+.skills-card.tighter .form small, .skills-card.tighter .form:not(.now) b, .skills-card.tighter .hs-cd { display: none; }
+.skills-card.tighter .form:not(.now) { padding-right: 3px; }
+.skills-card.tighter .hs-art { min-height: 60px; }
+.skills-card.tighter .form i { width: 26px; height: 26px; }
+.skills-card.tighter .form i canvas { width: 26px !important; height: 26px !important; }
+.hs-swap { align-self: flex-start; margin-top: 2px; padding: 3px 10px; font-size: 12px; min-height: 0; white-space: normal; text-align: left; max-width: 100%; }
 .hs-swap[disabled] { opacity: 0.55; cursor: default; }
 .hpath { position: relative; display: grid; grid-template-columns: repeat(20, 1fr); width: 100%; max-width: 760px; gap: 0; padding: 0 2px; }
 .hpath::before, .hpath::after { content: ''; position: absolute; left: 2.5%; right: 2.5%; top: 12px; height: 3px; background: var(--line); border-radius: 2px; }
@@ -227,9 +242,14 @@ html.big .overlay p, html.big .n-desc { font-size: 15.5px; }
 .skills-card.tight .hs-text, .skills-card.tight .hs-trait, .skills-card.tight .sk-stats { display: none; }
 .skills-card.tighter .hs-art { min-height: 72px; }
 .skills-card.tighter .hp-node small, .skills-card.tighter .hs-key, .skills-card.tighter .cd-hint { display: none; }
-.skills-card.tighter h2 { font-size: 22px; }
+.skills-card.tighter h2 { font-size: 20px; line-height: 1; }
+.skills-card.tighter .hskill { padding: 6px; gap: 8px; }
+.skills-card.tighter .hskill h4 { line-height: 1.05; }
 .skills-card.tighter .hskill h4 { font-size: 17px; }
-.skills-card.tighter .hp-detail, .skills-card.tighter .hs-next { font-size: 12px; }
+.skills-card.tighter .hp-detail, .skills-card.tighter .hs-next { font-size: 12px; line-height: 1.3; }
+.skills-card.tighter .forms { margin: -2px 0; }
+.skills-card.tighter .hs-key + h4 { margin-top: 0; }
+.skills-card.tighter .tal { padding: 1px 8px; }
 .skills-card.tighter .tal { padding: 2px 8px; font-size: 11px; }
 .skills-card.tighter .hskill { grid-template-columns: minmax(84px, 34%) 1fr; }
 @media (max-width: 640px) and (orientation: portrait) { .hskills { grid-template-columns: 1fr; } }
@@ -494,6 +514,7 @@ div.map-btn.on:hover { border-color: var(--brass); }
 .hero-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; cursor: pointer; min-width: 0; }
 .hero-btn:hover { border-color: var(--brass); }
 .hb-art { width: 100%; height: 92px; min-height: 0; flex: none; }
+.hb-forms { font: 600 11px var(--font-mono); color: var(--brass) !important; }
 .hb-outfit { font: 600 11.5px var(--font-mono); padding: 3px 10px; border-radius: 999px; border: 1px dashed var(--brass); color: var(--brass); cursor: pointer; }
 .hb-outfit.on { background: var(--brass); color: #14181c; border-style: solid; }
 .diffs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 720px; }
@@ -682,8 +703,8 @@ const START_GOLD = 180, START_LIVES = 20;
 // Difficulty is picked when a campaign starts and stays with that campaign.
 const DIFF = {
   casual:  { name: 'Casual', hp: 0.78, speed: 0.95, lives: 30, gold: 1.2, text: 'Softer enemies, 30 lives, extra starting BST' },
-  normal:  { name: 'Normal', hp: 1.2, speed: 1, lives: 20, gold: 1, text: 'The intended challenge' },
-  veteran: { name: 'Veteran', hp: 1.75, speed: 1.1, lives: 10, gold: 0.9, text: 'Tougher, faster enemies and only 10 lives' },
+  normal:  { name: 'Normal', hp: 1.3, speed: 1, lives: 20, gold: 1, text: 'The intended challenge' },
+  veteran: { name: 'Veteran', hp: 1.7, speed: 1.06, lives: 15, gold: 0.9, text: 'Tougher, faster enemies and only 15 lives' },
 };
 const diff = () => DIFF[(S && S.diff) || 'normal'] || DIFF.normal;
 // Second outfits: earned by finishing the campaign with that hero.
@@ -697,7 +718,7 @@ const WARD = { unlocked: {}, wear: {} };
 try { Object.assign(WARD, JSON.parse(localStorage.getItem(KEY_WARD)) || {}); } catch (e) {}
 function saveWard() { try { localStorage.setItem(KEY_WARD, JSON.stringify(WARD)); } catch (e) {} if (typeof pushCloud === 'function') pushCloud(); }
 const wearing = k => !!(WARD.unlocked[k] && WARD.wear[k]);
-const GAME_VERSION = 'v39 · difficulty, chatter and outfits';   // shown in Settings, so you can tell whether a fresh copy loaded
+const GAME_VERSION = 'v40 · heroes evolve';   // shown in Settings, so you can tell whether a fresh copy loaded
 // Player settings, kept on this device.
 const SET = { music: 0.5, sfx: 0.8, autoWave: false, autoPause: true, reduceFx: false, bigShots: false, vibrate: true, barks: true, diff: 'normal' };
 try { Object.assign(SET, JSON.parse(localStorage.getItem('bastion-line-settings')) || {}); } catch (e) {}
@@ -793,6 +814,11 @@ const MASTERY = {
 // Like Kingdom Rush, a final-form tower has both of its skills and ranks each one up separately.
 const MAST_COST = [1.0, 1.6, 2.3];
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V'];
+// Each hero evolves twice as they level, growing bigger and a little stronger each time.
+const FORM_LVL = [1, 7, 14];
+const FORMS = { maren: ['Squire', 'Knight', 'Warden of the Cove'], ilse: ['Apprentice', 'Ember Scribe', 'Starcaller'], tick: ['Tinkerer', 'Gate Tinker', 'Gearwright'] };
+const formOf = h => FORM_LVL.filter(l => h.lvl >= l).length;   // 1..3
+const formMul = h => 1 + 0.1 * (formOf(h) - 1);
 const sk = (t, i) => (t.skills && t.skills[i]) || 0;
 function masteryCost(t, skill = 0) {
   if (t.lvl < 2 || !unlocked('mastery')) return null;
@@ -907,7 +933,7 @@ const unlocked = k => !(k in UNLOCK) || (S.cleared || 0) >= UNLOCK[k];
 
 // ---------- Heroes ----------
 const MAX_LVL = 20;
-const XP_NEXT = Array.from({ length: MAX_LVL - 1 }, (_, i) => Math.round(18.5 * (i + 1) ** 2 + 50 * (i + 1)));   // total xp to reach levels 2..20
+const XP_NEXT = Array.from({ length: MAX_LVL - 1 }, (_, i) => Math.round(4 * (i + 1) ** 2.5 + 40 * (i + 1)));   // total xp to reach levels 2..20: quick at first, a long climb at the end
 const lvlForXp = xp => 1 + XP_NEXT.filter(x => xp >= x).length;
 const FX_KEYS = ['dmg', 'hp', 'regen', 'rate', 'range', 'speed', 'cleave', 'exec', 'pierce', 'burn', 'skill', 'cdr', 'xp', 'gold', 'auraRate', 'auraDmg', 'auraR', 'respawn', 'thorns', 'radius', 'armor', 'last', 'star'];
 const fx0 = () => Object.fromEntries(FX_KEYS.map(k => [k, 0]));
@@ -1031,6 +1057,72 @@ function bark(type, force) {
   let text = pool[Math.floor(Math.random() * pool.length)];
   if (S.bark && S.bark.text === text && pool.length > 1) text = pool[(pool.indexOf(text) + 1) % pool.length];
   S.bark = { text, at: S.time, until: S.time + 2.4 }; S.barkQuiet = S.time + 7;
+}
+// Evolution: about two seconds of slow motion. The hero glows and flickers between old and new forms,
+// a flash reveals the new form, and a banner names it. Fewer effects keeps it to a quick flash.
+const EVO_T = 2.6, EVO_FLASH = 1.15;
+function startEvolve(h, to) {
+  S.evo = { t0: performance.now() / 1000, from: h.formShown || to - 1, to, done: false };
+  if (REDUCED_MOTION) S.evo.t0 -= EVO_FLASH - 0.05;
+  else S.banner = { text: `What? ${HEROES[h.k].name.split(' ')[0]} is evolving!`, sub: `Level ${h.lvl}`, life: EVO_FLASH + 0.1 };
+  sfx('perk');
+}
+function evoNow() { return S.evo ? performance.now() / 1000 - S.evo.t0 : 99; }
+function updateEvolve() {
+  const ev = S.evo, h = S.hero; if (!ev || !h) return;
+  const e = evoNow();
+  if (!ev.done && e >= EVO_FLASH) {
+    ev.done = true; h.formShown = ev.to; h.hp = h.maxHp;
+    const d = HEROES[h.k], first = d.name.split(' ')[0], name = FORMS[h.k][ev.to - 1];
+    ring(h.x, h.y, 10, 3 * TILE, 0.8, d.color); ring(h.x, h.y, 6, 1.8 * TILE, 0.6, '#ffffff'); burst(h.x, h.y, d.color, 40, 220); burst(h.x, h.y, '#ffffff', 20, 160);
+    shake(6); sfx('win'); buzz([40, 60, 80]);
+    S.banner = { text: `${first} evolved!`, sub: `${name} · form ${ev.to} of 3 · +10% to everything`, life: 2.6 };
+    toast(`${first} became the ${name}`, `Form ${ev.to} of 3: bigger, fully healed, and 10% stronger in every way.`);
+    S.bark = { text: ev.to === 3 ? ({ maren: 'The cove has its Warden.', ilse: 'I can hear the stars now.', tick: 'Behold: the Gearwright!' })[h.k] : ({ maren: 'A knight at last.', ilse: 'Look at this hat!', tick: 'Tools upgraded. Me too.' })[h.k], at: S.time, until: S.time + 2.6 };
+    S.barkQuiet = S.time + 7;
+    renderHeroUI();
+  }
+  if (e > EVO_T) S.evo = null;
+}
+const evoSlow = () => S.evo && !REDUCED_MOTION && evoNow() < EVO_T - 0.4 ? 0.3 : 1;
+// which form to draw right now: during the charge it flickers faster and faster between old and new
+function shownForm(h) {
+  const ev = S.evo; if (!ev || ev.done) return h.formShown || formOf(h);
+  const e = evoNow(); if (e < 0.35) return ev.from;
+  const hz = 2 + (e - 0.35) * 14; return Math.floor(e * hz) % 2 ? ev.to : ev.from;
+}
+function drawEvolve() {
+  const ev = S.evo, h = S.hero; if (!ev || !h || h.dead) return;
+  const e = evoNow(), [hx, hy] = heroDrawPos(h), col = HEROES[h.k].color;
+  const charge = Math.min(1, e / EVO_FLASH), after = Math.max(0, e - EVO_FLASH);
+  ctx.save();
+  if (!REDUCED_MOTION) {
+    // dim the board around a spotlight on the hero
+    const dim = e < EVO_FLASH ? charge * 0.7 : Math.max(0, 0.7 - after * 0.6);
+    const sp = ctx.createRadialGradient(hx, hy - 10, 24 * K, hx, hy - 10, 110 * K); sp.addColorStop(0, 'rgba(6,10,8,0)'); sp.addColorStop(1, `rgba(6,10,8,${dim})`);
+    ctx.fillStyle = sp; ctx.fillRect(0, 0, W, H);
+    // turning rays and a pillar of light
+    if (e < EVO_FLASH + 0.6) {
+      const ra = e < EVO_FLASH ? charge : 1 - after / 0.6;
+      ctx.save(); ctx.translate(hx, hy - 10 * K); ctx.rotate(e * 1.5); ctx.fillStyle = hexA(col, 0.22 * ra);
+      for (let i = 0; i < 12; i++) { ctx.rotate(0.5236); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(120 * K, -10 * K); ctx.lineTo(120 * K, 10 * K); ctx.fill(); }
+      ctx.restore();
+      const pl = ctx.createLinearGradient(hx - 16 * K, 0, hx + 16 * K, 0); pl.addColorStop(0, 'rgba(255,255,255,0)'); pl.addColorStop(0.5, `rgba(255,250,230,${0.45 * ra})`); pl.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = pl; ctx.fillRect(hx - 16 * K, 0, 32 * K, hy + 12 * K);
+    }
+    // sparks drawn in toward the hero while charging
+    if (e < EVO_FLASH) for (let i = 0; i < 18; i++) {
+      const a = i * 2.4 + e * 0.8, q = (e * 1.3 + i / 18) % 1, rr = (1 - q) * 70 * K;
+      ctx.fillStyle = i % 3 ? hexA(col, 0.9) : 'rgba(255,255,255,0.95)'; ctx.fillRect(hx + Math.cos(a) * rr - 1.5, hy - 10 * K + Math.sin(a) * rr - 1.5, 3, 3);
+    }
+  }
+  // the hero on top of the dimming, glowing white as the charge builds
+  const pose = heroPose(h), sc = K * 1.25;
+  drawHero(ctx, h.k, hx, hy, { angle: h.angle, scale: sc, form: shownForm(h), pose, flash: e < EVO_FLASH && charge > 0.5 && Math.floor(e * 12) % 2 === 0 });
+  if (e < EVO_FLASH) { const g = ctx.createRadialGradient(hx, hy - 8 * K, 2, hx, hy - 8 * K, 28 * K); g.addColorStop(0, `rgba(255,255,255,${0.9 * charge})`); g.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(hx, hy - 8 * K, 28 * K, 0, 6.283); ctx.fill(); }
+  // the flash
+  if (after < 0.6 && e >= EVO_FLASH) { ctx.fillStyle = `rgba(255,252,240,${(REDUCED_MOTION ? 0.35 : 0.85) * (1 - after / 0.6)})`; ctx.fillRect(0, 0, W, H); }
+  ctx.restore();
 }
 function drawBark() {
   const h = S.hero, b = S.bark; if (!b || !h || h.dead || S.time > b.until) return;
@@ -2072,13 +2164,13 @@ function makeHero(k) {
   }
   const h = { k, x: best[0], y: best[1], post: best.slice(), dest: null, lvl: 1, xp: 0, sp: 0, learned: {}, fx: fx0(), evo: null, ult: false,
     ab: { e: 4, r: 1e9 }, cd: 0.3, dead: false, respawnAt: 0, shield: 0, shieldUntil: 0, invuln: 0, rage: 0, lastHit: -99, kills: 0, dealt: 0, flash: 0, angle: 0 };
-  recomputeFx(h); h.maxHp = hMax(h); h.hp = h.maxHp;
+  recomputeFx(h); h.maxHp = hMax(h); h.hp = h.maxHp; h.formShown = formOf(h);
   return h;
 }
 const skillName = h => h.evo ? HEROES[h.k].evo[h.evo === 'a' ? 0 : 1].name : HEROES[h.k].active.name;
-function hMax(h) { return Math.round(HEROES[h.k].hp * (1 + 0.07 * (h.lvl - 1)) * (1 + h.fx.hp)); }
-function heroDmg(h) { return HEROES[h.k].dmg * (1 + 0.1 * (h.lvl - 1)) * (1 + 0.05 * (S.wave - 1)) * (1 + h.fx.dmg); }
-function skillPower(h) { return (80 + 11 * h.lvl + 8 * S.wave) * (1 + h.fx.skill); }
+function hMax(h) { return Math.round(HEROES[h.k].hp * (1 + 0.07 * (h.lvl - 1)) * (1 + h.fx.hp) * formMul(h)); }
+function heroDmg(h) { return HEROES[h.k].dmg * (1 + 0.085 * (h.lvl - 1)) * formMul(h) * (1 + 0.05 * (S.wave - 1)) * (1 + h.fx.dmg); }
+function skillPower(h) { return (80 + 9.5 * h.lvl + 8 * S.wave) * (1 + h.fx.skill) * formMul(h); }
 function cdOf(h, base) { return base * (1 - Math.min(0.6, h.fx.cdr)) * S.mods.cd; }
 function recomputeFx(h) {
   h.fx = fx0();
@@ -2102,7 +2194,7 @@ function heroXp(e) {
     if (ur > 0) { sub = `${d.ult.name} ${ROMAN[ur + 1]}: ${d.ult.ranks[ur - 1]}`; toast(`${d.ult.name} · rank ${ROMAN[ur + 1]}`, d.ult.ranks[ur - 1]); }
     if (tal) { sub = `${tal.cap ? 'Capstone' : 'Talent'}: ${tal.name}`; toast(`${tal.cap ? 'Capstone talent' : 'New talent'}: ${tal.name}`, tal.text); }
     S.banner = { text: `${first} reached level ${h.lvl}`, sub, life: 2.4 };
-    bark('level', true);
+    if (FORM_LVL.indexOf(h.lvl) > 0) startEvolve(h, formOf(h)); else bark('level', true);
     renderHeroUI();
   }
 }
@@ -2412,6 +2504,7 @@ bg.width = W * DPR; bg.height = H * DPR;
 // ---------- Low-poly art helpers: flat-shaded facets, light from the top-left ----------
 const LIGHT = 3.93;
 const INK = 'rgba(16,22,19,0.72)';
+const hexA = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
 const hsl = (h, s, l, a = 1) => `hsla(${h},${s}%,${Math.max(0, Math.min(100, l))}%,${a})`;
 function poly(c, pts, fill, stroke) {
   c.beginPath(); c.moveTo(pts[0], pts[1]);
@@ -3103,8 +3196,14 @@ function drawHero(c, k, x, y, o = {}) {
   const castUp = cast < 1 ? Math.sin(Math.PI * Math.min(1, cast * 1.25)) : 0;                     // rises into the cast and settles
   const chan = k === 'ilse' && pw ? 0.75 + Math.sin(t * 6) * 0.1 : 0;                              // Ilse holds Sunfall overhead
   const raise = Math.max(castUp, chan, air ? 1 : 0);
-  c.save(); c.translate(x, y); c.scale(s, s);
+  const F = o.form || 2, fsz = [0.9, 1, 1.12][F - 1];   // three forms: small and plain, today's look, big and grand
+  c.save(); c.translate(x, y); c.scale(s * fsz, s * fsz);
   if (o.sceneScale) c.scale(o.sceneScale, o.sceneScale);
+  if (F === 3 && !o.silhouette) {   // final form: a soft glow and rising motes
+    const g3 = c.createRadialGradient(0, -6, 2, 0, -6, 24); g3.addColorStop(0, hexA(col, 0.32)); g3.addColorStop(1, hexA(col, 0));
+    c.fillStyle = g3; c.beginPath(); c.arc(0, -6, 24, 0, 6.283); c.fill();
+    for (let i = 0; i < 4; i++) { const q = (t * 0.5 + i / 4) % 1; c.fillStyle = hexA(col, 0.8 * (1 - q)); c.fillRect(-10 + i * 6.5 + Math.sin(t * 2 + i) * 2, 6 - q * 30, 1.6, 1.6); }
+  }
   // ground: a slowly turning ring in the hero's colour
   if (o.aura) {
     c.save(); c.strokeStyle = d.color; c.globalAlpha = 0.45 + Math.sin(t * 3) * 0.12; c.lineWidth = 1.6; c.setLineDash([5, 4]); c.lineDashOffset = -t * 12;
@@ -3116,11 +3215,22 @@ function drawHero(c, k, x, y, o = {}) {
   }
   { const sh = 1 - Math.min(0.6, air / 50); c.fillStyle = `rgba(8,20,14,${0.42 * sh})`; c.beginPath(); c.ellipse(3, 11.5, 12 * sh, 4.5 * sh, 0, 0, 6.283); c.fill(); }
   if (land) { c.strokeStyle = `rgba(255,243,214,${land * 0.7})`; c.lineWidth = 1.5; c.beginPath(); c.ellipse(0, 11, 14 + (1 - land) * 12, 4 + (1 - land) * 3, 0, 0, 6.283); c.stroke(); }
-  c.translate(0, -air - (k === 'ilse' ? raise * 5 : 0));
-  // boots step when walking
-  c.fillStyle = '#2a2018';
-  c.beginPath(); c.ellipse(-3.6 + step * 2.2, 10.5, 2.8, 1.8, 0, 0, 6.283); c.fill();
-  c.beginPath(); c.ellipse(3.6 - step * 2.2, 10.5, 2.8, 1.8, 0, 0, 6.283); c.fill();
+  c.translate(0, -air - (k === 'ilse' ? raise * 5 + (F === 3 ? 4 + Math.sin(t * 2) * 1.2 : 0) : 0));
+  if (k === 'tick' && F === 3) {   // Gearwright: Tick rides a little two-legged walker
+    for (const sd of [-1, 1]) {
+      const ph = mv ? Math.sin(t * 11 + (sd > 0 ? Math.PI : 0)) : 0, fx = sd * 6 + ph * 2.5;
+      c.strokeStyle = '#3a4248'; c.lineWidth = 2.4; c.beginPath(); c.moveTo(sd * 4, 2); c.lineTo(sd * 8 + ph, 6); c.lineTo(fx, 10.5); c.stroke();
+      c.fillStyle = '#5b666e'; c.beginPath(); c.arc(sd * 8 + ph, 6, 1.6, 0, 6.283); c.fill();
+      c.fillStyle = '#2a2018'; c.fillRect(fx - 3, 9.5, 6, 2);
+    }
+    poly(c, [-9, -1, 9, -1, 7, 4, -7, 4], hsl(48, 25, 40), INK); c.fillStyle = '#ffb347'; c.fillRect(-1.5, 0.5, 3, 1.5);
+    c.translate(0, -7);
+  } else {
+    // boots step when walking
+    c.fillStyle = '#2a2018';
+    c.beginPath(); c.ellipse(-3.6 + step * 2.2, 10.5, 2.8, 1.8, 0, 0, 6.283); c.fill();
+    c.beginPath(); c.ellipse(3.6 - step * 2.2, 10.5, 2.8, 1.8, 0, 0, 6.283); c.fill();
+  }
   // the body bends around the feet: lean into a walk, lunge into a strike, recoil from a hit, stretch into a cast, squash on landing
   { const breathe = Math.sin(t * 2.2) * 0.018, stepSq = mv ? (1 - Math.abs(Math.sin(t * 11))) * 0.05 : 0;
     const lean = face * ((mv ? 0.13 : 0) + lunge * 0.22 - flinch * 0.28 + (P.low ? 0.1 : 0)) + (air ? face * 0.25 * Math.cos(Math.PI * (1 - air / 30)) : 0);
@@ -3132,72 +3242,113 @@ function drawHero(c, k, x, y, o = {}) {
   if (k === 'maren') {
     c.save(); c.scale(face, 1);
     // banner on her back: bigger and brighter during Hold the Line
-    const fl = pw ? 1.5 : 1, wv = Math.sin(t * 5) * 2.4;
-    c.strokeStyle = '#5a4630'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-5, 6); c.lineTo(-8, -30 * fl); c.stroke();
-    poly(c, [-8, -30 * fl, -8 - 13 * fl, -27 * fl + wv, -8 - 10 * fl, -22 * fl + wv * 0.6, -8, -21 * fl], col, INK);
-    c.fillStyle = '#fff3d6'; c.beginPath(); c.arc(-8 - 6 * fl, -25 * fl + wv * 0.5, 1.6 * fl, 0, 6.283); c.fill();
-    poly(c, [-7, -7, 7, -7, 10 + sway, 10, -10 + sway, 10], alt ? hsl(214, 55, 36) : hsl(355, 45, 30), INK);                // cape
-    const AH = alt ? 44 : 210, AS = alt ? 45 : 12;
+    const fl = (pw ? 1.5 : 1) * (F === 3 ? 1.15 : 1), wv = Math.sin(t * 5) * 2.4;
+    if (F >= 2) {   // the squire has not earned a banner yet
+      c.strokeStyle = '#5a4630'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-5, 6); c.lineTo(-8, -30 * fl); c.stroke();
+      poly(c, [-8, -30 * fl, -8 - 13 * fl, -27 * fl + wv, -8 - 10 * fl, -22 * fl + wv * 0.6, -8, -21 * fl], col, INK);
+      c.fillStyle = '#fff3d6'; c.beginPath(); c.arc(-8 - 6 * fl, -25 * fl + wv * 0.5, 1.6 * fl, 0, 6.283); c.fill();
+      if (F === 3) {   // a lantern hangs from the Warden's banner pole, like the lighthouse
+        const lg = c.createRadialGradient(-8, -32 * fl, 0.5, -8, -32 * fl, 9); lg.addColorStop(0, 'rgba(255,230,150,0.9)'); lg.addColorStop(1, 'rgba(255,230,150,0)');
+        c.fillStyle = lg; c.beginPath(); c.arc(-8, -32 * fl, 9, 0, 6.283); c.fill();
+        poly(c, [-9.6, -34.5 * fl, -6.4, -34.5 * fl, -6.8, -30 * fl, -9.2, -30 * fl], '#ffe08a', INK);
+      }
+    }
+    const capeC = alt ? hsl(214, 55, 36) : hsl(355, 45, 30);
+    if (F === 1) poly(c, [-6, -7, 6, -7, 7 + sway * 0.6, 4, -7 + sway * 0.6, 4], hsl(30, 35, 32), INK);                // short travelling cloak
+    else if (F === 2) poly(c, [-7, -7, 7, -7, 10 + sway, 10, -10 + sway, 10], capeC, INK);                // cape
+    else { poly(c, [-8, -8, 8, -8, 12 + sway * 1.3, 12, -12 + sway * 1.3, 12], capeC, INK); c.strokeStyle = '#ffd166'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(-12 + sway * 1.3, 11.4); c.lineTo(12 + sway * 1.3, 11.4); c.stroke(); }
+    const AH = F === 1 ? 28 : alt ? 44 : 210, AS = F === 1 ? 35 : alt ? 45 : 12;
     poly(c, [-7.5, -8, 0, -8, 0, 8, -8, 8], hsl(AH, AS, 74), INK); poly(c, [0, -8, 7.5, -8, 8, 8, 0, 8], hsl(AH, AS, 52), INK);   // armour
     poly(c, [-3.5, -6, 3.5, -6, 4.2, 8, -4.2, 8], col, INK);                                         // tabard
     poly(c, [0, -3, 1, 0, 0, 3, -1, 0], '#fff3d6');                                                  // tabard star
-    c.fillStyle = hsl(AH, AS + 2, 80); c.strokeStyle = INK; c.lineWidth = 1;
-    for (const px of [-8, 8]) { c.beginPath(); c.ellipse(px, -6.5, 3.6, 2.6, 0, Math.PI, 0); c.fill(); c.stroke(); }   // pauldrons
-    poly(c, [-5, -9, -5, -15, 0, -20, 0, -9], hsl(AH, AS, 80), INK); poly(c, [0, -20, 5, -15, 5, -9, 0, -9], hsl(AH, AS, 58), INK);   // helm
-    c.fillStyle = '#14181c'; c.fillRect(-3.4, -13.4, 6.8, 1.5); c.fillRect(-0.7, -13.4, 1.4, 4);    // T-visor
-    poly(c, [0, -20, 7 + sway, -27 + Math.sin(t * 6), 4, -18.5], alt ? '#f4f1e6' : hsl(0, 65, 52), INK);             // plume
-    // kite shield with a lighthouse
-    poly(c, [-14.5, -5, -7.5, -5, -7.5, 4, -11, 11, -14.5, 4], hsl(210, 14, 66), INK); poly(c, [-11, -5, -7.5, -5, -7.5, 4, -11, 11], hsl(210, 14, 50), INK);
-    c.fillStyle = col; c.fillRect(-11.9, -3, 1.8, 7); c.fillStyle = '#c0453a'; c.fillRect(-11.9, -0.8, 1.8, 1.4); c.fillRect(-11.9, 2.4, 1.8, 1.4);
-    poly(c, [-12.6, -3, -11, -5, -9.4, -3], '#ffd166');
+    if (F >= 2) {
+      c.fillStyle = hsl(AH, AS + 2, 80); c.strokeStyle = F === 3 ? '#ffd166' : INK; c.lineWidth = F === 3 ? 1.3 : 1;
+      const pr = F === 3 ? 1.35 : 1;
+      for (const px of [-8, 8]) { c.beginPath(); c.ellipse(px * (F === 3 ? 1.08 : 1), -6.5, 3.6 * pr, 2.6 * pr, 0, Math.PI, 0); c.fill(); c.stroke(); }   // pauldrons
+      if (F === 3) { poly(c, [-5, -15, -10, -19, -5, -12], '#ffd166', INK); poly(c, [5, -15, 10, -19, 5, -12], '#ffd166', INK); }   // winged helm
+      poly(c, [-5, -9, -5, -15, 0, -20, 0, -9], hsl(AH, AS, 80), INK); poly(c, [0, -20, 5, -15, 5, -9, 0, -9], hsl(AH, AS, 58), INK);   // helm
+      c.fillStyle = '#14181c'; c.fillRect(-3.4, -13.4, 6.8, 1.5); c.fillRect(-0.7, -13.4, 1.4, 4);    // T-visor
+      const pl = F === 3 ? 1.4 : 1;
+      poly(c, [0, -20, (7 + sway) * pl, -20 - 7 * pl + Math.sin(t * 6), 4, -18.5], alt ? '#f4f1e6' : hsl(0, 65, 52), INK);             // plume
+    } else {   // squire: bare head under a leather coif
+      c.fillStyle = '#e2bf9a'; c.beginPath(); c.arc(0.5, -12.5, 3.8, 0, 6.283); c.fill(); c.strokeStyle = INK; c.lineWidth = 1; c.stroke();
+      poly(c, [-4.5, -12, -4, -16.5, 0.5, -17.8, 5, -16.5, 4.6, -13.5, 1, -15, -2, -14], hsl(28, 40, 34), INK);
+      c.fillStyle = '#1b1420'; c.fillRect(2, -12.8, 1.2, 1.2);
+    }
+    if (F === 1) {   // round wooden buckler
+      c.fillStyle = hsl(30, 45, 38); c.strokeStyle = INK; c.lineWidth = 1; c.beginPath(); c.arc(-11, 0, 4.6, 0, 6.283); c.fill(); c.stroke();
+      c.fillStyle = '#9aa6b2'; c.beginPath(); c.arc(-11, 0, 1.6, 0, 6.283); c.fill();
+    } else {
+      // kite shield with a lighthouse
+      poly(c, [-14.5, -5, -7.5, -5, -7.5, 4, -11, 11, -14.5, 4], hsl(210, 14, 66), F === 3 ? '#ffd166' : INK); poly(c, [-11, -5, -7.5, -5, -7.5, 4, -11, 11], hsl(210, 14, 50), INK);
+      c.fillStyle = col; c.fillRect(-11.9, -3, 1.8, 7); c.fillStyle = '#c0453a'; c.fillRect(-11.9, -0.8, 1.8, 1.4); c.fillRect(-11.9, 2.4, 1.8, 1.4);
+      poly(c, [-12.6, -3, -11, -5, -9.4, -3], '#ffd166');
+    }
     c.restore();
     // the sword sweeps through each blow, and goes up over her head for the leap
     const sw = atk < 0.45 ? -1.7 + 2.6 * easeOut(atk / 0.45) : 0.9 * (1 - (atk - 0.45) / 0.55), base = o.angle || 0;
     const up = -Math.PI / 2 - face * 0.5, ang = base + sw * face * (atk < 1 ? 1 : 0), fin = ang + (up - ang) * raise;
     if (atk < 0.45 && !raise) { c.strokeStyle = 'rgba(255,255,255,0.55)'; c.lineWidth = 3; c.beginPath(); c.arc(7 * face, 0, 20, base - 1.7 * face, base + (sw) * face, face < 0); c.stroke(); }
     c.save(); c.translate(7 * face, -raise * 6); c.rotate(fin);
-    poly(c, [3, -1.5, 20, -0.2, 3, 0], '#eef3f8', INK); poly(c, [3, 0, 20, -0.2, 3, 1.5], '#9aa6b2', INK);
+    const bl = [16, 20, 24][F - 1];
+    if (F === 3) { c.strokeStyle = hexA(col, 0.55); c.lineWidth = 4; c.beginPath(); c.moveTo(4, 0); c.lineTo(bl, -0.2); c.stroke(); }
+    poly(c, [3, -1.5, bl, -0.2, 3, 0], '#eef3f8', INK); poly(c, [3, 0, bl, -0.2, 3, 1.5], '#9aa6b2', INK);
     c.fillStyle = col; c.fillRect(1.4, -3.6, 2, 7.2); c.fillStyle = '#5a4630'; c.fillRect(-2, -0.9, 3.6, 1.8);
     if (o.flash) { c.strokeStyle = 'rgba(255,255,255,0.85)'; c.lineWidth = 2.4; c.beginPath(); c.arc(0, 0, 19, -0.8, 0.8); c.stroke(); }
     c.restore();
   } else if (k === 'ilse') {
     c.save(); c.scale(face, 1);
-    poly(c, [-1, -7, -13 + sway * 1.4, -4 + Math.sin(t * 4), -11 + sway, -1, 1, -5], alt ? hsl(165, 60, 52) : hsl(40, 75, 55), INK);
+    if (F === 3) {   // Starcaller: a crown of flames turns behind her head
+      for (let i = 0; i < 8; i++) { const a = t * 1.2 + i * 0.785, fx = Math.cos(a) * 11, fy = -14 + Math.sin(a) * 11, fh = 3 + Math.sin(t * 9 + i) * 1;
+        c.fillStyle = i % 2 ? '#ffb347' : '#ff8a3c'; c.beginPath(); c.moveTo(fx - 1.6, fy); c.quadraticCurveTo(fx, fy - fh * 1.8, fx + 1.6, fy); c.fill(); }
+    }
+    if (F >= 2) poly(c, [-1, -7, -13 + sway * 1.4, -4 + Math.sin(t * 4), -11 + sway, -1, 1, -5], alt ? hsl(165, 60, 52) : hsl(40, 75, 55), INK);
     const RH = alt ? 222 : 272, HH = alt ? 224 : 270;   // scarf
-    poly(c, [0, -10, 0, 10, -11 + sway, 10], hsl(RH, 42, alt ? 36 : 50), INK); poly(c, [0, -10, 11 + sway, 10, 0, 10], hsl(RH, 42, alt ? 24 : 34), INK);   // robe
-    c.fillStyle = '#ffd166'; for (const [sx, sy] of [[-4, 4], [3, 7], [-6, 8], [5, 2]]) { c.beginPath(); c.arc(sx + sway * 0.4, sy, 0.7, 0, 6.283); c.fill(); }   // stars on the robe
+    const hem = F === 3 ? 12 : 10;
+    poly(c, [0, -10, 0, hem, -11 + sway, hem], hsl(RH, F === 1 ? 22 : 42, alt ? 36 : 50), INK); poly(c, [0, -10, 11 + sway, hem, 0, hem], hsl(RH, F === 1 ? 22 : 42, alt ? 24 : 34), INK);   // robe
+    if (F === 3) { c.strokeStyle = '#ffd166'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(-11 + sway, hem - 0.6); c.lineTo(11 + sway, hem - 0.6); c.stroke(); }
+    c.fillStyle = '#ffd166'; if (F >= 2) for (const [sx, sy] of F === 3 ? [[-4, 4], [3, 7], [-6, 8], [5, 2], [-2, 10], [6, 9], [-8, 10]] : [[-4, 4], [3, 7], [-6, 8], [5, 2]]) { c.beginPath(); c.arc(sx + sway * 0.4, sy, 0.7, 0, 6.283); c.fill(); }   // stars on the robe
     poly(c, [-5.8, 1.5, 5.8, 1.5, 6.4, 4, -6.4, 4], hsl(40, 70, 55), INK);                         // sash
     poly(c, [-4.6, -10, -5.4, -4, -2, -6], '#3a2440');                                              // hair
     c.fillStyle = '#e2bf9a'; c.beginPath(); c.arc(0, -8.5, 3.6, 0, 6.283); c.fill(); c.strokeStyle = INK; c.lineWidth = 1; c.stroke();
     c.fillStyle = '#1b1420'; c.fillRect(0.8, -9.4, 1.2, 1.2);                                       // eye
-    poly(c, [-10, -9.5, 0, -11, 0, -7, -9, -7], hsl(HH, 40, 30), INK); poly(c, [0, -11, 10, -9.5, 9, -7, 0, -7], hsl(HH, 40, 22), INK);   // brim
-    poly(c, [-5.5, -10.5, 0, -10.5, 1.5, -21], hsl(HH, 40, 40), INK); poly(c, [0, -10.5, 5.5, -10.5, 1.5, -21], hsl(HH, 40, 26), INK);  // cone
-    poly(c, [1.5, -21, -5 + sway, -27 + Math.sin(t * 2.5), -0.5, -19.5], hsl(HH, 40, 34), INK);
-    if (alt) { c.strokeStyle = 'rgba(127,224,200,0.7)'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(-6, 6 + Math.sin(t * 3)); c.quadraticCurveTo(0, 2, 7, 6 + Math.cos(t * 3)); c.stroke(); }    // bent tip
-    c.fillStyle = '#ffd166'; c.fillRect(-5, -12.2, 10, 1.4);                                        // hat band
+    if (F === 1) {   // apprentice: a plain hood, no hat yet
+      poly(c, [-5.5, -5, -5.2, -11.5, 0, -14.6, 5.2, -12, 4.6, -10.6, 0.5, -12.4, -2.6, -10.6, -3.2, -5], hsl(RH, 22, 34), INK);
+    } else {
+      poly(c, [-10, -9.5, 0, -11, 0, -7, -9, -7], hsl(HH, 40, 30), INK); poly(c, [0, -11, 10, -9.5, 9, -7, 0, -7], hsl(HH, 40, 22), INK);   // brim
+      poly(c, [-5.5, -10.5, 0, -10.5, 1.5, -21], hsl(HH, 40, 40), INK); poly(c, [0, -10.5, 5.5, -10.5, 1.5, -21], hsl(HH, 40, 26), INK);  // cone
+      poly(c, [1.5, -21, -5 + sway, -27 + Math.sin(t * 2.5), -0.5, -19.5], hsl(HH, 40, 34), INK);
+      if (alt) { c.strokeStyle = 'rgba(127,224,200,0.7)'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(-6, 6 + Math.sin(t * 3)); c.quadraticCurveTo(0, 2, 7, 6 + Math.cos(t * 3)); c.stroke(); }    // bent tip
+      c.fillStyle = F === 3 ? (Math.sin(t * 6) > 0 ? '#ffe08a' : '#ffb347') : '#ffd166'; c.fillRect(-5, -12.2, 10, 1.4);                                        // hat band
+    }
     c.restore();
-    // floating spellbook, pages glowing
-    const bx = -14 * face, by = -11 + Math.sin(t * 2.6) * 2;
-    c.save(); c.translate(bx, by); c.rotate(Math.sin(t * 1.3) * 0.15);
+    // floating spellbooks, pages glowing: none for the apprentice, three circling the Starcaller
+    const books = F === 1 ? [] : F === 2 ? [[-14 * face, -11 + Math.sin(t * 2.6) * 2, Math.sin(t * 1.3) * 0.15]] : [0, 1, 2].map(i => { const a = t * 0.9 + i * 2.094; return [Math.cos(a) * 21, -6 + Math.sin(a) * 4, Math.sin(t + i) * 0.3]; });
+    for (const [bx, by, br] of books) {
+    c.save(); c.translate(bx, by); c.rotate(br);
     const bg2 = c.createRadialGradient(0, 0, 1, 0, 0, 9); bg2.addColorStop(0, 'rgba(255,200,120,0.55)'); bg2.addColorStop(1, 'rgba(255,200,120,0)');
     c.fillStyle = bg2; c.beginPath(); c.arc(0, 0, 9, 0, 6.283); c.fill();
     poly(c, [-6, -1, 0, 0.5, 0, 4, -6, 2.5], hsl(20, 45, 30), INK); poly(c, [0, 0.5, 6, -1, 6, 2.5, 0, 4], hsl(20, 45, 24), INK);
     poly(c, [-5.5, -1.8, 0, -0.2, 0, 3, -5.5, 1.6], '#fff3d6', INK); poly(c, [0, -0.2, 5.5, -1.8, 5.5, 1.6, 0, 3], '#efe0c0', INK);
-    c.restore();
+    c.restore(); }
     { const ang = o.angle || 0, up = -Math.PI / 2 + face * 0.25; c.save(); c.translate(0, -raise * 4); c.rotate(ang + (up - ang) * raise); c.translate(lunge * 4, 0); }
-    c.strokeStyle = '#7a5a34'; c.lineWidth = 2.2; c.beginPath(); c.moveTo(0, 3); c.lineTo(16, 0); c.stroke();
+    const sl = [12, 16, 18][F - 1];
+    c.strokeStyle = F === 3 ? '#c9a24a' : '#7a5a34'; c.lineWidth = 2.2; c.beginPath(); c.moveTo(0, 3); c.lineTo(sl, 0); c.stroke();
+    c.translate(sl - 16, 0);
     if (raise > 0.3) { c.strokeStyle = `rgba(255,179,71,${raise * 0.7})`; c.lineWidth = 1.2; for (let i = 0; i < 3; i++) { const a2 = t * 7 + i * 2.1; c.beginPath(); c.arc(17, 0, 10 + i * 4 + Math.sin(a2) * 2, a2, a2 + 1.4); c.stroke(); } }
     const og = c.createRadialGradient(17, 0, 0.5, 17, 0, 8);
     og.addColorStop(0, '#fff3d0'); og.addColorStop(0.35, '#ff8a3c'); og.addColorStop(1, 'rgba(255,138,60,0)');
-    c.fillStyle = og; c.beginPath(); c.arc(17, 0, (pw ? 11 : 8) + raise * 5 + lunge * 3 + (o.flash ? 3 : Math.sin(t * 5)), 0, 6.283); c.fill();
+    c.fillStyle = og; c.beginPath(); c.arc(17, 0, (pw ? 11 : 8) + (F - 2) * 2.5 + raise * 5 + lunge * 3 + (o.flash ? 3 : Math.sin(t * 5)), 0, 6.283); c.fill();
     c.restore();
-    for (let i = 0, n = pw ? 6 : 3; i < n; i++) {
+    for (let i = 0, n = (pw ? 6 : 3) + F - 2; i < n; i++) {
       const a = t * 2 + i * 6.283 / n, ex = Math.cos(a) * 13, ey = Math.sin(a) * 5 - 4;
       poly(c, [ex, ey - 2.2, ex + 1.5, ey, ex, ey + 2.2, ex - 1.5, ey], '#ffb347');
     }
   } else {
     c.save(); c.scale(face, 1);
-    // backpack: spinning gear, antenna with a blinking light, a chimney that puffs steam
+    // backpack: spinning gear, antenna with a blinking light, a chimney that puffs steam (the tinkerer has a plain tool satchel)
+    if (F === 1) { poly(c, [-10, -6, -3, -6, -3, 4, -10, 4], hsl(30, 30, 34), INK); c.fillStyle = '#9aa6b2'; c.fillRect(-9, -9, 1.4, 4); c.fillRect(-6, -8, 1.2, 3); }
+    else {
     poly(c, [-11, -9, -3, -9, -3, 4, -11, 4], hsl(30, 30, 34), INK);
     c.strokeStyle = '#3a3a3a'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(-9, -9); c.lineTo(-10, -22); c.stroke();
     c.fillStyle = Math.sin(t * 6) > 0 ? '#ff8c42' : '#5a3a20'; c.beginPath(); c.arc(-10, -22.5, 1.6, 0, 6.283); c.fill();
@@ -3209,6 +3360,7 @@ function drawHero(c, k, x, y, o = {}) {
     c.closePath(); c.fill(); c.strokeStyle = INK; c.lineWidth = 1; c.stroke();
     c.fillStyle = '#3a2a1a'; c.beginPath(); c.arc(0, 0, 1.3, 0, 6.283); c.fill();
     c.restore();
+    }
     const CH = alt ? 48 : 24, CS = alt ? 85 : 58;
     poly(c, [-8, -6, 0, -6, 0, 10, -9 + sway * 0.5, 10], hsl(CH, CS, alt ? 56 : 52), INK); poly(c, [0, -6, 8, -6, 9 + sway * 0.5, 10, 0, 10], hsl(CH, CS, alt ? 42 : 38), INK);   // coat
     c.fillStyle = '#2a2018'; c.fillRect(-8.5, 2.5, 17, 2.4); c.fillStyle = '#d9a84e'; c.fillRect(-1.5, 2.3, 3, 2.8);   // belt
@@ -3223,18 +3375,22 @@ function drawHero(c, k, x, y, o = {}) {
     c.restore();
     { const ang = o.angle || 0, kick = atk < 1 ? (1 - atk) ** 2 : 0, up = -Math.PI / 2 + face * 0.9;
       c.save(); c.rotate(ang - face * kick * 0.35 + (up - ang) * raise * 0.8); c.translate(-kick * 5, 0); }
-    poly(c, [4, -2.4, 22, -1.6, 22, 0, 4, 0], hsl(40, 60, 58), INK); poly(c, [4, 0, 22, 0, 22, 1.6, 4, 2.4], hsl(214, 10, 40), INK);
-    c.fillStyle = '#20262a'; c.fillRect(9, -4.6, 6, 2);                                              // scope
+    const gl = [16, 22, 26][F - 1];
+    if (F === 3) poly(c, [6, 2.4, gl - 2, 2.6, gl - 2, 4.4, 6, 4.6], hsl(214, 10, 34), INK);         // second barrel
+    poly(c, [4, -2.4, gl, -1.6, gl, 0, 4, 0], hsl(40, 60, 58), INK); poly(c, [4, 0, gl, 0, gl, 1.6, 4, 2.4], hsl(214, 10, 40), INK);
+    if (F >= 2) { c.fillStyle = '#20262a'; c.fillRect(9, -4.6, 6, 2); }                              // scope
     c.fillStyle = col; c.fillRect(10, -2.6, 4, 6);
-    if (o.flash) { c.fillStyle = 'rgba(160,255,230,0.9)'; c.beginPath(); c.arc(24, 0, 3.5, 0, 6.283); c.fill(); }
+    if (o.flash) { c.fillStyle = 'rgba(160,255,230,0.9)'; c.beginPath(); c.arc(gl + 2, 0, 3.5, 0, 6.283); c.fill(); }
     c.restore();
-    // scout drone circling overhead
-    const da = t * 1.6, dx = Math.cos(da) * 15, dy = -24 + Math.sin(t * 3) * 1.6 + Math.sin(da) * 3;
+    // scout drones circling overhead: none for the tinkerer, two for the Gearwright
+    for (let di = 0; di < F - 1; di++) {
+    const da = t * 1.6 + di * Math.PI, dx = Math.cos(da) * 15, dy = -24 + Math.sin(t * 3 + di) * 1.6 + Math.sin(da) * 3;
     c.fillStyle = 'rgba(8,20,14,0.25)'; c.beginPath(); c.ellipse(dx, 12, 4, 1.5, 0, 0, 6.283); c.fill();
     c.fillStyle = '#3a4a46'; c.fillRect(dx - 5, dy - 0.6, 10, 1.2);
     c.fillStyle = 'rgba(200,240,230,0.55)'; for (const rx of [-5, 5]) { c.beginPath(); c.ellipse(dx + rx, dy - 1.2, 3.2, 0.9, 0, 0, 6.283); c.fill(); }
     c.fillStyle = '#7fd9c0'; c.strokeStyle = INK; c.lineWidth = 0.8; c.beginPath(); c.arc(dx, dy + 0.8, 2.2, 0, 6.283); c.fill(); c.stroke();
     c.fillStyle = pw || Math.sin(t * 9) > 0.6 ? '#ff8c42' : '#20262a'; c.beginPath(); c.arc(dx, dy + 1.4, 0.8, 0, 6.283); c.fill();
+    }
     if (pw && Math.random() < 0.3) { c.strokeStyle = '#fff6c0'; c.lineWidth = 1; c.beginPath(); const a2 = Math.random() * 6.283; c.moveTo(Math.cos(a2) * 8, -6 + Math.sin(a2) * 8); c.lineTo(Math.cos(a2) * 14, -6 + Math.sin(a2) * 14); c.stroke(); }
   }
   c.restore();
@@ -3246,7 +3402,7 @@ function sceneCrab(c, x, y, type, wob, spin = 0) {
   drawEnemy(c, { type, x: 0, y: 0, wob, hp: 1, maxHp: 1, alive: true, air: false, hitT: 0 });
   c.restore();
 }
-function drawScene(c, k, which, t) {
+function drawScene(c, k, which, t, form = 2) {
   const d = HEROES[k], T = which === 'r' ? 3.2 : 2.6, p = (t % T) / T, W2 = SCENE_W, H2 = SCENE_H;
   c.save();
   // backdrop: evening sky, far hills, a strip of sea, the grassy road
@@ -3261,7 +3417,7 @@ function drawScene(c, k, which, t) {
   c.fillStyle = 'rgba(255,255,255,0.25)'; for (let i = 0; i < 5; i++) c.fillRect(((i * 37 + t * 8) % (W2 + 20)) - 10, 65 + (i % 2) * 3, 8, 1);
   c.fillStyle = '#3f6b45'; c.fillRect(-300, 70, W2 + 600, 400);
   c.fillStyle = '#c9b48a'; c.beginPath(); c.ellipse(W2 / 2, 96, W2 * 0.62, 11, 0, 0, 6.283); c.fill();
-  const hero = (x, y, pose, o = {}) => drawHero(c, k, x, y, Object.assign({ scale: 1.55, pose, angle: o.angle ?? 0, power: !!o.power, flash: !!o.flash }, o));
+  const hero = (x, y, pose, o = {}) => drawHero(c, k, x, y, Object.assign({ scale: 1.55, pose, angle: o.angle ?? 0, power: !!o.power, flash: !!o.flash, form }, o));
   const ringAt = (x, y, r, a, col) => { c.strokeStyle = col; c.globalAlpha = a; c.lineWidth = 2.5; c.beginPath(); c.ellipse(x, y, r, r * 0.35, 0, 0, 6.283); c.stroke(); c.globalAlpha = 1; };
   const meteor = (x, y, sz, a) => {
     c.save(); c.translate(x, y); c.rotate(a);
@@ -3341,19 +3497,19 @@ function animateScenes() {
       if (cv.width !== Math.round(w * DPR)) { cv.width = Math.round(w * DPR); cv.height = Math.round(h * DPR); }
       const g = cv.getContext('2d'), sc = Math.min(w / SCENE_W, h / SCENE_H) * 1.06;
       g.setTransform(DPR * sc, 0, 0, DPR * sc, DPR * (w - SCENE_W * sc) / 2, DPR * (h - SCENE_H * sc) * 0.55);
-      drawScene(g, cv.dataset.k, cv.dataset.s, t + (cv.dataset.s === 'r' ? 0.7 : 0));
+      drawScene(g, cv.dataset.k, cv.dataset.s, t + (cv.dataset.s === 'r' ? 0.7 : 0), +cv.dataset.f || 2);
     }
     requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);
 }
-function iconHero(k, size) {
+function iconHero(k, size, form = 2) {
   const c = document.createElement('canvas');
   c.width = size * DPR; c.height = size * DPR; c.style.width = c.style.height = size + 'px';
   const g = c.getContext('2d'); g.scale(DPR * size / 44, DPR * size / 44);
   g.fillStyle = '#23312a'; g.beginPath(); g.arc(22, 22, 21, 0, 6.283); g.fill();
   g.strokeStyle = HEROES[k].color; g.lineWidth = 1.5; g.stroke();
-  drawHero(g, k, 22, 31, { scale: 0.92, angle: -0.6 });
+  drawHero(g, k, 22, form === 3 ? 33 : 31, { scale: form === 3 ? 0.85 : 0.92, angle: -0.6, form });
   return c;
 }
 
@@ -3441,7 +3597,7 @@ function render() {
       ctx.beginPath(); ctx.moveTo(dx - 5, dy - 5); ctx.lineTo(dx + 5, dy + 5); ctx.moveTo(dx + 5, dy - 5); ctx.lineTo(dx - 5, dy + 5); ctx.stroke();
     }
     const power = hh.k === 'maren' ? S.time < (hh.rage || 0) : hh.k === 'ilse' ? S.rains.length > 0 : S.buffs.some(b => b.r > 1e8 && b.until > S.time);
-    drawHero(ctx, hh.k, ...heroDrawPos(hh), { angle: hh.angle, flash: hh.flash > 0, scale: K * 1.25 * Math.min(1, 0.3 + (S.time - (hh.spawnAt ?? -9)) / 0.35 * 0.7), aura: true, moving: S.time - (hh.movedAt || -9) < 0.12, power, pose: heroPose(hh) });
+    if (!S.evo) drawHero(ctx, hh.k, ...heroDrawPos(hh), { angle: hh.angle, flash: hh.flash > 0, scale: K * 1.25 * Math.min(1, 0.3 + (S.time - (hh.spawnAt ?? -9)) / 0.35 * 0.7), aura: true, moving: S.time - (hh.movedAt || -9) < 0.12, power, pose: heroPose(hh), form: shownForm(hh) });
     if (S.time < hh.invuln || hh.shield > 0) { ctx.strokeStyle = 'rgba(255,240,200,0.85)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(hh.x, hh.y, 15 * K, 0, Math.PI * 2); ctx.stroke(); }
     const bw = 28 * K, bx = hh.x - bw / 2, by = hh.y - 43 * K;
     ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.fillRect(bx - 1, by - 1, bw + 2, 6);
@@ -3449,6 +3605,7 @@ function render() {
     ctx.font = '700 10px "JetBrains Mono", monospace'; ctx.textAlign = 'left'; ctx.fillStyle = hd.color; ctx.fillText(hh.lvl, bx + bw + 3, by + 5);
   }
   drawBark();
+  drawEvolve();
 
   // shots
   for (const s of S.shots) {
@@ -4081,10 +4238,10 @@ function renderHeroUI() {
     <button class="chip-main" id="hc-sel" type="button" title="Command ${first} (H)"><span id="hc-icon"></span><span class="chip-body"><span class="chip-top"><b>${first}</b><span id="hc-lvl">Lv 1</span></span><span class="bar"><span class="fill hp" id="hc-hp"></span></span><span class="bar thin"><span class="fill xp" id="hc-xp"></span></span></span></button>
     <button class="ibtn" id="hc-skills" type="button" title="Hero skills (K)" aria-label="Hero skills">${IC.star}</button>
     <span id="hc-state" hidden></span>`;
-  $('hc-icon').appendChild(iconHero(h.k, 30));
+  $('hc-icon').appendChild(iconHero(h.k, 30, h.formShown || formOf(h)));
   $('hc-sel').onclick = toggleHeroSel; $('hc-skills').onclick = openSkills;
   const evo = skillName(h), rk = sigRank(h), ur = ultRank(h);
-  els.ab.hero.querySelector('.ab-text').innerHTML = `<b>${evo}${rk > 1 ? ' ' + ['', '', 'II', 'III'][rk] : ''}</b>`;
+  els.ab.hero.querySelector('.ab-text').innerHTML = `<b>${evo}${rk > 1 ? ' ' + ROMAN[rk] : ''}</b>`;
   $('ab-hero-ic').innerHTML = IC.bolt; $('ab-hero-ic').style.color = d.color;
   els.ab.ult.querySelector('.ab-ic').innerHTML = IC.burst;
   els.ab.hero.title = `${evo} (E, then click the map): ${d.active.text}`;
@@ -4168,7 +4325,7 @@ function continueCampaign(c) {
   ui.hero = c.hero.k;
   const h = S.hero = makeHero(c.hero.k);
   Object.assign(h, { lvl: lvlForXp(c.hero.xp || 0), xp: c.hero.xp, sp: c.hero.sp, learned: c.hero.learned || {}, evo: c.hero.evo, ult: c.hero.ult, toldSkill: c.hero.toldSkill, respec: c.hero.respec });
-  h.ult = h.lvl >= ULT_LVL; recomputeFx(h); h.maxHp = hMax(h); h.hp = h.maxHp; if (h.ult) h.ab.r = 3;
+  h.ult = h.lvl >= ULT_LVL; recomputeFx(h); h.maxHp = hMax(h); h.hp = h.maxHp; h.formShown = formOf(h); if (h.ult) h.ab.r = 3;
   for (const o of c.towers || []) {
     if (!TOWERS[o.type] || !tileFree(o.tx, o.ty)) { if (TOWERS[o.type]) S.gold += o.spent || 0; continue; }
     S.towers.push({ id: S.nextId++, type: o.type, lvl: o.lvl, tx: o.tx, ty: o.ty, x: (o.tx + 0.5) * TILE, y: (o.ty + 0.5) * TILE, cd: 0.2, angle: -Math.PI / 2,
@@ -4217,7 +4374,7 @@ function heroSelect() {
   showOverlay(`
     <h2>Choose your <span>champion</span></h2>
     <p>Your hero fights beside the towers, levels up, and earns new skills as the story unfolds.</p>
-    <div class="heroes">${Object.entries(HEROES).map(([k, d]) => `<button type="button" class="hero-btn${k === ui.hero ? ' on' : ''}" data-k="${k}"><canvas class="hs-art hb-art" data-k="${k}" data-s="e" aria-hidden="true"></canvas><b>${d.name}</b><small class="hb-title" style="color:${d.color}">${d.title}</small><small class="hb-role">${d.role}</small><small class="hb-skills">E · ${d.active.name}<br>R · ${d.ult.name} (Lv ${ULT_LVL})</small>${WARD.unlocked[k] ? `<span class="hb-outfit${WARD.wear[k] ? ' on' : ''}" role="switch" aria-checked="${!!WARD.wear[k]}" data-o="${k}">Outfit: ${WARD.wear[k] ? OUTFITS[k].name : 'Classic'}</span>` : `<small class="hb-tree">Finish the campaign with ${d.name.split(' ')[0]} to unlock the ${OUTFITS[k].name} outfit</small>`}</button>`).join('')}</div>
+    <div class="heroes">${Object.entries(HEROES).map(([k, d]) => `<button type="button" class="hero-btn${k === ui.hero ? ' on' : ''}" data-k="${k}"><canvas class="hs-art hb-art" data-k="${k}" data-s="e" data-f="1" aria-hidden="true"></canvas><b>${d.name}</b><small class="hb-title" style="color:${d.color}">${d.title}</small><small class="hb-role">${d.role}</small><small class="hb-skills">E · ${d.active.name}<br>R · ${d.ult.name} (Lv ${ULT_LVL})</small><small class="hb-forms">${FORMS[k].join(' › ')}</small>${WARD.unlocked[k] ? `<span class="hb-outfit${WARD.wear[k] ? ' on' : ''}" role="switch" aria-checked="${!!WARD.wear[k]}" data-o="${k}">Outfit: ${WARD.wear[k] ? OUTFITS[k].name : 'Classic'}</span>` : `<small class="hb-tree">Finish the campaign with ${d.name.split(' ')[0]} to unlock the ${OUTFITS[k].name} outfit</small>`}</button>`).join('')}</div>
     <div class="diffs" role="radiogroup" aria-label="Difficulty">${Object.entries(DIFF).map(([k, v]) => `<button type="button" class="diff${SET.diff === k ? ' on' : ''}" role="radio" aria-checked="${SET.diff === k}" data-d="${k}"><b>${v.name}</b><small>${v.text}</small></button>`).join('')}</div>
     <div class="row"><button class="btn primary" id="ov-begin" type="button">Begin</button><button class="btn" id="ov-back" type="button">Back</button></div>`, 'wide xl hero-pick');
   animateScenes();
@@ -4270,9 +4427,9 @@ function renderSkills(sel) {
   const eNext = nextOf(RANK_LVL, [d.active.text, ...d.active.ranks]), rNext = nextOf(ULT_LVLS, [d.ult.text, ...d.ult.ranks]);
   const pips = (n, of) => `<span class="pips">${Array.from({ length: of }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</span>`;
   const other = h.evo ? d.evo[h.evo === 'a' ? 1 : 0] : null, swapped = h.respec === S.mapI;
-  const swap = other ? `<button type="button" class="btn tiny hs-swap" id="sk-swap"${swapped ? ' disabled' : ''}>${swapped ? 'Evolution swapped on this map' : `Swap to ${other.name} · once per map`}</button>` : '';
+  const swap = other ? `<button type="button" class="btn tiny hs-swap" id="sk-swap"${swapped ? ' disabled' : ''}>${swapped ? 'Path swapped on this map' : `Swap path to ${other.name} · once per map`}</button>` : '';
   const card = (which, key, name, rank, of, text, nx, cd, locked) => `
-      <div class="hskill${locked ? ' locked' : ''}"><canvas class="hs-art" data-k="${h.k}" data-s="${which}" aria-hidden="true"></canvas>
+      <div class="hskill${locked ? ' locked' : ''}"><canvas class="hs-art" data-k="${h.k}" data-s="${which}" data-f="${formOf(h)}" aria-hidden="true"></canvas>
         <div class="hs-body"><p class="hs-key">${key}</p><h4>${name}${rank > 1 ? ' ' + ROMAN[rank] : ''} ${pips(rank, of)}</h4>
         <p class="hs-text">${text}</p>
         ${nx ? `<p class="hs-next"><b>Lv ${nx.lvl}</b> ${nx.text}</p>` : `<p class="hs-next done">Fully ranked</p>`}
@@ -4281,6 +4438,7 @@ function renderSkills(sel) {
     <p class="chap" style="color:${d.color}">${d.name} · ${d.title}</p>
     <h2>Hero <span>skills</span></h2>
     <div class="skillhead"><span>Level <b>${h.lvl}</b> of ${MAX_LVL}${h.lvl < MAX_LVL ? ` · ${Math.floor(h.xp - prev)} / ${next - prev} xp` : ' · max'}</span><span class="sk-stats">${Math.round(heroDmg(h))} damage · ${(d.rate * (1 + h.fx.rate)).toFixed(1)}/s · ${Math.ceil(h.hp)}/${h.maxHp} health</span></div>
+    <div class="forms">${FORMS[h.k].map((n, i) => `<span class="form${formOf(h) > i ? ' on' : ''}${formOf(h) === i + 1 ? ' now' : ''}" data-form="${i + 1}"><i></i><span><b>${formOf(h) > i ? n : '???'}</b><small>${i ? 'Lv ' + FORM_LVL[i] : 'Start'}</small></span></span>`).join('<span class="form-arrow">›</span>')}</div>
     <div class="hpath" style="--hc:${d.color};--fill:${(h.lvl - 1) / (MAX_LVL - 1) * 100}%">${path.map(n => `<button type="button" class="hp-node k-${n.kind}${n.lvl <= h.lvl ? ' on' : ''}${n.lvl === h.lvl ? ' now' : ''}${n === pick ? ' sel' : ''}" data-l="${n.lvl}" aria-label="Level ${n.lvl}: ${n.name}"><i>${ICON[n.kind]}</i><small>${n.lvl}</small></button>`).join('')}</div>
     <p class="hp-detail"><b>Lv ${pick.lvl} · ${pick.name}</b> ${pick.lvl <= h.lvl ? '<span class="got">✓</span>' : ''} ${pick.text}</p>
     <div class="hskills">
@@ -4291,6 +4449,7 @@ function renderSkills(sel) {
     <div class="row"><button class="btn primary" id="sk-close" type="button">Back to the fight</button></div>`, 'wide xl skills-card');
   for (const cls of ['tight', 'tighter']) { if (els.overlay.scrollHeight <= els.overlay.clientHeight + 1) break; els.card.classList.add(cls); }
   $('sk-close').onclick = closeSkills;
+  els.card.querySelectorAll('.form').forEach(el => el.querySelector('i').appendChild(iconHero(h.k, 34, +el.dataset.form)));
   if ($('sk-swap')) $('sk-swap').onclick = () => {
     if (h.respec === S.mapI) return;
     h.evo = h.evo === 'a' ? 'b' : 'a'; h.respec = S.mapI; sfx('upgrade');
@@ -4521,7 +4680,8 @@ function frame(now) {
   const real = Math.min(0.1, (now - last) / 1000); last = now;
   updateCritters(real);
   if (ui.started && !ui.paused && !S.over) {
-    let remaining = real * ui.speed;
+    updateEvolve();
+    let remaining = real * ui.speed * evoSlow();
     while (remaining > 0) { const step = Math.min(1 / 60, remaining); update(step); remaining -= step; if (ui.paused || S.over) break; }
   } else updateFx(0);
   render();
